@@ -10,6 +10,8 @@ Este documento diz **como** o app sai do papel: fases, entregas e o critério de
 - **Offline-first:** o app funciona 100% sem internet. O Room no aparelho é a fonte da verdade; a nuvem só entra no premium, depois da saída do Exército.
 - **GPS com dois usos (decidido em 26/09/2026):** (a) marcar o local de um registro e (b) gravar a rota de um rolê. Somar km automaticamente fica fora do MVP.
 - **Mapa da rota no MVP (decidido em 26/09/2026):** só o traçado, com distância e duração, sem mapa de fundo, porque um mapa sem internet exige baixar os blocos antes. O mapa offline será reavaliado na fase 4.
+- **Fonte de localização (decidido em 26/09/2026):** `FusedLocationProviderClient` do Google Play Services, que gasta menos bateria, com o `LocationManager` do Android como alternativa em aparelhos sem esses serviços.
+- **Rotas no plano grátis (decidido em 26/09/2026):** sem limite de quantidade, porque tudo fica guardado no aparelho.
 - **Um único módulo `:app`** com pacotes por funcionalidade (`garagem`, `diario`, `plano`, `rotas`, `numeros`), decidido em 26/09/2026. Separar em módulos Gradle só quando o tempo de build ou um limite de fronteira pedir.
 - **Capacidade:** 8 a 10 h por semana, com o cronograma contado em meses a partir do início (M1, M2…).
 - **Limite de trabalho em andamento:** no máximo 3 itens em execução e 2 em integração (escala S do framework).
@@ -137,8 +139,3 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 - **Retro curta (15 min):** ao fim de cada fase, em `docs/retros/`.
 - **Riscos e decisões:** viram issues `risco` e `decisao` no momento em que surgem. Decisão registrada não se reabre sem motivo novo.
 - **Toda sessão termina** com push feito, PR aberta e uma linha de retomada (lição 20).
-
-## Decisões que precisam do Pedro
-
-1. **Serviços do Google para localização.** O `FusedLocationProviderClient` gasta menos bateria, mas depende do Google Play Services. Recomendo usá-lo, com o `LocationManager` do Android como alternativa para aparelhos sem esses serviços.
-2. **Rota no plano grátis.** Recomendo gravar rotas no grátis sem limite de quantidade, porque o custo fica só no aparelho.
