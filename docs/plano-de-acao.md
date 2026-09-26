@@ -9,6 +9,7 @@ Este documento diz **como** o app sai do papel: fases, entregas e o critério de
 - **Plataforma:** Android nativo em Kotlin, minSdk 26 (Android 8) e targetSdk 36.
 - **Offline-first:** o app funciona 100% sem internet. O Room no aparelho é a fonte da verdade; a nuvem só entra no premium, depois da saída do Exército.
 - **GPS com dois usos (decidido em 26/09/2026):** (a) marcar o local de um registro e (b) gravar a rota de um rolê. Somar km automaticamente fica fora do MVP.
+- **Mapa da rota no MVP (decidido em 26/09/2026):** só o traçado, com distância e duração, sem mapa de fundo, porque um mapa sem internet exige baixar os blocos antes. O mapa offline será reavaliado na fase 4.
 - **Um único módulo `:app`** com pacotes por funcionalidade (`garagem`, `diario`, `plano`, `rotas`, `numeros`), decidido em 26/09/2026. Separar em módulos Gradle só quando o tempo de build ou um limite de fronteira pedir.
 - **Capacidade:** 8 a 10 h por semana, com o cronograma contado em meses a partir do início (M1, M2…).
 - **Limite de trabalho em andamento:** no máximo 3 itens em execução e 2 em integração (escala S do framework).
@@ -70,7 +71,7 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 | 1.4 | Lembretes | WorkManager para os lembretes por tempo; recálculo dos lembretes por km a cada atualização do hodômetro; notificações | Lembrete dispara com o app fechado e após reiniciar o aparelho |
 | 1.5 | Ocorrência gera pendência | Uma ocorrência (queda, barulho, vazamento) cria itens de inspeção no plano | Pendência aparece no plano e some quando resolvida |
 | 1.6 | GPS: local do registro | Botão "usar local atual" no registro, com permissão pedida só nesse momento; funciona sem internet (o GPS não precisa de rede) | Local gravado em modo avião; negar a permissão não quebra o registro |
-| 1.7 | GPS: rota do rolê | Gravação iniciada pelo usuário num serviço em primeiro plano do tipo `location`, com notificação fixa; pontos gravados no Room durante a gravação; distância e duração calculadas no aparelho | Rolê de 1 h gravado em modo avião, sem perder pontos se o app for para segundo plano |
+| 1.7 | GPS: rota do rolê | Gravação iniciada pelo usuário e exibida como traçado, sem mapa de fundo, num serviço em primeiro plano do tipo `location`, com notificação fixa; pontos gravados no Room durante a gravação; distância e duração calculadas no aparelho | Rolê de 1 h gravado em modo avião, sem perder pontos se o app for para segundo plano |
 | 1.8 | Modo oficina | Escala de tipografia e espaçamento maior, alvos de toque grandes, uso com luva | Fluxo "registrar troca de óleo" feito em até 3 toques no modo oficina |
 | 1.9 | Exportar e importar | Backup em arquivo (JSON com as fotos) escolhido pelo usuário pelo seletor do sistema | Exportar num aparelho e importar em outro recupera todos os dados |
 | 1.10 | Flag de premium | Recursos premium atrás de uma flag local, desligada | Nenhum recurso premium visível com a flag desligada, com teste |
@@ -139,6 +140,5 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 
 ## Decisões que precisam do Pedro
 
-1. **Mapa da rota sem internet.** Para mostrar a rota sobre um mapa offline é preciso baixar blocos de mapa antes. Recomendo, no MVP, desenhar só o traçado com distância e duração, sem mapa de fundo, e avaliar o mapa offline na fase 4.
-2. **Serviços do Google para localização.** O `FusedLocationProviderClient` gasta menos bateria, mas depende do Google Play Services. Recomendo usá-lo, com o `LocationManager` do Android como alternativa para aparelhos sem esses serviços.
-3. **Rota no plano grátis.** Recomendo gravar rotas no grátis sem limite de quantidade, porque o custo fica só no aparelho.
+1. **Serviços do Google para localização.** O `FusedLocationProviderClient` gasta menos bateria, mas depende do Google Play Services. Recomendo usá-lo, com o `LocationManager` do Android como alternativa para aparelhos sem esses serviços.
+2. **Rota no plano grátis.** Recomendo gravar rotas no grátis sem limite de quantidade, porque o custo fica só no aparelho.
