@@ -13,6 +13,12 @@ Este documento diz **como** o app sai do papel: fases, entregas e o critério de
 - **Fonte de localização (decidido em 26/09/2026):** `FusedLocationProviderClient` do Google Play Services, que gasta menos bateria, com o `LocationManager` do Android como alternativa em aparelhos sem esses serviços.
 - **Rotas no plano grátis (decidido em 26/09/2026):** sem limite de quantidade, porque tudo fica guardado no aparelho.
 - **Um único módulo `:app`** com pacotes por funcionalidade (`garagem`, `diario`, `plano`, `rotas`, `numeros`), decidido em 26/09/2026. Separar em módulos Gradle só quando o tempo de build ou um limite de fronteira pedir.
+- **Decisões da revisão pelas áreas (26/09/2026):**
+  - O banco local não é criptografado no MVP, porque o Android já criptografa o armazenamento do app e o backup automático do banco fica desligado. A criptografia será reavaliada no premium.
+  - A medição usa só a Play Console e o Crashlytics sem dados pessoais. Nenhum analytics de terceiros entra no plano grátis.
+  - A importação de histórico de planilha fica para a fase 4 e é confirmada no teste fechado.
+  - Os pontos brutos da rota são apagados quando a rota simplificada é salva.
+  - A verba de divulgação no lançamento é zero, com divulgação direta em grupos e moto clubes.
 - **Capacidade:** 8 a 10 h por semana, com o cronograma contado em meses a partir do início (M1, M2…).
 - **Limite de trabalho em andamento:** no máximo 3 itens em execução e 2 em integração (escala S do framework).
 
@@ -30,7 +36,7 @@ Este documento diz **como** o app sai do papel: fases, entregas e o critério de
 
 **Calendário sugerido (estimativa de 26/09/2026):** com a fundação começando em outubro de 2026, M1 é outubro. O MVP fica pronto em dezembro, janeiro reúne as 4 semanas de uso na M800 e o teste fechado, e o lançamento grátis fica para o início de fevereiro de 2027. Automatizar a criação de telas, entidades e frentes pode adiantar essas datas. Elas são revistas na reunião mensal pela vazão medida, não pela vontade.
 
-As fases 0 a 3 estão detalhadas abaixo. As entregas 0.11, 0.12, 2.6 e 3.5 e vários critérios vieram da revisão pelas áreas (UX/UI, CyberOps, Desempenho, Marketing e DevOps) em `docs/PLANEJAMENTO.md`, seção 8. Os conflitos da seção 6 desse documento ainda aguardam decisão e ficam fora deste plano até lá. As fases 4 a 6 dependem dos dados reais do lançamento e da data de saída, então ficam em nível de marco e são detalhadas na retro da fase 3.
+As fases 0 a 3 estão detalhadas abaixo. As entregas 0.11, 0.12, 2.6 e 3.5 e vários critérios vieram da revisão pelas áreas (UX/UI, CyberOps, Desempenho, Marketing e DevOps) em `docs/PLANEJAMENTO.md`, seção 8. Os cinco conflitos da seção 6 desse documento foram decididos por Pedro em 26/09/2026 e estão nas premissas abaixo. As fases 4 a 6 dependem dos dados reais do lançamento e da data de saída, então ficam em nível de marco e são detalhadas na retro da fase 3.
 
 ---
 
@@ -77,7 +83,7 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 | 1.4 | Lembretes | WorkManager para os lembretes por tempo; recálculo dos lembretes por km a cada atualização do hodômetro; notificações | Lembrete dispara com o app fechado e após reiniciar o aparelho; tocar na notificação abre a moto no item vencido; recálculo feito em lote |
 | 1.5 | Ocorrência gera pendência | Uma ocorrência (queda, barulho, vazamento) cria itens de inspeção no plano | Pendência aparece no plano e some quando resolvida |
 | 1.6 | GPS: local do registro | Botão "usar local atual" no registro, com permissão pedida só nesse momento; funciona sem internet (o GPS não precisa de rede) | Local gravado em modo avião; negar a permissão não quebra o registro |
-| 1.7 | GPS: rota do rolê | Gravação iniciada pelo usuário num serviço em primeiro plano do tipo `location`, com notificação fixa; pontos gravados no Room durante a gravação; distância e duração calculadas no aparelho; rota exibida só como traçado, sem mapa de fundo | Rolê de 1 h gravado em modo avião, sem perder pontos se o app for para segundo plano |
+| 1.7 | GPS: rota do rolê | Gravação iniciada pelo usuário num serviço em primeiro plano do tipo `location`, com notificação fixa; pontos gravados no Room durante a gravação; distância e duração calculadas no aparelho; rota exibida só como traçado, sem mapa de fundo | Rolê de 1 h gravado em modo avião, sem perder pontos se o app for para segundo plano; pontos brutos apagados depois de salvar a rota simplificada, com teste |
 | 1.8 | Modo oficina | Escala de tipografia e espaçamento maior, alvos de toque grandes, uso com luva | Fluxo "registrar troca de óleo" feito em até 3 toques no modo oficina |
 | 1.9 | Exportar e importar | Backup em arquivo (JSON com as fotos) escolhido pelo usuário pelo seletor do sistema | Exportar num aparelho e importar em outro recupera todos os dados; exportação avisa que o arquivo contém dados pessoais e oferece a opção de sair sem rotas |
 | 1.10 | Flag de premium | Recursos premium atrás de uma flag local, desligada | Nenhum recurso premium visível com a flag desligada, com teste |
@@ -89,7 +95,7 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 - Pedir `ACCESS_FINE_LOCATION` e `ACCESS_COARSE_LOCATION` só quando o usuário tocar em "usar local" ou "gravar rota", nunca na abertura do app.
 - Não pedir `ACCESS_BACKGROUND_LOCATION`: a rota é gravada por um serviço em primeiro plano iniciado pelo usuário, o que evita a revisão extra da Play para localização em segundo plano.
 - Declarar `FOREGROUND_SERVICE` e `FOREGROUND_SERVICE_LOCATION` (exigido a partir do Android 14) e pedir `POST_NOTIFICATIONS` a partir do Android 13.
-- Intervalo de captura entre 2 e 5 segundos, com distância mínima entre pontos, para poupar bateria. Simplificar a rota ao salvar para não inflar o banco.
+- Intervalo de captura entre 2 e 5 segundos, com distância mínima entre pontos, para poupar bateria. Ao salvar, gravar só a rota simplificada e apagar os pontos brutos, para não inflar o banco nem expor o trajeto detalhado.
 - O local é opcional e aparece assim na política de privacidade e no formulário de Segurança dos dados.
 
 **Regras de dados offline**
@@ -122,8 +128,8 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 | # | Entrega | Critério de pronto |
 | --- | --- | --- |
 | 3.1 | Ficha da loja: ícone, 6 a 8 capturas com os temas e o modo oficina, descrição com "manutenção moto", "revisão moto", "consumo moto" e "troca de óleo" | Ficha publicada; cada frase da ficha aponta para a tela que a comprova; a ficha responde "e se eu perder o celular?" |
-| 3.2 | Divulgação em grupos de motociclistas | Registro de onde foi divulgado e quantas instalações vieram |
-| 3.3 | Métricas de produto medidas: instalações, retenção em 30 dias e registros por usuário ativo | Primeira leitura registrada com data |
+| 3.2 | Divulgação em grupos de motociclistas | Registro de onde foi divulgado e quantas instalações vieram; verba zero |
+| 3.3 | Métricas de produto medidas: instalações, ativação em 7 dias, retenção em 30 dias e registros por usuário ativo, só com a Play Console e o Crashlytics | Primeira leitura registrada com data |
 | 3.4 | Retro completa (PFA-01, etapa P3), com as lições enviadas ao framework-aprendido | Arquivo em `docs/retros/` e PR aberto no framework |
 | 3.5 | Tabela de concorrentes e frase de posicionamento | Tabela com link e data de cada leitura |
 
@@ -133,7 +139,7 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 
 ## Fases 4 a 6 — Marcos
 
-- **Fase 4, evolução na ativa:** planos por categoria para as motos mais vendidas, estatísticas, relatório em PDF e backup na nuvem, tudo atrás da flag e desligado. Nenhuma receita.
+- **Fase 4, evolução na ativa:** planos por categoria para as motos mais vendidas, importação de histórico de planilha, estatísticas, relatório em PDF e backup na nuvem, tudo atrás da flag e desligado. Nenhuma receita.
 - **Fase 5, empresa:** LTDA, contador, D-U-N-S, conta de organização na Play e transferência do app (ver o plano de produto).
 - **Fase 6, premium:** Play Billing (assinatura mensal, anual e vitalício), backup no Supabase e desconto de fundador, com o catálogo de segurança do Supabase conferido e toda compra verificada no servidor.
 
