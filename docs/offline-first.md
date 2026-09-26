@@ -88,7 +88,7 @@ O GPS recebe sinal dos satélites e não precisa de internet. O que depende de r
 | --- | --- | --- |
 | Posição | Funciona. A primeira leitura pode levar de 30 s a alguns minutos em céu aberto | Mostrar "procurando satélites" e deixar o usuário salvar sem esperar |
 | Nome do lugar (`Geocoder`) | Não funciona | Salvar só as coordenadas; um worker com rede preenche o nome depois. O usuário também pode digitar |
-| Mapa de fundo | Não funciona, a menos que a área já esteja em cache | Mostrar a rota como traçado sobre fundo neutro; o mapa aparece quando houver rede |
+| Mapa de fundo | Não funciona, a menos que a área já esteja em cache | Mostrar a rota como traçado sobre fundo neutro; o mapa aparece quando houver rede. Mapas offline por região ficam para depois do MVP |
 | Distância da rota | Funciona | Soma de `Location.distanceBetween` entre pontos válidos, calculada no aparelho |
 
 **Provedor de localização:** `FusedLocationProviderClient` (Google Play Services), com alta precisão. Em aparelhos sem Play Services, como alguns Huawei, o fallback é o `LocationManager` com `GPS_PROVIDER`. Os dois ficam atrás de uma interface `FonteDeLocalizacao`, o que também permite um provedor falso nos testes.
@@ -128,7 +128,7 @@ O backup do grátis é um arquivo que o usuário guarda onde quiser, sem nenhum 
 
 - **Exportar:** gera um `.zip` com os dados em JSON (com a versão do esquema) e as fotos. O usuário escolhe onde salvar pelo seletor do sistema (`ACTION_CREATE_DOCUMENT`), que pode ser o Drive, o WhatsApp ou um cartão SD. Não precisa de permissão.
 - **Importar:** lê o `.zip`, converte a partir da versão do esquema que o gerou e grava tudo numa transação. Se algo falhar, nada muda.
-- **Backup automático do Android:** o sistema pode guardar até 25 MB do app na conta Google do usuário, de graça. Recomendo ligar só para o arquivo exportado mais recente, e não para o banco aberto, que pode ser copiado no meio de uma escrita. Decisão em aberto, abaixo.
+- **Backup automático do Android:** o sistema pode guardar até 25 MB do app na conta Google do usuário, de graça. Fica ligado só para o arquivo exportado mais recente, e não para o banco aberto, que pode ser copiado no meio de uma escrita.
 
 ## Backup e sincronização no premium
 
@@ -182,11 +182,13 @@ Os passos seguem o roadmap do plano de produto. Cada um termina com um critério
 | 4. Evolução na ativa | `SyncWorker`, Supabase com RLS, envio de fotos, tudo atrás da flag `premium` | Dois aparelhos convergem para os mesmos dados após editar os dois offline |
 | 6. Premium | Liberar a flag para assinantes | Backup restaurado num aparelho novo com fotos e rotas |
 
-## Decisões em aberto
+## Decisões
 
-- **Mapa sem internet:** recomendo, no MVP, mostrar a rota como traçado sobre fundo neutro quando não houver rede, e mapa normal quando houver. Baixar mapas offline por região pode vir depois.
-- **Backup automático do Android:** recomendo ligar só para o arquivo exportado mais recente.
-- **Conflitos:** recomendo "vence a alteração mais recente" por registro, suficiente para um usuário com poucos aparelhos.
+Decididas por Pedro em 26/09/2026.
+
+- **Mapa sem internet:** no MVP, só o viável. Sem rede, a rota aparece como traçado sobre fundo neutro; com rede, sobre o mapa normal. Baixar mapas offline por região fica para depois do MVP.
+- **Backup automático do Android:** ligado só para o arquivo exportado mais recente, nunca para o banco aberto.
+- **Conflitos no premium:** vale a alteração mais recente de cada registro (`alteradoEm`), e uma exclusão vence uma edição mais antiga.
 
 ## Fontes
 
