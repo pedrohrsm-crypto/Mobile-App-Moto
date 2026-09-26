@@ -1,0 +1,38 @@
+package com.pedrohrsm.diariodebordo.__PACOTE__.data
+
+import kotlinx.coroutines.flow.Flow
+import java.time.Clock
+import javax.inject.Inject
+
+/** Único lugar que escreve em __TABELA__: preenche os campos de controle e confere as linhas afetadas. */
+class __ENTIDADE__Repositorio @Inject constructor(
+    private val dao: __ENTIDADE__Dao,
+    private val relogio: Clock,
+) {
+    fun observarAtivos(): Flow<List<__ENTIDADE__>> = dao.observarAtivos()
+
+    suspend fun criar(item: __ENTIDADE__): __ENTIDADE__ {
+        val agora = relogio.millis()
+        val novo = item.copy(
+            criadoEm = agora,
+            alteradoEm = agora,
+            fusoHorario = relogio.zone.id,
+            excluidoEm = null,
+            pendenteSync = false,
+        )
+        dao.inserir(novo)
+        return novo
+    }
+
+    suspend fun atualizar(item: __ENTIDADE__): __ENTIDADE__ {
+        val alterado = item.copy(alteradoEm = relogio.millis())
+        val linhas = dao.atualizar(alterado)
+        check(linhas == 1) { "__ENTIDADE__ ${item.id} não foi atualizado ($linhas linhas)" }
+        return alterado
+    }
+
+    suspend fun excluir(id: String) {
+        val linhas = dao.marcarExcluido(id, relogio.millis())
+        check(linhas == 1) { "__ENTIDADE__ $id não foi excluído ($linhas linhas)" }
+    }
+}

@@ -1,0 +1,54 @@
+package com.pedrohrsm.diariodebordo.__PACOTE__.data
+
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+
+class __ENTIDADE__RepositorioTest {
+
+    private val instante = Instant.parse("2026-10-01T12:00:00Z")
+    private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
+    private val dao = Fake__ENTIDADE__Dao()
+    private val repositorio = __ENTIDADE__Repositorio(dao, relogio)
+
+    // AJUSTAR: montar um item válido com os campos reais.
+    private fun exemplo() = __ENTIDADE__(descricao = "exemplo")
+
+    @Test
+    fun criarPreencheOsCamposDeControle() = runTest {
+        val criado = repositorio.criar(exemplo())
+        assertEquals(instante.toEpochMilli(), criado.criadoEm)
+        assertEquals(instante.toEpochMilli(), criado.alteradoEm)
+        assertEquals("America/Sao_Paulo", criado.fusoHorario)
+        assertNull(criado.excluidoEm)
+        assertFalse(criado.pendenteSync)
+        assertEquals(listOf(criado), repositorio.observarAtivos().first())
+    }
+
+    @Test
+    fun excluirEscondeDaListaSemApagarALinha() = runTest {
+        val criado = repositorio.criar(exemplo())
+        repositorio.excluir(criado.id)
+        assertTrue(repositorio.observarAtivos().first().isEmpty())
+        assertEquals(1, dao.linhas.value.size)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun atualizarItemInexistenteFalhaEmVezDeIgnorar() = runTest {
+        repositorio.atualizar(exemplo())
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun excluirDuasVezesFalha() = runTest {
+        val criado = repositorio.criar(exemplo())
+        repositorio.excluir(criado.id)
+        repositorio.excluir(criado.id)
+    }
+}

@@ -1,0 +1,25 @@
+package com.pedrohrsm.diariodebordo.__PACOTE__.data
+
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.Query
+import androidx.room.Update
+import kotlinx.coroutines.flow.Flow
+
+@Dao
+interface __ENTIDADE__Dao {
+    // AJUSTAR: ordenação da lista, se criadoEm não for a certa para esta funcionalidade.
+    @Query("SELECT * FROM __TABELA__ WHERE excluidoEm IS NULL ORDER BY criadoEm DESC")
+    fun observarAtivos(): Flow<List<__ENTIDADE__>>
+
+    @Insert
+    suspend fun inserir(item: __ENTIDADE__)
+
+    /** Retorna quantas linhas mudaram, para quem chama conferir (regra do framework). */
+    @Update
+    suspend fun atualizar(item: __ENTIDADE__): Int
+
+    /** Exclusão lógica, para a exclusão também sincronizar no premium. */
+    @Query("UPDATE __TABELA__ SET excluidoEm = :quando, alteradoEm = :quando WHERE id = :id AND excluidoEm IS NULL")
+    suspend fun marcarExcluido(id: String, quando: Long): Int
+}

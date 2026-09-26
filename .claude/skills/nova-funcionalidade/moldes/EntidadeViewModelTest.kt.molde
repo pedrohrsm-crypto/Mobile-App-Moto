@@ -1,0 +1,45 @@
+package com.pedrohrsm.diariodebordo.__PACOTE__.ui
+
+import com.pedrohrsm.diariodebordo.__PACOTE__.data.Fake__ENTIDADE__Dao
+import com.pedrohrsm.diariodebordo.__PACOTE__.data.__ENTIDADE__
+import com.pedrohrsm.diariodebordo.__PACOTE__.data.__ENTIDADE__Repositorio
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Before
+import org.junit.Test
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneId
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class __ENTIDADE__ViewModelTest {
+
+    private val relogio = Clock.fixed(Instant.parse("2026-10-01T12:00:00Z"), ZoneId.of("America/Sao_Paulo"))
+    private val repositorio = __ENTIDADE__Repositorio(Fake__ENTIDADE__Dao(), relogio)
+
+    @Before
+    fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
+
+    @After
+    fun tearDown() = Dispatchers.resetMain()
+
+    @Test
+    fun comecaCarregandoEMostraOsItensDoRepositorio() = runTest {
+        val viewModel = __ENTIDADE__ViewModel(repositorio)
+        assertEquals(__ENTIDADE__Estado.Carregando, viewModel.estado.value)
+
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.estado.collect {} }
+        assertEquals(__ENTIDADE__Estado.Pronto(emptyList()), viewModel.estado.value)
+
+        // AJUSTAR: montar um item válido com os campos reais.
+        val criado = repositorio.criar(__ENTIDADE__(descricao = "exemplo"))
+        assertEquals(__ENTIDADE__Estado.Pronto(listOf(criado)), viewModel.estado.value)
+    }
+}

@@ -1,0 +1,21 @@
+package com.pedrohrsm.diariodebordo.__PACOTE__.data
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import java.util.UUID
+
+/**
+ * Os campos de controle (id, criadoEm, alteradoEm, fusoHorario, excluidoEm, pendenteSync)
+ * seguem docs/offline-first.md e são preenchidos pelo [__ENTIDADE__Repositorio], nunca pela tela.
+ */
+@Entity(tableName = "__TABELA__")
+data class __ENTIDADE__(
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    // AJUSTAR: trocar pelos campos da funcionalidade (e atualizar a tela e os testes).
+    val descricao: String,
+    val criadoEm: Long = 0,
+    val alteradoEm: Long = 0,
+    val fusoHorario: String = "",
+    val excluidoEm: Long? = null,
+    val pendenteSync: Boolean = false,
+)
