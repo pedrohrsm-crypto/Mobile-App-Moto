@@ -30,7 +30,7 @@ Este documento diz **como** o app sai do papel: fases, entregas e o critério de
 
 **Calendário sugerido (estimativa de 26/09/2026):** com a fundação começando em outubro de 2026, M1 é outubro. O MVP fica pronto em dezembro, janeiro reúne as 4 semanas de uso na M800 e o teste fechado, e o lançamento grátis fica para o início de fevereiro de 2027. Automatizar a criação de telas, entidades e frentes pode adiantar essas datas. Elas são revistas na reunião mensal pela vazão medida, não pela vontade.
 
-As fases 0 a 3 estão detalhadas abaixo. As fases 4 a 6 dependem dos dados reais do lançamento e da data de saída, então ficam em nível de marco e são detalhadas na retro da fase 3.
+As fases 0 a 3 estão detalhadas abaixo. As entregas 0.11, 0.12, 2.6 e 3.5 e vários critérios vieram da revisão pelas áreas (UX/UI, CyberOps, Desempenho, Marketing e DevOps) em `docs/PLANEJAMENTO.md`, seção 8. Os conflitos da seção 6 desse documento ainda aguardam decisão e ficam fora deste plano até lá. As fases 4 a 6 dependem dos dados reais do lançamento e da data de saída, então ficam em nível de marco e são detalhadas na retro da fase 3.
 
 ---
 
@@ -45,11 +45,13 @@ Objetivo: deixar o projeto de pé com os portões automáticos rodando desde o p
 | 0.3 | Labels do GitHub (`frente`, `erro`, `licao-candidata`, `guarda`, `migration`, `risco`, `decisao`, `urgente`, `data-fixa`, `estrutural`, `bloqueado`) e quadro no GitHub Projects | Labels e quadro visíveis no repositório |
 | 0.4 | `docs/GESTAO.md` em escala S: tese do produto, colunas com WIP, cadência semanal e mensal | Arquivo commitado, com data |
 | 0.5 | Projeto Gradle (Kotlin DSL e version catalog), Compose + Material 3, Hilt, Room, WorkManager, minSdk 26 e targetSdk 36 | `./gradlew assembleDebug` passa na bancada e no CI |
-| 0.6 | Os 3 temas do Figma (Oficina, Estrada e Cromo) como `ColorScheme`, e o modo oficina como escala de tipografia e espaçamento | Tema troca em tempo real; teste garante que cada token existe nos 3 temas |
-| 0.7 | Banco Room v1 (Moto, Registro, ItemDoPlano, Rota, PontoDeRota) com `exportSchema = true` e o esquema versionado no repositório | JSON do esquema v1 commitado e teste de abertura do banco passando |
-| 0.8 | GitHub Actions com os portões: ktlint ou detekt, Android Lint, testes unitários, build do APK e do AAB | Link de um run verde |
+| 0.6 | Os 3 temas do Figma (Oficina, Estrada e Cromo) como `ColorScheme`, e o modo oficina como escala de tipografia e espaçamento | Tema troca em tempo real; teste garante que cada token existe nos 3 temas; guarda que reprova cor crua fora do tema |
+| 0.7 | Banco Room v1 (Moto, Registro, ItemDoPlano, Rota, PontoDeRota) com `exportSchema = true` e o esquema versionado no repositório | JSON do esquema v1 commitado e teste de abertura do banco passando; índices nas consultas principais e dados de exemplo para cada estado de usuário (novo, com uma moto, com histórico longo) |
+| 0.8 | GitHub Actions com os portões: ktlint ou detekt, Android Lint, testes unitários, build do APK e do AAB | Link de um run verde; Dependabot, `concurrency` para cancelar runs antigos, cache do Gradle e guarda de idioma nos textos |
 | 0.9 | Proteção de branch na `main`: PR obrigatório, checks obrigatórios, sem push direto | Tentativa de push direto recusada |
 | 0.10 | Conta pessoal na Play Console (US$ 25) e verificação de identidade | Conta aprovada |
+| 0.11 | Edge-to-edge com insets em toda tela e `imePadding()` nos formulários | Captura com o teclado aberto em 360 dp sem nenhum campo coberto |
+| 0.12 | Verificação do manifesto do build de release | Um componente exportado plantado deixa o teste vermelho |
 
 **Critério de pronto:** CI verde na `main` protegida, app abrindo num emulador API 26 e num API 36, tema trocando em tempo real e Pedro aprovando o `CLAUDE.md` preenchido.
 
@@ -59,7 +61,7 @@ Objetivo: deixar o projeto de pé com os portões automáticos rodando desde o p
 2. Testes unitários do domínio, cada teste novo visto falhar antes de passar (lição 6).
 3. Testes de migration do Room para toda mudança de esquema.
 4. Build do AAB.
-5. Portão visual: capturas nos 3 temas, no modo oficina e com fonte em 140%, em tela de 360 dp.
+5. Portão visual: capturas nos 3 temas, no modo oficina, com fonte em 140% e em 200%, com o TalkBack ligado e com o teclado aberto, em tela de 360 dp.
 
 ---
 
@@ -69,16 +71,18 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 
 | # | Frente | Entregas | Critério de pronto |
 | --- | --- | --- | --- |
-| 1.1 | Garagem e hodômetro | Cadastro de 1 moto (grátis), atualização do hodômetro com histórico, validação de km que não pode diminuir | Hodômetro nunca aceita valor menor que o último, com teste |
-| 1.2 | Diário | Registros de manutenção, abastecimento, ocorrência, rolê e nota; até 3 fotos por registro, comprimidas, no armazenamento interno | Registro criado, editado e apagado em modo avião; fotos sobrevivem a reiniciar o app |
-| 1.3 | Plano de manutenção | Planos-base por categoria (custom, street, trail, scooter) com intervalos por km e por tempo, ajustáveis pelo usuário; especificações marcadas como "dado do usuário" | Mudar um intervalo recalcula a próxima revisão, com teste do cálculo |
-| 1.4 | Lembretes | WorkManager para os lembretes por tempo; recálculo dos lembretes por km a cada atualização do hodômetro; notificações | Lembrete dispara com o app fechado e após reiniciar o aparelho |
+| 1.1 | Garagem e hodômetro | Cadastro de 1 moto (grátis), atualização do hodômetro com histórico, validação de km que não pode diminuir | Hodômetro nunca aceita valor menor que o último, com teste; destinos de navegação numa lista única e um formatador único de número e unidade |
+| 1.2 | Diário | Registros de manutenção, abastecimento, ocorrência, rolê e nota; até 3 fotos por registro, comprimidas, no armazenamento interno | Registro criado, editado e apagado em modo avião; fotos sobrevivem a reiniciar o app; EXIF de GPS removido das fotos; formatador único de número e unidade |
+| 1.3 | Plano de manutenção | Planos-base por categoria (custom, street, trail, scooter) com intervalos por km e por tempo, ajustáveis pelo usuário; especificações marcadas como "dado do usuário" | Mudar um intervalo recalcula a próxima revisão, com teste do cálculo; formatador único de número e unidade |
+| 1.4 | Lembretes | WorkManager para os lembretes por tempo; recálculo dos lembretes por km a cada atualização do hodômetro; notificações | Lembrete dispara com o app fechado e após reiniciar o aparelho; tocar na notificação abre a moto no item vencido; recálculo feito em lote |
 | 1.5 | Ocorrência gera pendência | Uma ocorrência (queda, barulho, vazamento) cria itens de inspeção no plano | Pendência aparece no plano e some quando resolvida |
 | 1.6 | GPS: local do registro | Botão "usar local atual" no registro, com permissão pedida só nesse momento; funciona sem internet (o GPS não precisa de rede) | Local gravado em modo avião; negar a permissão não quebra o registro |
 | 1.7 | GPS: rota do rolê | Gravação iniciada pelo usuário num serviço em primeiro plano do tipo `location`, com notificação fixa; pontos gravados no Room durante a gravação; distância e duração calculadas no aparelho; rota exibida só como traçado, sem mapa de fundo | Rolê de 1 h gravado em modo avião, sem perder pontos se o app for para segundo plano |
 | 1.8 | Modo oficina | Escala de tipografia e espaçamento maior, alvos de toque grandes, uso com luva | Fluxo "registrar troca de óleo" feito em até 3 toques no modo oficina |
-| 1.9 | Exportar e importar | Backup em arquivo (JSON com as fotos) escolhido pelo usuário pelo seletor do sistema | Exportar num aparelho e importar em outro recupera todos os dados |
+| 1.9 | Exportar e importar | Backup em arquivo (JSON com as fotos) escolhido pelo usuário pelo seletor do sistema | Exportar num aparelho e importar em outro recupera todos os dados; exportação avisa que o arquivo contém dados pessoais e oferece a opção de sair sem rotas |
 | 1.10 | Flag de premium | Recursos premium atrás de uma flag local, desligada | Nenhum recurso premium visível com a flag desligada, com teste |
+
+**Toda frente da fase 1** cobre os três estados de tela (carregando, vazio e com dados) e o caso de quem ainda não cadastrou nenhuma moto.
 
 **Regras de GPS e permissões**
 
@@ -102,11 +106,12 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 
 | # | Entrega | Critério de pronto |
 | --- | --- | --- |
-| 2.1 | Firebase Crashlytics ligado, sem dados pessoais nos relatórios | Falha plantada aparece no painel e depois é removida |
+| 2.1 | Firebase Crashlytics ligado, sem dados pessoais nos relatórios | Falha plantada aparece no painel e depois é removida; Crashlytics desligado em builds de debug e no CI |
 | 2.2 | Política de privacidade publicada (LGPD) e formulário de Segurança dos dados preenchido, citando fotos, hodômetro e localização opcional | Link da política na ficha e formulário aprovado |
 | 2.3 | 15 a 20 testadores do moto clube inscritos na faixa de teste fechado | 12 ou mais testadores ativos por 14 dias seguidos |
 | 2.4 | Correções dos achados, cada um como issue `erro` com causa raiz | Todo erro fechado com causa raiz; erro repetido ganha guarda (regra da segunda ocorrência) |
 | 2.5 | Teste em aparelhos reais: pelo menos um Android 8 e um Android 14 ou mais recente | Fluxos de GPS e lembretes conferidos nos dois |
+| 2.6 | Baseline de desempenho no aparelho Android 8 | Tabela com data, versão e aparelho em `docs/desempenho/` |
 
 **Critério de pronto:** acesso à produção liberado pela Play e ≥ 99% de sessões sem falha no Crashlytics.
 
@@ -116,10 +121,11 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 
 | # | Entrega | Critério de pronto |
 | --- | --- | --- |
-| 3.1 | Ficha da loja: ícone, 6 a 8 capturas com os temas e o modo oficina, descrição com "manutenção moto", "revisão moto", "consumo moto" e "troca de óleo" | Ficha publicada |
+| 3.1 | Ficha da loja: ícone, 6 a 8 capturas com os temas e o modo oficina, descrição com "manutenção moto", "revisão moto", "consumo moto" e "troca de óleo" | Ficha publicada; cada frase da ficha aponta para a tela que a comprova; a ficha responde "e se eu perder o celular?" |
 | 3.2 | Divulgação em grupos de motociclistas | Registro de onde foi divulgado e quantas instalações vieram |
 | 3.3 | Métricas de produto medidas: instalações, retenção em 30 dias e registros por usuário ativo | Primeira leitura registrada com data |
 | 3.4 | Retro completa (PFA-01, etapa P3), com as lições enviadas ao framework-aprendido | Arquivo em `docs/retros/` e PR aberto no framework |
+| 3.5 | Tabela de concorrentes e frase de posicionamento | Tabela com link e data de cada leitura |
 
 **Critério de pronto:** 500 instalações e 20% de retenção em 30 dias, três meses após o lançamento. Se a retenção ficar abaixo disso, a fase 4 começa por entender o motivo com usuários reais, antes de qualquer recurso premium.
 
@@ -129,7 +135,7 @@ Objetivo: o gratuito resolve sozinho o problema de lembrar e registrar a manuten
 
 - **Fase 4, evolução na ativa:** planos por categoria para as motos mais vendidas, estatísticas, relatório em PDF e backup na nuvem, tudo atrás da flag e desligado. Nenhuma receita.
 - **Fase 5, empresa:** LTDA, contador, D-U-N-S, conta de organização na Play e transferência do app (ver o plano de produto).
-- **Fase 6, premium:** Play Billing (assinatura mensal, anual e vitalício), backup no Supabase e desconto de fundador.
+- **Fase 6, premium:** Play Billing (assinatura mensal, anual e vitalício), backup no Supabase e desconto de fundador, com o catálogo de segurança do Supabase conferido e toda compra verificada no servidor.
 
 ---
 
