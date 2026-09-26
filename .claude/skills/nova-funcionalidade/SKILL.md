@@ -22,16 +22,17 @@ Dinheiro em centavos (`Long`), distância em km (`Int`), instantes em milissegun
 
 ## 2. Gerar os arquivos
 
+O pacote `garagem` é a referência viva dos moldes: se um mudar, o outro muda junto.
+
 ```bash
 .claude/skills/nova-funcionalidade/gerar.sh <pacote> <Entidade> <tabela>
 ```
 
-O script para sem gerar nada se o pacote ou a tabela já existirem. Ele cria:
+O script para sem gerar nada se o pacote ou a tabela já existirem, ou se faltar `core/di/TempoModule.kt` (fornece o `Clock`). Ele cria:
 
 - `data/`: entidade com os campos de controle de `docs/offline-first.md`, DAO (lista só ativos, exclusão lógica, escritas devolvem linhas), repositório (único que escreve; preenche `criadoEm`, `alteradoEm`, `fusoHorario` pelo `Clock` injetado e confere as linhas)
 - `ui/`: estado (`Carregando` / `Pronto`), ViewModel, tela Compose com Route + Screen + Preview
 - testes na JVM: DAO falso em memória, testes do repositório e do ViewModel
-- `core/di/TempoModule.kt` (só na primeira vez), que fornece o `Clock`
 
 ## 3. Ligar nos arquivos compartilhados
 

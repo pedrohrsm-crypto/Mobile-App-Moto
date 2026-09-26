@@ -24,6 +24,7 @@ TESTE="$RAIZ/app/src/test/java/$BASE"
 for d in "$MAIN/$PACOTE" "$TESTE/$PACOTE"; do
   [ ! -e "$d" ] || { echo "já existe: ${d#$RAIZ/} (nada foi gerado)" >&2; exit 1; }
 done
+[ -e "$MAIN/core/di/TempoModule.kt" ] || { echo "falta core/di/TempoModule.kt (fornece o Clock dos repositórios)" >&2; exit 1; }
 grep -rqs "tableName = \"$TABELA\"" "$MAIN" && { echo "tabela $TABELA já existe (nada foi gerado)" >&2; exit 1; }
 
 renderizar() { # molde destino
@@ -43,9 +44,6 @@ renderizar FakeEntidadeDao.kt.molde        "$TESTE/$PACOTE/data/Fake${ENTIDADE}D
 renderizar EntidadeRepositorioTest.kt.molde "$TESTE/$PACOTE/data/${ENTIDADE}RepositorioTest.kt"
 renderizar EntidadeViewModelTest.kt.molde  "$TESTE/$PACOTE/ui/${ENTIDADE}ViewModelTest.kt"
 
-if [ ! -e "$MAIN/core/di/TempoModule.kt" ]; then
-  renderizar TempoModule.kt.molde "$MAIN/core/di/TempoModule.kt"
-fi
 
 cat <<FIM
 
