@@ -28,6 +28,8 @@ Este documento diz **como** o app sai do papel: fases, entregas e o critério de
 | 5. Empresa | Saída + 1 a 2 meses | LTDA, D-U-N-S, conta de organização | App transferido e perfil de pagamentos ativo |
 | 6. Premium | Após a fase 5 | Assinatura e vitalício | 2% a 3% dos usuários ativos pagando |
 
+**Calendário sugerido (estimativa de 26/09/2026):** com a fundação começando em outubro de 2026, M1 é outubro. O MVP fica pronto em dezembro, janeiro reúne as 4 semanas de uso na M800 e o teste fechado, e o lançamento grátis fica para o início de fevereiro de 2027. Automatizar a criação de telas, entidades e frentes pode adiantar essas datas. Elas são revistas na reunião mensal pela vazão medida, não pela vontade.
+
 As fases 0 a 3 estão detalhadas abaixo. As fases 4 a 6 dependem dos dados reais do lançamento e da data de saída, então ficam em nível de marco e são detalhadas na retro da fase 3.
 
 ---
