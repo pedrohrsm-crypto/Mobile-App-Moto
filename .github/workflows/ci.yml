@@ -15,8 +15,14 @@ permissions:
 jobs:
   build:
     name: Lint, build e testes
-    runs-on: ubuntu-latest
+    # Runner próprio: os minutos do Actions hospedado estão bloqueados na conta.
+    # Precisa estar registrado neste repositório (Settings > Actions > Runners).
+    runs-on: self-hosted
     timeout-minutes: 30
+    defaults:
+      run:
+        # Git Bash no Windows, bash no Linux/macOS: o mesmo ./gradlew nos dois.
+        shell: bash
     steps:
       - uses: actions/checkout@v4
 
@@ -27,7 +33,7 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
-      # O runner já traz o Android SDK; aqui só garantimos a plataforma do compileSdk.
+      # Instala (ou reaproveita) o Android SDK e a plataforma do compileSdk.
       - uses: android-actions/setup-android@v3
         with:
           packages: "platforms;android-37 build-tools;36.0.0"
