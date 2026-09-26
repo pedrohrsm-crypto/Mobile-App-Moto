@@ -41,7 +41,7 @@
   - Chave de upload da Play fora do git, nos segredos do GitHub, com Play App Signing ligado; release com R8 (§2, "Segredo"; §3, "separar o que a plataforma faz do que é seu").
   - Fase 6: RLS em toda tabela, views com `security_invoker`, nada executável pelo papel anônimo, compra da Play verificada no servidor com idempotência por token, MFA no admin e restauração do backup testada (§2 e §5).
 - **Arrisca** (→ issue `risco`): exposição da localização de casa pelas rotas, no arquivo exportado ou no Crashlytics.
-- **Decidir** (→ issue `decisao`): criptografar o banco local (ver seção 6).
+- **Decidido** (26/09/2026): banco local sem criptografia no MVP, reavaliar no premium (seção 6).
 - **Mede:** placar PASS/FALHA da verificação do manifesto, com tudo PASS em todo release.
 - **Portão** (→ `DIA_ZERO.md` ou CI):
   - Verificação reexecutável do manifesto final do release: nenhum componente exportado sem motivo, só as permissões esperadas, `usesCleartextTraffic` desligado, regras de backup iguais à decisão do offline-first, `debuggable` desligado. Vista falhar com um componente exportado plantado (§1, "a verificação reexecutável é o coração").
@@ -69,7 +69,7 @@
   - Diário paginado (Paging 3) em ordem decrescente, e rota simplificada ao salvar (§4, padrão 7).
   - Lembretes recalculados em lote, numa única tarefa do WorkManager por atualização de hodômetro (§4, padrão 12).
 - **Arrisca** (→ issue `risco`): pontos brutos de rota crescendo sem limite (§4, padrão 13) e bateria alta na gravação, que vira nota ruim na loja.
-- **Decidir** (→ issue `decisao`): o que fazer com os pontos brutos depois da simplificação (ver seção 6).
+- **Decidido** (26/09/2026): pontos brutos apagados ao salvar a rota simplificada (seção 6).
 - **Mede:** baseline no aparelho Android 8 mais fraco disponível, antes do lançamento: abertura a frio, tamanho do AAB e do app instalado, quadros perdidos ao rolar o diário, bateria e bytes por hora de rolê. Depois, a mesma medição a cada versão, sem comentar quando nada muda (§3, fases 1 e 6; §7, linha "App mobile nativo").
 - **Portão** (→ `DIA_ZERO.md` ou CI): teste de migração e de abertura do banco com os índices; tamanho do AAB com teto que só sobe por decisão.
 - **Fontes lidas:** `Desempenho/PADRAO_AGENTE_DESEMPENHO.md` §1 a §7.
@@ -83,16 +83,16 @@
   - Divulgação em grupos e moto clubes feita à mão, com permissão do administrador, sem mensagem automática (`LICOES.md` M-11).
   - Preço do premium comparado com o que o motociclista já gasta, como uma revisão ou uma troca de óleo perdida (`FUNCIONOU.md` F-04).
 - **Arrisca** (→ issue `risco`): o gargalo ser ativação (instala e não cadastra a moto), e não alcance (`LICOES.md` M-06).
-- **Decidir** (→ issue `decisao`): verba de divulgação e importação de planilha (ver seção 6).
+- **Decidido** (26/09/2026): verba zero no lançamento; importação de planilha na fase 4; métricas só por Play Console e Crashlytics (seção 6).
 - **Mede:** ativação em 7 dias, definida como "moto cadastrada, hodômetro atual e um lembrete agendado", ao lado de instalações, retenção em 30 dias e registros por usuário ativo, que já estão no plano de produto. Os builds de debug e de CI não enviam nada a nenhuma métrica (`LICOES.md` M-04). O critério de sucesso de valor segue o do plano de produto: 20% de retenção em 30 dias.
 - **Portão** (→ `DIA_ZERO.md` ou CI): guarda que procura formas europeias ("guardar", "registado", "ficheiro") em `strings.xml` (`LICOES.md` M-15).
 - **Fontes lidas:** `Marketing/README.md`, `PADRAO.md`, `LICOES.md`, `FUNCIONOU.md` e `UX-UI.md`.
 
 ## 6. Conflitos entre áreas
 
-Cada linha traz a recomendação. Viram issues `decisao` quando o Pedro aprovar este plano.
+Decididas pelo Pedro em 26/09/2026, que aceitou as 5 recomendações. Cada linha vira uma issue `decisao` já fechada, para registro.
 
-| Área A quer | Área B exige | Recomendação |
+| Área A quer | Área B exige | Decisão |
 |---|---|---|
 | Segurança: criptografar o banco local | Desempenho e exportação: banco rápido e arquivo legível | Não criptografar no MVP e reavaliar no premium, porque o Android já criptografa o armazenamento do app e o backup automático do banco está desligado |
 | Marketing: medir ativação e origem das instalações | Segurança: nenhum rastreamento além do necessário, e a política de privacidade promete isso | Só Play Console e Crashlytics sem dado pessoal; nada de analytics de terceiros no grátis |
@@ -102,7 +102,7 @@ Cada linha traz a recomendação. Viram issues `decisao` quando o Pedro aprovar 
 
 ## 7. O que sai deste plano
 - [ ] Riscos abertos como issues `risco` (passo 1.5): pior condição de UI, localização exposta, DevOps sem padrão, runner parado, rota crescendo, ativação
-- [ ] Decisões abertas como issues `decisao` (passo 1.5): as 5 linhas da seção 6
+- [x] Decisões da seção 6 tomadas pelo Pedro em 26/09/2026 (registrar como issues `decisao` no passo 1.5)
 - [ ] Portões copiados para o `DIA_ZERO.md` (passo 1.4)
 - [ ] Critério de sucesso de valor no `GESTAO.md` §1
 
