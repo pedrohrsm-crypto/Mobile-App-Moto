@@ -1,6 +1,6 @@
 # Diário de Bordo (Mobile App Moto) — instruções para sessões de IA
 
-Framework: v1.4 (https://github.com/pedrohrsm-crypto/framework-aprendido)
+Framework: v1.6 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 
 ## Idioma
 - Português do Brasil em código, commits, documentos e interface. Nunca variantes europeias ("registrado", não "registado"; "arquivo", não "ficheiro").
