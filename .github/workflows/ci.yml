@@ -16,8 +16,8 @@ jobs:
   build:
     name: Lint, build e testes
     # Runner próprio: os minutos do Actions hospedado estão bloqueados na conta.
-    # Precisa estar registrado neste repositório (Settings > Actions > Runners).
-    runs-on: self-hosted
+    # Runner dedicado a este app, com o rótulo "moto", para não ocupar o runner de outros projetos.
+    runs-on: [self-hosted, moto]
     timeout-minutes: 30
     defaults:
       run:
