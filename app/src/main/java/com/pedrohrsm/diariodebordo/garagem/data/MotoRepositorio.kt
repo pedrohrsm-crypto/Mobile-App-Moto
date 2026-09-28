@@ -1,15 +1,14 @@
 package com.pedrohrsm.diariodebordo.garagem.data
 
-import kotlinx.coroutines.flow.Flow
 import java.time.Clock
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 
 /** Único lugar que escreve em motos: preenche os campos de controle e confere as linhas afetadas. */
-class MotoRepositorio @Inject constructor(
-    private val dao: MotoDao,
-    private val relogio: Clock,
-) {
+class MotoRepositorio @Inject constructor(private val dao: MotoDao, private val relogio: Clock) {
     fun observarAtivos(): Flow<List<Moto>> = dao.observarAtivos()
+
+    fun observar(id: String): Flow<Moto?> = dao.observar(id)
 
     suspend fun criar(item: Moto): Moto {
         val agora = relogio.millis()

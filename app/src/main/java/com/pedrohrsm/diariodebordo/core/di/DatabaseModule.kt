@@ -3,6 +3,9 @@ package com.pedrohrsm.diariodebordo.core.di
 import android.content.Context
 import androidx.room.Room
 import com.pedrohrsm.diariodebordo.core.database.DiarioDatabase
+import com.pedrohrsm.diariodebordo.core.database.Transacao
+import com.pedrohrsm.diariodebordo.core.database.TransacaoRoom
+import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
 import dagger.Module
 import dagger.Provides
@@ -22,4 +25,10 @@ object DatabaseModule {
 
     @Provides
     fun provideMotoDao(database: DiarioDatabase): MotoDao = database.motoDao()
+
+    @Provides
+    fun provideLeituraHodometroDao(database: DiarioDatabase): LeituraHodometroDao = database.leituraHodometroDao()
+
+    @Provides
+    fun provideTransacao(database: DiarioDatabase): Transacao = TransacaoRoom(database)
 }

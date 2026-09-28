@@ -5,4 +5,47 @@
     <string name="garagem_vazio">Nenhuma moto cadastrada ainda.</string>
     <string name="garagem_marca_modelo">%1$s %2$s</string>
     <string name="canal_lembretes_nome">Lembretes de manutenção</string>
+    <!-- Comuns -->
+    <string name="salvar">Salvar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="editar">Editar</string>
+    <string name="excluir">Excluir</string>
+    <string name="campo_obrigatorio">Preencha este campo.</string>
+    <string name="erro_ao_carregar">Não foi possível carregar os dados.</string>
+    <string name="erro_ao_salvar">Não foi possível salvar. %1$s</string>
+    <string name="km_invalido">Digite o km só com números, por exemplo 12.345.</string>
+    <string name="sem_moto_mensagem">Cadastre sua moto para começar o diário.</string>
+
+    <!-- Garagem e hodômetro -->
+    <string name="garagem_cadastrar">Cadastrar moto</string>
+    <string name="garagem_adicionar">Adicionar moto</string>
+    <string name="garagem_limite_gratis">O plano grátis guarda 1 moto. Mais motos virão no premium.</string>
+    <string name="moto_titulo">Moto</string>
+    <string name="moto_form_nova">Nova moto</string>
+    <string name="moto_form_editar">Editar moto</string>
+    <string name="moto_apelido">Apelido</string>
+    <string name="moto_marca">Marca</string>
+    <string name="moto_modelo">Modelo</string>
+    <string name="moto_ano">Ano (opcional)</string>
+    <string name="moto_ano_invalido">Digite um ano entre 1900 e o ano que vem.</string>
+    <string name="moto_km_inicial">Hodômetro hoje (km)</string>
+    <string name="moto_categoria">Categoria</string>
+    <string name="moto_categoria_ajuda">A categoria sugere um plano de manutenção inicial. Os intervalos são seus e podem ser ajustados.</string>
+    <string name="moto_nao_encontrada">Esta moto não existe mais.</string>
+    <string name="categoria_custom">Custom</string>
+    <string name="categoria_street">Street</string>
+    <string name="categoria_trail">Trail</string>
+    <string name="categoria_scooter">Scooter</string>
+    <string name="hodometro_atualizar">Atualizar hodômetro</string>
+    <string name="hodometro_km_atual">Km no painel</string>
+    <string name="hodometro_historico">Histórico do hodômetro</string>
+    <string name="hodometro_sem_leitura">Hodômetro sem leitura</string>
+    <string name="hodometro_menor">O hodômetro não volta: a última leitura foi %1$s.</string>
+    <string name="hodometro_igual">Esse km já está registrado (%1$s).</string>
+
+    <!-- Abas -->
+    <string name="diario_titulo">Diário</string>
+    <string name="plano_titulo">Plano</string>
+    <string name="rotas_titulo">Rotas</string>
+    <string name="ajustes_titulo">Ajustes</string>
 </resources>
