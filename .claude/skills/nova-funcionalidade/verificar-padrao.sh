@@ -10,6 +10,8 @@ MAIN="$RAIZ/app/src/main/java/$BASE"
 TESTE="$RAIZ/app/src/test/java/$BASE"
 DB="$MAIN/core/database/DiarioDatabase.kt"
 DI="$MAIN/core/di/DatabaseModule.kt"
+COPIA="$MAIN/backup/dominio/CopiaDeSeguranca.kt"
+BKDAO="$MAIN/backup/data/BackupDao.kt"
 problemas=0
 falha() { echo "  ✗ $*"; problemas=$((problemas + 1)); }
 
@@ -28,16 +30,46 @@ for p in "${pacotes[@]}"; do
   grep -rn "AJUSTAR:" "$dir" "$TESTE/$p" 2>/dev/null | sed "s#$RAIZ/##" | while read -r l; do echo "  ✗ marcador pendente: $l"; done
   n=$(grep -rn "AJUSTAR:" "$dir" "$TESTE/$p" 2>/dev/null | wc -l); problemas=$((problemas + n))
 
-  # 2. Toda entidade tem os campos de controle de docs/offline-first.md.
-  for f in $(grep -rl "^@Entity" "$dir" --include=*.kt); do
-    classe=$(grep -oE "data class [A-Za-z0-9]+" "$f" | head -1 | awk '{print $3}')
-    grep -qE "@PrimaryKey val id: String" "$f" || falha "$classe: id deve ser UUID em texto (@PrimaryKey val id: String)"
-    for campo in "criadoEm: Long" "alteradoEm: Long" "fusoHorario: String" "excluidoEm: Long?" "pendenteSync: Boolean"; do
-      grep -qF "val $campo" "$f" || falha "$classe: falta o campo de controle 'val $campo'"
-    done
-    # 3. Toda entidade está registrada no banco.
-    grep -qE "entities = \[[^]]*\b$classe::class" "$DB" || falha "$classe: não está em entities de DiarioDatabase"
-  done
+  # 2 e 3. Entidades: campos de controle, registro no banco e ida ao backup.
+  #   Entidade que não vai no backup (ex.: ponto bruto de rota) diz isso no KDoc com
+  #   "fora do backup" ou "não vai no arquivo exportado".
+  saida=$(python3 - "$dir" "$DB" "$COPIA" "$BKDAO" <<'PY'
+import os, re, sys
+pasta, db, copia, bkdao = sys.argv[1:5]
+ler = lambda c: open(c, encoding="utf-8").read() if os.path.exists(c) else None
+m = re.search(r"entities\s*=\s*\[(.*?)\]", ler(db) or "", re.S)
+no_banco = set(re.findall(r"(\w+)::class", m.group(1))) if m else set()
+txt_copia, txt_bkdao = ler(copia), ler(bkdao)
+controle = ["criadoEm: Long", "alteradoEm: Long", "fusoHorario: String", "excluidoEm: Long?", "pendenteSync: Boolean"]
+for raiz, _, arquivos in os.walk(pasta):
+    for a in sorted(arquivos):
+        if not a.endswith(".kt"):
+            continue
+        texto = ler(os.path.join(raiz, a))
+        for e in re.finditer(r"(/\*\*(?:(?!\*/).)*\*/\s*)?((?:@\w+(?:\([^)]*\))?\s*)*)@Entity\b.*?data class (\w+)\((.*?)\n\)", texto, re.S):
+            doc, anot, classe, corpo = e.group(1) or "", e.group(2), e.group(3), e.group(4)
+            if not re.search(r"@PrimaryKey val id: String", corpo):
+                print(f"{classe}: id deve ser UUID em texto (@PrimaryKey val id: String)")
+            for c in controle:
+                if f"val {c}" not in corpo:
+                    print(f"{classe}: falta o campo de controle 'val {c}'")
+            if classe not in no_banco:
+                print(f"{classe}: não está em entities de DiarioDatabase")
+            if re.search(r"fora do backup|n[ãa]o vai no arquivo exportado|nem vai no arquivo exportado", doc, re.I):
+                continue
+            texto_antes = texto[max(0, e.start() - 200):e.start()] + anot
+            if "@Serializable" not in (anot + doc + texto_antes).split("*/")[-1]:
+                print(f"{classe}: falta @Serializable (vai no backup)")
+            if txt_copia is not None and not re.search(rf"List<{classe}>", txt_copia):
+                print(f"{classe}: falta a lista em CopiaDeSeguranca")
+            if txt_bkdao is not None and not re.search(rf"gravar\w*\(itens: List<{classe}>\)", txt_bkdao):
+                print(f"{classe}: falta leitura e gravação em BackupDao")
+PY
+)
+  if [ -n "$saida" ]; then
+    echo "$saida" | sed 's/^/  ✗ /'
+    problemas=$((problemas + $(echo "$saida" | wc -l)))
+  fi
 
   # 4. Escritas devolvem as linhas afetadas; todo DAO é fornecido pelo Hilt.
   for f in $(grep -rl "^@Dao" "$dir" --include=*.kt); do

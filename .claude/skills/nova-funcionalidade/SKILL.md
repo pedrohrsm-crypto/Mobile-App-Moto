@@ -36,7 +36,13 @@ O script para sem gerar nada se o pacote ou a tabela já existirem, ou se faltar
 
 ## 3. Ligar nos arquivos compartilhados
 
-- `core/database/DiarioDatabase.kt`: a entidade em `entities`, `abstract fun <pacote>Dao()`, `version` + 1. Tabela nova: `autoMigrations = [AutoMigration(from = N, to = N + 1)]`. Mudança em tabela existente: `Migration` escrita à mão e teste de migração.
+- `core/database/DiarioDatabase.kt`: a entidade em `entities` e `abstract fun <pacote>Dao()`. Enquanto nenhuma versão do app tiver sido publicada, tudo fica na versão 1 (veja o comentário do arquivo). Depois da primeira publicação: `version` + 1; tabela nova com `autoMigrations = [AutoMigration(from = N, to = N + 1)]`, mudança em tabela existente com `Migration` escrita à mão e teste de migração.
+- Backup (a entidade já sai com `@Serializable`):
+  - `backup/dominio/CopiaDeSeguranca.kt`: `val <plural>: List<Entidade> = emptyList()`. O JSON ignora chaves desconhecidas, então lista nova com valor padrão não sobe o `FORMATO_ATUAL`.
+  - `backup/data/BackupDao.kt`: `@Query("SELECT * FROM <tabela>") suspend fun <plural>()` e `@Upsert suspend fun gravar<Plural>(itens: List<Entidade>)`.
+  - `backup/data/BackupRepositorio.kt`: exportar só os ativos (`excluidoEm == null`) e, na importação, `mesclar(dao.<plural>(), copia.<plural>, { it.id }, { it.alteradoEm })`.
+  - `FakeBackupDao` nos testes e um caso no `BackupRepositorioTest`.
+  - Entidade que não deve sair do aparelho diz "fora do backup" no KDoc e pula estes passos.
 - `core/di/DatabaseModule.kt`: `@Provides fun provide<Entidade>Dao(database: DiarioDatabase) = database.<pacote>Dao()`.
 - `navegacao/DiarioNavHost.kt`: constante em `Rotas` e `composable(Rotas.X) { <Entidade>Route() }`.
 - `res/values/strings.xml`: `<pacote>_titulo` e `<pacote>_vazio`, e os textos novos da tela. Nenhum texto fixo no Kotlin.
@@ -49,6 +55,8 @@ Troque cada comentário `AJUSTAR:` e apague o comentário:
 - ordenação da consulta no DAO, se `criadoEm` não servir;
 - o que o item da lista mostra na tela;
 - o item de exemplo nos dois testes.
+
+Espaçamentos e alvos de toque vêm de `LocalDimensoes.current` (o modo oficina aumenta tudo), nunca de `dp` fixo na tela.
 
 Regra de negócio (cálculo de consumo, vencimento etc.) vai numa função pura em `<pacote>/dominio/`, com teste próprio, nunca na tela nem no DAO.
 
@@ -67,7 +75,7 @@ ktlint "**/*.kt" "**/*.kts" "!**/build/**"   # 1.7.1, regras em .editorconfig (1
 
 Teste novo precisa ter sido visto falhar: quebre de propósito a regra que ele cobre, veja o vermelho e desfaça.
 
-`verificar-padrao.sh` sem argumento confere todos os pacotes com entidade. Ele falha quando sobra `AJUSTAR:`, falta campo de controle, a entidade não está no banco, o DAO não está no Hilt, uma escrita não devolve linhas, há cor fixa fora do tema, a tela usa `Scaffold` em vez de `TelaDiario`, falta teste ou o schema da versão atual não foi commitado.
+`verificar-padrao.sh` sem argumento confere todos os pacotes com entidade. Ele falha quando sobra `AJUSTAR:`, falta campo de controle, a entidade não está no banco ou no backup (`@Serializable`, `CopiaDeSeguranca`, `BackupDao`), o DAO não está no Hilt, uma escrita não devolve linhas, há cor fixa fora do tema, a tela usa `Scaffold` em vez de `TelaDiario`, falta teste ou o schema da versão atual não foi commitado.
 
 Se este ambiente não tiver o SDK do Android, diga isso e deixe o CI do PR ser a prova do build; não afirme que compila sem ver o CI verde.
 

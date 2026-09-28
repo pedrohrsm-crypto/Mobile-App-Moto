@@ -3,11 +3,14 @@ package com.pedrohrsm.diariodebordo.__PACOTE__.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
 /**
  * Os campos de controle (id, criadoEm, alteradoEm, fusoHorario, excluidoEm, pendenteSync)
  * seguem docs/offline-first.md e são preenchidos pelo [__ENTIDADE__Repositorio], nunca pela tela.
+ * Serializável porque a entidade vai no arquivo de backup (backup/dominio/CopiaDeSeguranca).
  */
+@Serializable
 @Entity(tableName = "__TABELA__")
 data class __ENTIDADE__(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),

@@ -62,6 +62,7 @@ cat <<FIM
 Falta ligar nos arquivos compartilhados (passo 3 da skill):
   - core/database/DiarioDatabase.kt: $ENTIDADE em entities, fun ${PACOTE}Dao(), version + 1 e migração
   - core/di/DatabaseModule.kt: provide${ENTIDADE}Dao
+  - backup: lista em CopiaDeSeguranca, leitura e gravação em BackupDao, exportar/mesclar em BackupRepositorio
   - navegacao/DiarioNavHost.kt: rota e composable de ${ENTIDADE}Route
   - res/values/strings.xml: ${PACOTE}_titulo e ${PACOTE}_vazio
 Depois troque todo "AJUSTAR:" e rode verificar-padrao.sh $PACOTE.
