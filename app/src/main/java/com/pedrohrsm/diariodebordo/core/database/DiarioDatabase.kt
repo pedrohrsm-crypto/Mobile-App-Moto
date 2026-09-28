@@ -12,6 +12,10 @@ import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlanoDao
+import com.pedrohrsm.diariodebordo.rota.data.PontoDeRota
+import com.pedrohrsm.diariodebordo.rota.data.PontoDeRotaDao
+import com.pedrohrsm.diariodebordo.rota.data.Rota
+import com.pedrohrsm.diariodebordo.rota.data.RotaDao
 
 /**
  * Fonte da verdade do app (offline-first). Nenhuma versão foi publicada ainda, então as tabelas do MVP
@@ -19,7 +23,15 @@ import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlanoDao
  * entidade: subir a [version], escrever a Migration e commitar o schema gerado em app/schemas/.
  */
 @Database(
-    entities = [Moto::class, LeituraHodometro::class, Registro::class, FotoRegistro::class, ItemDoPlano::class],
+    entities = [
+        Moto::class,
+        LeituraHodometro::class,
+        Registro::class,
+        FotoRegistro::class,
+        ItemDoPlano::class,
+        Rota::class,
+        PontoDeRota::class,
+    ],
     version = 1,
     exportSchema = true,
 )
@@ -29,6 +41,8 @@ abstract class DiarioDatabase : RoomDatabase() {
     abstract fun registroDao(): RegistroDao
     abstract fun fotoRegistroDao(): FotoRegistroDao
     abstract fun itemDoPlanoDao(): ItemDoPlanoDao
+    abstract fun rotaDao(): RotaDao
+    abstract fun pontoDeRotaDao(): PontoDeRotaDao
 
     companion object {
         const val NOME = "diario.db"

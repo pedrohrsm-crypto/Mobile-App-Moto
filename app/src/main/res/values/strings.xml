@@ -115,4 +115,31 @@
     <string name="lembrete_texto">%1$s · toque para ver o plano</string>
     <string name="lembrete_permissao">Ative as notificações para receber os lembretes de manutenção.</string>
     <string name="lembrete_ativar">Ativar</string>
+    <!-- Local do registro -->
+    <string name="local_titulo">Local (opcional)</string>
+    <string name="local_usar_atual">Usar local atual</string>
+    <string name="local_buscando">Buscando o GPS…</string>
+    <string name="local_sem_permissao">Sem permissão de localização. O registro pode ser salvo sem o local.</string>
+    <string name="local_indisponivel">O GPS não respondeu. Tente num lugar aberto ou salve sem o local.</string>
+
+    <!-- Rotas -->
+    <string name="rotas_titulo_moto">Rotas · %1$s</string>
+    <string name="rotas_explicacao">Grave o trajeto do rolê. Funciona sem internet e com a tela desligada; a notificação fica visível enquanto grava.</string>
+    <string name="rotas_vazio">Nenhuma rota salva ainda.</string>
+    <string name="rota_titulo">Rota</string>
+    <string name="rota_gravar">Gravar rota</string>
+    <string name="rota_parar">Parar e salvar</string>
+    <string name="rota_gravando">Gravando a rota do rolê</string>
+    <string name="rota_gravando_desde">Gravando desde %1$s · %2$d pontos</string>
+    <string name="rota_interrompida">A gravação parou com %1$d pontos. Salvar o que foi gravado?</string>
+    <string name="rota_salvar">Salvar rota</string>
+    <string name="rota_descartar">Descartar</string>
+    <string name="rota_sem_permissao">Sem permissão de localização: a rota não foi gravada.</string>
+    <string name="rota_falha_gps">O GPS parou: %1$s</string>
+    <string name="rota_notificacao_titulo">Diário de Bordo</string>
+    <string name="rota_canal_nome">Gravação de rota</string>
+    <string name="rota_nao_encontrada">Rota não encontrada.</string>
+    <string name="rota_tracado_descricao">Traçado da rota</string>
+    <string name="rota_sem_mapa">Só o traçado, sem mapa de fundo: nada é baixado da internet.</string>
+    <string name="rota_excluir_titulo">Excluir esta rota?</string>
 </resources>

@@ -54,18 +54,8 @@ import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 
-/** Espaço para funcionalidades que acrescentam campos ao formulário (local do GPS, por exemplo). */
-typealias ExtrasDoRegistro = @Composable (
-    RegistroFormEstado,
-    ((RegistroFormEstado) -> RegistroFormEstado) -> Unit,
-) -> Unit
-
 @Composable
-fun RegistroFormRoute(
-    onConcluido: () -> Unit,
-    extras: ExtrasDoRegistro = { _, _ -> },
-    viewModel: RegistroFormViewModel = hiltViewModel(),
-) {
+fun RegistroFormRoute(onConcluido: () -> Unit, viewModel: RegistroFormViewModel = hiltViewModel()) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     LaunchedEffect(estado.concluido) { if (estado.concluido) onConcluido() }
     val escolherFoto = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
@@ -81,8 +71,10 @@ fun RegistroFormRoute(
                 escolherFoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             },
             onRemoverFoto = viewModel::removerFoto,
+            onUsarLocal = viewModel::usarLocalAtual,
+            onLocalNegado = viewModel::localNegado,
+            onRemoverLocal = viewModel::removerLocal,
         ),
-        extras = extras,
     )
 }
 
@@ -92,14 +84,13 @@ data class AcoesRegistroForm(
     val onExcluir: () -> Unit = {},
     val onAdicionarFoto: () -> Unit = {},
     val onRemoverFoto: (String) -> Unit = {},
+    val onUsarLocal: () -> Unit = {},
+    val onLocalNegado: () -> Unit = {},
+    val onRemoverLocal: () -> Unit = {},
 )
 
 @Composable
-fun RegistroFormScreen(
-    estado: RegistroFormEstado,
-    acoes: AcoesRegistroForm = AcoesRegistroForm(),
-    extras: ExtrasDoRegistro = { _, _ -> },
-) {
+fun RegistroFormScreen(estado: RegistroFormEstado, acoes: AcoesRegistroForm = AcoesRegistroForm()) {
     var confirmarExclusao by remember { mutableStateOf(false) }
     TelaDiario(
         titulo = stringResource(if (estado.editando) R.string.registro_editar else R.string.registro_novo),
@@ -112,7 +103,7 @@ fun RegistroFormScreen(
         if (estado.carregando) {
             EstadoCarregando(Modifier.fillMaxSize().padding(padding))
         } else {
-            RegistroFormulario(estado, padding, acoes, extras)
+            RegistroFormulario(estado, padding, acoes)
         }
     }
     if (confirmarExclusao) {
@@ -134,12 +125,7 @@ fun RegistroFormScreen(
 }
 
 @Composable
-private fun RegistroFormulario(
-    estado: RegistroFormEstado,
-    padding: PaddingValues,
-    acoes: AcoesRegistroForm,
-    extras: ExtrasDoRegistro,
-) {
+private fun RegistroFormulario(estado: RegistroFormEstado, padding: PaddingValues, acoes: AcoesRegistroForm) {
     val d = LocalDimensoes.current
     val onAlterar = acoes.onAlterar
     val rotulos = TipoRegistro.entries.associateWith { rotuloTipo(it) }
@@ -218,7 +204,7 @@ private fun RegistroFormulario(
                 rotulo = stringResource(R.string.registro_descricao),
                 linhas = 3,
             )
-            extras(estado, onAlterar)
+            CampoLocal(estado, acoes)
             Fotos(estado, acoes)
             estado.erro?.let { Text(textoDoErro(it), color = MaterialTheme.colorScheme.error) }
             BotaoPrincipal(
@@ -306,6 +292,8 @@ private fun textoDoErro(erro: ErroRegistroForm): String = when (erro) {
     ErroRegistroForm.SemMoto -> stringResource(R.string.sem_moto_mensagem)
     ErroRegistroForm.NaoEncontrado -> stringResource(R.string.registro_nao_encontrado)
     is ErroRegistroForm.FalhaFoto -> stringResource(R.string.registro_falha_foto, erro.detalhe.orEmpty())
+    ErroRegistroForm.SemPermissaoLocal -> stringResource(R.string.local_sem_permissao)
+    ErroRegistroForm.LocalIndisponivel -> stringResource(R.string.local_indisponivel)
     is ErroRegistroForm.Falha -> stringResource(R.string.erro_ao_salvar, erro.detalhe.orEmpty())
 }
 

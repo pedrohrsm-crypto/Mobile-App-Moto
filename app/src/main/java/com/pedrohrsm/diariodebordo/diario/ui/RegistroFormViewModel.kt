@@ -13,6 +13,9 @@ import com.pedrohrsm.diariodebordo.diario.dominio.validarRegistro
 import com.pedrohrsm.diariodebordo.diario.fotos.GuardaFotos
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
+import com.pedrohrsm.diariodebordo.localizacao.FonteLocalizacao
+import com.pedrohrsm.diariodebordo.localizacao.LocalIndisponivelException
+import com.pedrohrsm.diariodebordo.localizacao.SemPermissaoDeLocalizacaoException
 import com.pedrohrsm.diariodebordo.numeros.Leitor
 import com.pedrohrsm.diariodebordo.numeros.TextoDeNumero
 import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
@@ -30,6 +33,8 @@ sealed interface ErroRegistroForm {
     data object SemMoto : ErroRegistroForm
     data object NaoEncontrado : ErroRegistroForm
     data class FalhaFoto(val detalhe: String?) : ErroRegistroForm
+    data object SemPermissaoLocal : ErroRegistroForm
+    data object LocalIndisponivel : ErroRegistroForm
     data class Falha(val detalhe: String?) : ErroRegistroForm
 }
 
@@ -52,6 +57,7 @@ data class RegistroFormEstado(
     val longitude: Double? = null,
     val fotos: List<String> = emptyList(),
     val importandoFoto: Boolean = false,
+    val buscandoLocal: Boolean = false,
     val invalidos: Set<CampoRegistro> = emptySet(),
     val erro: ErroRegistroForm? = null,
     val salvando: Boolean = false,
@@ -68,6 +74,7 @@ class RegistroFormViewModel @Inject constructor(
     private val motoAtual: MotoAtual,
     private val plano: PlanoRepositorio,
     private val hodometro: HodometroRepositorio,
+    private val localizacao: FonteLocalizacao,
     private val relogio: Clock,
 ) : ViewModel() {
 
@@ -138,6 +145,31 @@ class RegistroFormViewModel @Inject constructor(
                 }
         }
     }
+
+    /** Chamado depois que a tela conferiu a permissão. Funciona em modo avião: o GPS não usa rede. */
+    fun usarLocalAtual() {
+        if (_estado.value.buscandoLocal) return
+        _estado.update { it.copy(buscandoLocal = true, erro = null) }
+        viewModelScope.launch {
+            runCatching { localizacao.atual() }
+                .onSuccess { p ->
+                    _estado.update { it.copy(buscandoLocal = false, latitude = p.latitude, longitude = p.longitude) }
+                }
+                .onFailure { e ->
+                    val erro = when (e) {
+                        is SemPermissaoDeLocalizacaoException -> ErroRegistroForm.SemPermissaoLocal
+                        is LocalIndisponivelException -> ErroRegistroForm.LocalIndisponivel
+                        else -> ErroRegistroForm.Falha(e.message)
+                    }
+                    _estado.update { it.copy(buscandoLocal = false, erro = erro) }
+                }
+        }
+    }
+
+    /** Permissão negada: o registro segue sem local (o local é opcional). */
+    fun localNegado() = _estado.update { it.copy(erro = ErroRegistroForm.SemPermissaoLocal) }
+
+    fun removerLocal() = _estado.update { it.copy(latitude = null, longitude = null) }
 
     fun removerFoto(arquivo: String) {
         _estado.update { it.copy(fotos = it.fotos - arquivo) }

@@ -110,6 +110,10 @@ dependencies {
 
     implementation(libs.androidx.work.runtime.ktx)
 
+    // Localização: Fused Location quando há Google Play Services; sem ele, LocationManager.
+    implementation(libs.play.services.location)
+    implementation(libs.kotlinx.coroutines.play.services)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.junit)

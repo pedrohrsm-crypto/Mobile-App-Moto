@@ -15,6 +15,9 @@ import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
+import com.pedrohrsm.diariodebordo.localizacao.FonteLocalizacaoFalsa
+import com.pedrohrsm.diariodebordo.localizacao.LocalIndisponivelException
+import com.pedrohrsm.diariodebordo.localizacao.Ponto
 import com.pedrohrsm.diariodebordo.plano.data.FakeItemDoPlanoDao
 import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
@@ -62,6 +65,7 @@ class RegistroFormViewModelTest {
         relogio,
     )
     private val fotos = GuardaFotosFalsa()
+    private val gps = FonteLocalizacaoFalsa()
 
     @Before
     fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -70,7 +74,7 @@ class RegistroFormViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun novo(args: Map<String, Any?> = emptyMap()) =
-        RegistroFormViewModel(SavedStateHandle(args), repositorio, fotos, motoAtual, plano, hodometro, relogio)
+        RegistroFormViewModel(SavedStateHandle(args), repositorio, fotos, motoAtual, plano, hodometro, gps, relogio)
 
     @Test
     fun registroNovoUsaAMotoAtualEOTipoPedido() = runTest {
@@ -130,5 +134,29 @@ class RegistroFormViewModelTest {
         assertEquals("14900", vm.estado.value.km)
         vm.salvar()
         assertEquals(14_900, plano.buscar(oleo.id)?.ultimaVezKm)
+    }
+
+    @Test
+    fun localAtualEntraNoRegistroSalvo() = runTest {
+        motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        gps.resposta = Ponto(-23.5505, -46.6333, instante = 0)
+        val vm = novo()
+        vm.alterar { it.copy(titulo = "Parada no mirante") }
+        vm.usarLocalAtual()
+        vm.salvar()
+        val salvo = registros.observarDaMoto(vm.estado.value.motoId!!).first().single()
+        assertEquals(-23.5505, salvo.latitude!!, 0.0)
+        assertEquals(-46.6333, salvo.longitude!!, 0.0)
+    }
+
+    @Test
+    fun gpsSemRespostaAvisaESegueSemLocal() = runTest {
+        motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        gps.falha = LocalIndisponivelException()
+        val vm = novo()
+        vm.usarLocalAtual()
+        assertEquals(ErroRegistroForm.LocalIndisponivel, vm.estado.value.erro)
+        assertEquals(null, vm.estado.value.latitude)
+        assertEquals(false, vm.estado.value.buscandoLocal)
     }
 }
