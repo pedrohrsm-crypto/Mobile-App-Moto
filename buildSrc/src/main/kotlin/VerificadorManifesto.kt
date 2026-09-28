@@ -40,8 +40,9 @@ object VerificadorManifesto {
         }
 
         val aplicacao = documento.getElementsByTagName("application").item(0) as? Element
-        if (aplicacao?.android("debuggable") == "true") problemas += "application com debuggable=true"
-        if (aplicacao?.android("usesCleartextTraffic") == "true") problemas += "application com usesCleartextTraffic=true"
+        for (atributo in listOf("debuggable", "usesCleartextTraffic")) {
+            if (aplicacao?.android(atributo) == "true") problemas += "application com $atributo=true"
+        }
 
         val permissoes = documento.getElementsByTagName("uses-permission")
         for (i in 0 until permissoes.length) {

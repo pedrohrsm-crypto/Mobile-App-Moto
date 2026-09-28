@@ -30,7 +30,8 @@ class VerificadorManifestoTest {
     @Test
     fun componenteExportadoPlantadoReprova() {
         val problemas = verificar(manifesto(corpo = """<service android:name=".Vazado" android:exported="true" />"""))
-        assertEquals(listOf("service exportado sem permissão e fora da lista de permitidos: $namespace.Vazado"), problemas)
+        val esperado = "service exportado sem permissão e fora da lista de permitidos: $namespace.Vazado"
+        assertEquals(listOf(esperado), problemas)
     }
 
     @Test
@@ -41,7 +42,8 @@ class VerificadorManifestoTest {
 
     @Test
     fun debuggableECleartextReprovam() {
-        val problemas = verificar(manifesto(aplicacao = """android:debuggable="true" android:usesCleartextTraffic="true""""))
+        val aplicacao = """android:debuggable="true" android:usesCleartextTraffic="true""""
+        val problemas = verificar(manifesto(aplicacao = aplicacao))
         assertEquals(2, problemas.size)
     }
 

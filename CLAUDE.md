@@ -18,11 +18,16 @@ Framework: v1.6 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 - **Frente** (N sessões): trabalha só na própria branch `front/NOME-DA-FRENTE`, em worktree própria. Nunca faz merge nem deploy.
 - Um escritor por branch. Decisão do dono registrada não se reabre.
 
-## Portões (rodar separados, nunca com `| tail`)
-1. `./gradlew lintDebug` → 0
-2. `./gradlew assembleDebug` → 0 (compila Kotlin, KSP de Room e Hilt)
-3. `./gradlew testDebugUnitTest` → verde; teste novo precisa ter sido visto falhar
-4. Visual: 3 temas (Oficina, Estrada, Cromo) × fonte 140% × tela de 360 dp quando houver interface
+## Portões (rodar separados, nunca com `| tail`; o CI roda os mesmos, nesta ordem)
+1. `bash ferramentas/guardas.sh` → 0 (idioma pt-BR, cor só do tema, nenhum texto fixo)
+2. `ktlint "**/*.kt" "**/*.kts"` → 0 (configuração em `.editorconfig`)
+3. `./gradlew -p buildSrc test` → verde
+4. `./gradlew lintDebug` → 0
+5. `./gradlew assembleDebug` → 0 (compila Kotlin, KSP de Room e Hilt)
+6. `./gradlew testDebugUnitTest` → verde; teste novo precisa ter sido visto falhar
+7. `./gradlew verificarManifestoRelease` → 0 (componente exportado entra na lista em `app/build.gradle.kts` com motivo)
+8. `./gradlew bundleRelease` → 0
+9. Visual: 3 temas (Oficina, Estrada, Cromo) × fonte 140% × tela de 360 dp quando houver interface
 
 ## Regras inegociáveis
 - Nunca descartar `error`. Escrita confere as linhas afetadas.
