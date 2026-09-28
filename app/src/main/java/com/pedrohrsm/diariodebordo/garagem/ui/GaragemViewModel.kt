@@ -11,9 +11,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
-class GaragemViewModel @Inject constructor(
-    repositorio: MotoRepositorio,
-) : ViewModel() {
+class GaragemViewModel @Inject constructor(repositorio: MotoRepositorio) : ViewModel() {
 
     val estado: StateFlow<GaragemEstado> = repositorio.observarAtivos()
         .map<_, GaragemEstado> { GaragemEstado.Pronto(it) }
