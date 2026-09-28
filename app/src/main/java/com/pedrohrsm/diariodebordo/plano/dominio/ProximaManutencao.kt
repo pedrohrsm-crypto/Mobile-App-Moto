@@ -17,12 +17,7 @@ data class Situacao(val kmRestantes: Int?, val diasRestantes: Int?) {
         get() = (kmRestantes != null && kmRestantes <= 0) || (diasRestantes != null && diasRestantes <= 0)
 }
 
-fun situacaoDaManutencao(
-    intervalo: Intervalo,
-    kmNaUltimaVez: Int,
-    kmAtual: Int,
-    diasDesdeUltimaVez: Int,
-): Situacao {
+fun situacaoDaManutencao(intervalo: Intervalo, kmNaUltimaVez: Int, kmAtual: Int, diasDesdeUltimaVez: Int): Situacao {
     require(kmAtual >= kmNaUltimaVez) { "Hodômetro atual menor que o da última manutenção" }
     return Situacao(
         kmRestantes = intervalo.km?.let { it - (kmAtual - kmNaUltimaVez) },

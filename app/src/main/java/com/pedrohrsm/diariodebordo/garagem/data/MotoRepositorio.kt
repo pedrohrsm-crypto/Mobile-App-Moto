@@ -1,8 +1,8 @@
 package com.pedrohrsm.diariodebordo.garagem.data
 
-import kotlinx.coroutines.flow.Flow
 import java.time.Clock
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 
 /** Único lugar que escreve em motos: preenche os campos de controle e confere as linhas afetadas. */
 class MotoRepositorio @Inject constructor(

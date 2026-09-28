@@ -12,10 +12,8 @@ import dagger.assisted.AssistedInject
  * usando plano.dominio.situacaoDaManutencao. Roda sem rede, só com o banco local.
  */
 @HiltWorker
-class LembreteWorker @AssistedInject constructor(
-    @Assisted context: Context,
-    @Assisted params: WorkerParameters,
-) : CoroutineWorker(context, params) {
+class LembreteWorker @AssistedInject constructor(@Assisted context: Context, @Assisted params: WorkerParameters) :
+    CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result = Result.success()
 
