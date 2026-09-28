@@ -4,11 +4,13 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
 /**
  * Rota de um rolê. Durante a gravação os pontos ficam em [PontoDeRota]; ao salvar, só o traçado
  * simplificado fica aqui ([polilinha]) e os pontos brutos são apagados (decisão de 26/09/2026).
  */
+@Serializable
 @Entity(tableName = "rotas", indices = [Index(value = ["motoId", "iniciadaEm"])])
 data class Rota(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),

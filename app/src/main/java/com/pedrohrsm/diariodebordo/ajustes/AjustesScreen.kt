@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -21,6 +22,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pedrohrsm.diariodebordo.R
+import com.pedrohrsm.diariodebordo.backup.ui.BackupEstado
+import com.pedrohrsm.diariodebordo.backup.ui.SecaoBackup
+import com.pedrohrsm.diariodebordo.backup.ui.SecaoBackupConteudo
 import com.pedrohrsm.diariodebordo.core.designsystem.LocalDimensoes
 import com.pedrohrsm.diariodebordo.core.designsystem.componentes.TelaDiario
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.DiarioTheme
@@ -30,11 +34,16 @@ import com.pedrohrsm.diariodebordo.core.ui.EscolhaUnica
 @Composable
 fun AjustesRoute(viewModel: AjustesViewModel = hiltViewModel()) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
-    AjustesScreen(estado, viewModel::escolherTema, viewModel::alternarModoOficina)
+    AjustesScreen(estado, viewModel::escolherTema, viewModel::alternarModoOficina) { SecaoBackup() }
 }
 
 @Composable
-fun AjustesScreen(estado: AjustesEstado, onTema: (TemaDiario) -> Unit = {}, onModoOficina: (Boolean) -> Unit = {}) {
+fun AjustesScreen(
+    estado: AjustesEstado,
+    onTema: (TemaDiario) -> Unit = {},
+    onModoOficina: (Boolean) -> Unit = {},
+    backup: @Composable () -> Unit = {},
+) {
     val d = LocalDimensoes.current
     TelaDiario(titulo = stringResource(R.string.ajustes_titulo)) { padding ->
         Column(
@@ -58,6 +67,8 @@ fun AjustesScreen(estado: AjustesEstado, onTema: (TemaDiario) -> Unit = {}, onMo
                 supportingContent = { Text(stringResource(R.string.ajustes_modo_oficina_explicacao)) },
                 trailingContent = { Switch(checked = estado.modoOficina, onCheckedChange = null) },
             )
+            HorizontalDivider()
+            backup()
         }
     }
 }
@@ -74,5 +85,7 @@ private fun rotuloTema(tema: TemaDiario): String = stringResource(
 @Preview
 @Composable
 private fun AjustesPreview() {
-    DiarioTheme(modoOficina = true) { AjustesScreen(AjustesEstado(modoOficina = true)) }
+    DiarioTheme(modoOficina = true) {
+        AjustesScreen(AjustesEstado(modoOficina = true)) { SecaoBackupConteudo(BackupEstado()) }
+    }
 }

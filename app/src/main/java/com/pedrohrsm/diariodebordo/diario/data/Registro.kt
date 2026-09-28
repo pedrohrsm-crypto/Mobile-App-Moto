@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
 enum class TipoRegistro { MANUTENCAO, ABASTECIMENTO, OCORRENCIA, ROLE, NOTA }
 
@@ -15,6 +16,7 @@ enum class TipoOcorrencia { QUEDA, BARULHO, VAZAMENTO, OUTRA }
  * Dinheiro em centavos, volume em mililitros, instantes em milissegundos UTC.
  * Campos de controle conforme docs/offline-first.md, preenchidos pelo [RegistroRepositorio].
  */
+@Serializable
 @Entity(
     tableName = "registros",
     indices = [Index(value = ["motoId", "dataEm"]), Index("itemPlanoId"), Index("rotaId")],

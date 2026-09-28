@@ -2,6 +2,7 @@ package com.pedrohrsm.diariodebordo.core.di
 
 import android.content.Context
 import androidx.room.Room
+import com.pedrohrsm.diariodebordo.backup.data.BackupDao
 import com.pedrohrsm.diariodebordo.core.database.DiarioDatabase
 import com.pedrohrsm.diariodebordo.core.database.Transacao
 import com.pedrohrsm.diariodebordo.core.database.TransacaoRoom
@@ -48,6 +49,9 @@ object DatabaseModule {
 
     @Provides
     fun providePontoDeRotaDao(database: DiarioDatabase): PontoDeRotaDao = database.pontoDeRotaDao()
+
+    @Provides
+    fun provideBackupDao(database: DiarioDatabase): BackupDao = database.backupDao()
 
     @Provides
     fun provideTransacao(database: DiarioDatabase): Transacao = TransacaoRoom(database)

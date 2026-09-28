@@ -150,4 +150,21 @@
     <string name="ajustes_modo_oficina">Modo oficina</string>
     <string name="ajustes_modo_oficina_explicacao">Letras e botões maiores, para usar de luva ou com a mão suja.</string>
     <string name="moto_registrar_troca_oleo">Registrar troca de óleo</string>
+    <!-- Backup (exportar e importar) -->
+    <string name="backup_titulo">Backup</string>
+    <string name="backup_explicacao">Um arquivo .zip com as motos, o diário, o plano, as fotos e as rotas. Guarde no Drive, no computador ou mande para você mesmo.</string>
+    <string name="backup_exportar">Exportar backup</string>
+    <string name="backup_importar">Importar backup</string>
+    <string name="backup_importar_explicacao">Importar junta o arquivo com o que já está no aparelho: nada é apagado e, se um item estiver nos dois, fica a versão alterada por último.</string>
+    <string name="backup_aviso_titulo">O arquivo tem dados pessoais</string>
+    <string name="backup_aviso_texto">Leva o diário, as fotos e os locais dos registros. Quem tiver o arquivo consegue ler tudo: guarde num lugar só seu.</string>
+    <string name="backup_incluir_rotas">Incluir as rotas gravadas</string>
+    <string name="backup_escolher_local">Escolher onde salvar</string>
+    <string name="backup_trabalhando">Trabalhando no backup…</string>
+    <string name="backup_exportado">Backup salvo. Motos: %1$d · Registros: %2$d · Fotos: %3$d · Rotas: %4$d</string>
+    <string name="backup_fotos_faltando">Fotos não encontradas no aparelho, que ficaram de fora: %1$d</string>
+    <string name="backup_importado">Importação concluída. Itens novos: %1$d · Atualizados: %2$d · Fotos: %3$d</string>
+    <string name="backup_arquivo_invalido">Este arquivo não é um backup do Diário de Bordo ou está corrompido. Nada foi alterado.</string>
+    <string name="backup_versao_nova">Este backup foi feito numa versão mais nova do app. Atualize o app e tente de novo. Nada foi alterado.</string>
+    <string name="backup_falha">Não foi possível concluir. Nada foi alterado. %1$s</string>
 </resources>

@@ -2,6 +2,7 @@ package com.pedrohrsm.diariodebordo.core.database
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.pedrohrsm.diariodebordo.backup.data.BackupDao
 import com.pedrohrsm.diariodebordo.diario.data.FotoRegistro
 import com.pedrohrsm.diariodebordo.diario.data.FotoRegistroDao
 import com.pedrohrsm.diariodebordo.diario.data.Registro
@@ -43,6 +44,7 @@ abstract class DiarioDatabase : RoomDatabase() {
     abstract fun itemDoPlanoDao(): ItemDoPlanoDao
     abstract fun rotaDao(): RotaDao
     abstract fun pontoDeRotaDao(): PontoDeRotaDao
+    abstract fun backupDao(): BackupDao
 
     companion object {
         const val NOME = "diario.db"
