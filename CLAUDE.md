@@ -1,6 +1,6 @@
 # Diário de Bordo (Mobile App Moto) — instruções para sessões de IA
 
-Framework: v1.4 (https://github.com/pedrohrsm-crypto/framework-aprendido)
+Framework: v1.6 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 
 ## Idioma
 - Português do Brasil em código, commits, documentos e interface. Nunca variantes europeias ("registrado", não "registado"; "arquivo", não "ficheiro").
@@ -18,11 +18,16 @@ Framework: v1.4 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 - **Frente** (N sessões): trabalha só na própria branch `front/NOME-DA-FRENTE`, em worktree própria. Nunca faz merge nem deploy.
 - Um escritor por branch. Decisão do dono registrada não se reabre.
 
-## Portões (rodar separados, nunca com `| tail`)
-1. `./gradlew lintDebug` → 0
-2. `./gradlew assembleDebug` → 0 (compila Kotlin, KSP de Room e Hilt)
-3. `./gradlew testDebugUnitTest` → verde; teste novo precisa ter sido visto falhar
-4. Visual: 3 temas (Oficina, Estrada, Cromo) × fonte 140% × tela de 360 dp quando houver interface
+## Portões (rodar separados, nunca com `| tail`; o CI roda os mesmos, nesta ordem)
+1. `bash ferramentas/guardas.sh` → 0 (idioma pt-BR, cor só do tema, nenhum texto fixo)
+2. `ktlint "**/*.kt" "**/*.kts"` → 0 (configuração em `.editorconfig`)
+3. `./gradlew -p buildSrc test` → verde
+4. `./gradlew lintDebug` → 0
+5. `./gradlew assembleDebug` → 0 (compila Kotlin, KSP de Room e Hilt)
+6. `./gradlew testDebugUnitTest` → verde; teste novo precisa ter sido visto falhar
+7. `./gradlew verificarManifestoRelease` → 0 (componente exportado entra na lista em `app/build.gradle.kts` com motivo)
+8. `./gradlew bundleRelease` → 0
+9. Visual: 3 temas (Oficina, Estrada, Cromo) × fonte 140% × tela de 360 dp quando houver interface
 
 ## Regras inegociáveis
 - Nunca descartar `error`. Escrita confere as linhas afetadas.
@@ -30,6 +35,7 @@ Framework: v1.4 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 - Mudança de entidade do Room sobe a versão do banco, com `Migration` e o schema exportado em `app/schemas/` commitado.
 - Localização só com permissão concedida na hora do uso; o app funciona sem ela.
 - Uma regra de negócio mora em um lugar só.
+- Toda tela usa `TelaDiario` (edge-to-edge, insets pelo `PaddingValues`); formulário usa `FormularioDiario` (rola e sobe com o teclado).
 - Toda cor vem do `ColorScheme` com par nos 3 temas; tamanhos em `dp`/`sp`, nunca px.
 - Na **segunda** ocorrência de um bug, criar primitivo, guarda ou lint (procedimento PFA-01, 2.3).
 - Todo número citado vem de um comando rodado, com data e SHA.

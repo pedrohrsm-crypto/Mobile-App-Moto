@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.Color
  */
 enum class TemaDiario { OFICINA, ESTRADA, CROMO }
 
-private val Oficina = darkColorScheme(
+private val coresOficina = darkColorScheme(
     primary = Color(0xFFFF8A00),
     onPrimary = Color(0xFF1F1F1F),
     background = Color(0xFF1F1F1F),
@@ -22,7 +22,7 @@ private val Oficina = darkColorScheme(
     onSurface = Color(0xFFF2F2F2),
 )
 
-private val Estrada = lightColorScheme(
+private val coresEstrada = lightColorScheme(
     primary = Color(0xFF2E5E4E),
     onPrimary = Color(0xFFFFFFFF),
     background = Color(0xFFF7F4EE),
@@ -31,7 +31,7 @@ private val Estrada = lightColorScheme(
     onSurface = Color(0xFF1C1B19),
 )
 
-private val Cromo = lightColorScheme(
+private val coresCromo = lightColorScheme(
     primary = Color(0xFF3A4A5C),
     onPrimary = Color(0xFFFFFFFF),
     background = Color(0xFFEEF1F4),
@@ -41,9 +41,9 @@ private val Cromo = lightColorScheme(
 )
 
 fun TemaDiario.colorScheme(): ColorScheme = when (this) {
-    TemaDiario.OFICINA -> Oficina
-    TemaDiario.ESTRADA -> Estrada
-    TemaDiario.CROMO -> Cromo
+    TemaDiario.OFICINA -> coresOficina
+    TemaDiario.ESTRADA -> coresEstrada
+    TemaDiario.CROMO -> coresCromo
 }
 
 @Composable

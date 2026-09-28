@@ -5,9 +5,11 @@
 <!-- front/<nome> · closes #NN -->
 
 ## Portões (números medidos nesta árvore)
+- [ ] Guardas e ktlint: 0
 - [ ] `./gradlew lintDebug`: 0
 - [ ] `./gradlew assembleDebug`: 0
-- [ ] `./gradlew testDebugUnitTest`: N ✓ — cada teste novo foi **visto falhar** (bug plantado → vermelho → revertido)
+- [ ] `./gradlew testDebugUnitTest` e `-p buildSrc test`: N ✓ — cada teste novo foi **visto falhar** (bug plantado → vermelho → revertido)
+- [ ] `./gradlew verificarManifestoRelease` e `bundleRelease`: 0
 
 ## Definition of Done
 - [ ] Nenhum `error` descartado; toda escrita confere as linhas afetadas
