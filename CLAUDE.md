@@ -30,6 +30,7 @@ Framework: v1.6 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 - Mudança de entidade do Room sobe a versão do banco, com `Migration` e o schema exportado em `app/schemas/` commitado.
 - Localização só com permissão concedida na hora do uso; o app funciona sem ela.
 - Uma regra de negócio mora em um lugar só.
+- Toda tela usa `TelaDiario` (edge-to-edge, insets pelo `PaddingValues`); formulário usa `FormularioDiario` (rola e sobe com o teclado).
 - Toda cor vem do `ColorScheme` com par nos 3 temas; tamanhos em `dp`/`sp`, nunca px.
 - Na **segunda** ocorrência de um bug, criar primitivo, guarda ou lint (procedimento PFA-01, 2.3).
 - Todo número citado vem de um comando rodado, com data e SHA.
