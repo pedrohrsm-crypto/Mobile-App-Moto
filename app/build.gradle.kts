@@ -1,3 +1,4 @@
+import com.android.build.api.artifact.SingleArtifact
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -56,6 +57,24 @@ android {
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
+// 0.12 do plano de ação: o manifesto final do release passa por VerificadorManifesto (buildSrc).
+// Rodar com ./gradlew verificarManifestoRelease. Novo componente exportado entra na lista com motivo.
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        val sufixo = variant.name.replaceFirstChar { it.uppercase() }
+        tasks.register<VerificarManifestoTask>("verificarManifesto$sufixo") {
+            manifesto.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST))
+            namespace.set(variant.namespace)
+            exportadosPermitidos.set(
+                setOf(
+                    // Tela de entrada: precisa ser exportada para o launcher abrir o app.
+                    "com.pedrohrsm.diariodebordo.MainActivity",
+                ),
+            )
+        }
     }
 }
 
