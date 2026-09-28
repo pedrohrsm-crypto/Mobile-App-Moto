@@ -6,11 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -20,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pedrohrsm.diariodebordo.R
+import com.pedrohrsm.diariodebordo.core.designsystem.componentes.TelaDiario
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.DiarioTheme
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 
@@ -29,12 +27,9 @@ fun GaragemRoute(viewModel: GaragemViewModel = hiltViewModel()) {
     GaragemScreen(estado = estado)
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GaragemScreen(estado: GaragemEstado) {
-    Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.garagem_titulo)) }) },
-    ) { padding ->
+    TelaDiario(titulo = stringResource(R.string.garagem_titulo)) { padding ->
         val centro = Modifier.fillMaxSize().padding(padding)
         when (estado) {
             GaragemEstado.Carregando -> Box(centro, contentAlignment = Alignment.Center) {
@@ -45,7 +40,7 @@ fun GaragemScreen(estado: GaragemEstado) {
                     Text(stringResource(R.string.garagem_vazio))
                 }
             } else {
-                LazyColumn(modifier = Modifier.padding(padding)) {
+                LazyColumn(contentPadding = padding) {
                     items(estado.motos, key = { it.id }) { moto -> MotoItem(moto) }
                 }
             }

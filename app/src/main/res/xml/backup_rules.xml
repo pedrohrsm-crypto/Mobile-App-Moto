@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 8 a 11: o backup automático do Google leva o banco local. -->
+<!-- Android 8 a 11. Decisão em docs/offline-first.md: o backup automático leva só o arquivo
+     exportado mais recente (files/exportacao/), nunca o banco aberto, que pode ser copiado no meio de uma escrita. -->
 <full-backup-content>
-    <include domain="database" path="." />
-    <include domain="sharedpref" path="." />
+    <include domain="file" path="exportacao/" />
 </full-backup-content>
