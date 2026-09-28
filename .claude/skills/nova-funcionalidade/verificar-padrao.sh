@@ -50,11 +50,15 @@ for p in "${pacotes[@]}"; do
   grep -rnE "Color\(0x|Color\.(Red|Blue|Green|Black|White|Gray|Yellow)" "$dir" --include=*.kt | sed "s#$RAIZ/##" | while read -r l; do echo "  ✗ cor fixa fora do tema: $l"; done
   n=$(grep -rnE "Color\(0x|Color\.(Red|Blue|Green|Black|White|Gray|Yellow)" "$dir" --include=*.kt | wc -l); problemas=$((problemas + n))
 
-  # 6. Toda funcionalidade tem teste na JVM.
+  # 6. Tela usa a casca TelaDiario (edge-to-edge), nunca Scaffold direto.
+  grep -rn "Scaffold(" "$dir" --include=*.kt | sed "s#$RAIZ/##" | while read -r l; do echo "  ✗ use TelaDiario em vez de Scaffold: $l"; done
+  n=$(grep -rn "Scaffold(" "$dir" --include=*.kt | wc -l); problemas=$((problemas + n))
+
+  # 7. Toda funcionalidade tem teste na JVM.
   find "$TESTE/$p" -name "*Test.kt" 2>/dev/null | grep -q . || falha "sem testes em ${TESTE#$RAIZ/}/$p"
 done
 
-# 7. Schema exportado da versão atual do banco está commitado.
+# 8. Schema exportado da versão atual do banco está commitado.
 versao=$(grep -oE "version = [0-9]+" "$DB" | grep -oE "[0-9]+")
 schema="$RAIZ/app/schemas/${BASE//\//.}.core.database.DiarioDatabase/$versao.json"
 [ -f "$schema" ] || { echo "banco:"; falha "schema da versão $versao não está em ${schema#$RAIZ/} (rode ./gradlew assembleDebug e commite)"; }

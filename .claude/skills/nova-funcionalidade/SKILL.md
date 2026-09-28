@@ -31,7 +31,7 @@ O pacote `garagem` é a referência viva dos moldes: se um mudar, o outro muda j
 O script para sem gerar nada se o pacote ou a tabela já existirem, ou se faltar `core/di/TempoModule.kt` (fornece o `Clock`). Ele cria:
 
 - `data/`: entidade com os campos de controle de `docs/offline-first.md`, DAO (lista só ativos, exclusão lógica, escritas devolvem linhas), repositório (único que escreve; preenche `criadoEm`, `alteradoEm`, `fusoHorario` pelo `Clock` injetado e confere as linhas)
-- `ui/`: estado (`Carregando` / `Pronto`), ViewModel, tela Compose com Route + Screen + Preview
+- `ui/`: estado (`Carregando` / `Pronto`), ViewModel, tela Compose com Route + Screen + Preview, dentro da casca `TelaDiario` (edge-to-edge; formulário usa `FormularioDiario`)
 - testes na JVM: DAO falso em memória, testes do repositório e do ViewModel
 
 ## 3. Ligar nos arquivos compartilhados
@@ -58,6 +58,8 @@ Rode cada um separado, sem `| tail`, e só siga com todos verdes:
 
 ```bash
 .claude/skills/nova-funcionalidade/verificar-padrao.sh <pacote>
+bash ferramentas/guardas.sh
+ktlint "**/*.kt" "**/*.kts" "!**/build/**"   # 1.7.1, regras em .editorconfig (120 colunas, trailing comma)
 ./gradlew lintDebug
 ./gradlew assembleDebug        # gera o schema novo em app/schemas/: commite
 ./gradlew testDebugUnitTest
@@ -65,7 +67,7 @@ Rode cada um separado, sem `| tail`, e só siga com todos verdes:
 
 Teste novo precisa ter sido visto falhar: quebre de propósito a regra que ele cobre, veja o vermelho e desfaça.
 
-`verificar-padrao.sh` sem argumento confere todos os pacotes com entidade. Ele falha quando sobra `AJUSTAR:`, falta campo de controle, a entidade não está no banco, o DAO não está no Hilt, uma escrita não devolve linhas, há cor fixa fora do tema, falta teste ou o schema da versão atual não foi commitado.
+`verificar-padrao.sh` sem argumento confere todos os pacotes com entidade. Ele falha quando sobra `AJUSTAR:`, falta campo de controle, a entidade não está no banco, o DAO não está no Hilt, uma escrita não devolve linhas, há cor fixa fora do tema, a tela usa `Scaffold` em vez de `TelaDiario`, falta teste ou o schema da versão atual não foi commitado.
 
 Se este ambiente não tiver o SDK do Android, diga isso e deixe o CI do PR ser a prova do build; não afirme que compila sem ver o CI verde.
 
