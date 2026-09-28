@@ -45,6 +45,18 @@ renderizar EntidadeRepositorioTest.kt.molde "$TESTE/$PACOTE/data/${ENTIDADE}Repo
 renderizar EntidadeViewModelTest.kt.molde  "$TESTE/$PACOTE/ui/${ENTIDADE}ViewModelTest.kt"
 
 
+# A ordem dos imports depende do nome do pacote; o ktlint do projeto acerta isso e o resto do estilo.
+gerados=("$MAIN/$PACOTE" "$TESTE/$PACOTE")
+if command -v ktlint >/dev/null; then
+  ktlint -F "${gerados[@]/%//**/*.kt}" >/dev/null 2>&1 || true
+  echo "  formatado com ktlint"
+elif [ -n "${KTLINT_JAR:-}" ]; then
+  java -jar "$KTLINT_JAR" -F "${gerados[@]/%//**/*.kt}" >/dev/null 2>&1 || true
+  echo "  formatado com ktlint ($KTLINT_JAR)"
+else
+  echo "  aviso: ktlint não encontrado; rode ktlint -F nos arquivos gerados antes do commit"
+fi
+
 cat <<FIM
 
 Falta ligar nos arquivos compartilhados (passo 3 da skill):

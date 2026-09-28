@@ -1,14 +1,11 @@
 package com.pedrohrsm.diariodebordo.__PACOTE__.data
 
-import kotlinx.coroutines.flow.Flow
 import java.time.Clock
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
 
 /** Único lugar que escreve em __TABELA__: preenche os campos de controle e confere as linhas afetadas. */
-class __ENTIDADE__Repositorio @Inject constructor(
-    private val dao: __ENTIDADE__Dao,
-    private val relogio: Clock,
-) {
+class __ENTIDADE__Repositorio @Inject constructor(private val dao: __ENTIDADE__Dao, private val relogio: Clock) {
     fun observarAtivos(): Flow<List<__ENTIDADE__>> = dao.observarAtivos()
 
     suspend fun criar(item: __ENTIDADE__): __ENTIDADE__ {
