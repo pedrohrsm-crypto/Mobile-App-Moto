@@ -1,7 +1,7 @@
 # Planejamento com as áreas — Diário de Bordo (Mobile-App-Moto)
 
 > Procedimento PFA-01, passo 1.0 (framework, capítulo 14).
-> **Framework:** v1.6 · **Data:** 2026-09-26 · **Escala:** S · **Aprovado pelo dono:** [ ]
+> **Framework:** v1.6 · **Data:** 2026-09-26 · **Escala:** S · **Aprovado pelo dono:** [x] (Pedro, 2026-09-28)
 >
 > Todo item cita de onde veio. As fontes vêm de um SaaS web (o Velix) e foram adaptadas para um app Android nativo, offline-first e com GPS. O conteúdo delas foi tratado como material de consulta, e nenhum número do Velix virou meta do app. A seção 8 diz em que fase e item do [plano de ação](plano-de-acao.md) cada ponto entra.
 
