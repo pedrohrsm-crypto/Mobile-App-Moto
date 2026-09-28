@@ -11,9 +11,11 @@ import com.pedrohrsm.diariodebordo.diario.dominio.CampoRegistro
 import com.pedrohrsm.diariodebordo.diario.dominio.MAXIMO_FOTOS
 import com.pedrohrsm.diariodebordo.diario.dominio.validarRegistro
 import com.pedrohrsm.diariodebordo.diario.fotos.GuardaFotos
+import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.numeros.Leitor
 import com.pedrohrsm.diariodebordo.numeros.TextoDeNumero
+import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import javax.inject.Inject
@@ -64,6 +66,8 @@ class RegistroFormViewModel @Inject constructor(
     private val repositorio: RegistroRepositorio,
     private val guardaFotos: GuardaFotos,
     private val motoAtual: MotoAtual,
+    private val plano: PlanoRepositorio,
+    private val hodometro: HodometroRepositorio,
     private val relogio: Clock,
 ) : ViewModel() {
 
@@ -91,13 +95,18 @@ class RegistroFormViewModel @Inject constructor(
     private suspend fun carregar(tipoInicial: TipoRegistro?, itemInicial: String?) {
         if (registroId == null) {
             val moto = motoAtual.moto.first()
+            // Vindo do plano ("registrar feito"): título do item e km atual já preenchidos, só falta salvar.
+            val item = itemInicial?.let { plano.buscar(it) }
+            val kmAtual = if (item != null) hodometro.kmAtual(item.motoId) else null
             _estado.update {
                 it.copy(
                     carregando = false,
-                    motoId = moto?.id,
-                    erro = if (moto == null) ErroRegistroForm.SemMoto else null,
-                    tipo = tipoInicial ?: it.tipo,
-                    itemPlanoId = itemInicial,
+                    motoId = item?.motoId ?: moto?.id,
+                    erro = if (moto == null && item == null) ErroRegistroForm.SemMoto else null,
+                    tipo = if (item != null) TipoRegistro.MANUTENCAO else tipoInicial ?: it.tipo,
+                    titulo = item?.nome.orEmpty(),
+                    km = kmAtual?.toString().orEmpty(),
+                    itemPlanoId = item?.id,
                     dataEm = relogio.millis(),
                 )
             }

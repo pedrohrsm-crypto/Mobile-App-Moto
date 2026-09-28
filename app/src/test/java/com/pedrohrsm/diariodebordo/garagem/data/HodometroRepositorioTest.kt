@@ -5,6 +5,8 @@ import com.pedrohrsm.diariodebordo.core.premium.LimiteDeMotosException
 import com.pedrohrsm.diariodebordo.core.premium.Premium
 import com.pedrohrsm.diariodebordo.garagem.dominio.LeituraRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoLeitura
+import com.pedrohrsm.diariodebordo.plano.data.FakeItemDoPlanoDao
+import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -22,6 +24,7 @@ class HodometroRepositorioTest {
     private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
     private val dao = FakeLeituraHodometroDao()
     private val hodometro = HodometroRepositorio(dao, relogio)
+    private val plano = PlanoRepositorio(FakeItemDoPlanoDao(), relogio)
 
     @Test
     fun registrarPreencheControleEViraKmAtual() = runTest {
@@ -55,16 +58,18 @@ class HodometroRepositorioTest {
     @Test
     fun cadastroCriaMotoELeituraInicialNumaTransacao() = runTest {
         val transacao = TransacaoFalsa()
-        val cadastro = CadastroMoto(MotoRepositorio(FakeMotoDao(), relogio), hodometro, Premium(false), transacao)
+        val cadastro =
+            CadastroMoto(MotoRepositorio(FakeMotoDao(), relogio), hodometro, plano, Premium(false), transacao)
         val moto = cadastro.cadastrar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"), 23_450)
         assertEquals(23_450, hodometro.kmAtual(moto.id))
         assertEquals(1, transacao.execucoes)
+        assertTrue(plano.abertos().any { it.motoId == moto.id && it.nome == "Troca de óleo" })
     }
 
     @Test(expected = LimiteDeMotosException::class)
     fun gratisNaoCadastraSegundaMoto() = runTest {
         val cadastro =
-            CadastroMoto(MotoRepositorio(FakeMotoDao(), relogio), hodometro, Premium(false), TransacaoFalsa())
+            CadastroMoto(MotoRepositorio(FakeMotoDao(), relogio), hodometro, plano, Premium(false), TransacaoFalsa())
         cadastro.cadastrar(Moto(apelido = "A", marca = "Honda", modelo = "CG"), 0)
         cadastro.cadastrar(Moto(apelido = "B", marca = "Yamaha", modelo = "Fazer"), 0)
     }

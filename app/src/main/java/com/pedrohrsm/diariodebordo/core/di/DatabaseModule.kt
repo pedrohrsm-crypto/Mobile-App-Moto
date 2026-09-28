@@ -9,6 +9,7 @@ import com.pedrohrsm.diariodebordo.diario.data.FotoRegistroDao
 import com.pedrohrsm.diariodebordo.diario.data.RegistroDao
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
+import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlanoDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,6 +37,9 @@ object DatabaseModule {
 
     @Provides
     fun provideFotoRegistroDao(database: DiarioDatabase): FotoRegistroDao = database.fotoRegistroDao()
+
+    @Provides
+    fun provideItemDoPlanoDao(database: DiarioDatabase): ItemDoPlanoDao = database.itemDoPlanoDao()
 
     @Provides
     fun provideTransacao(database: DiarioDatabase): Transacao = TransacaoRoom(database)

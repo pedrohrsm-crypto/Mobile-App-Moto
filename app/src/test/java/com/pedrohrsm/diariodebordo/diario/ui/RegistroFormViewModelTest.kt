@@ -15,6 +15,8 @@ import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
+import com.pedrohrsm.diariodebordo.plano.data.FakeItemDoPlanoDao
+import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -48,10 +50,13 @@ class RegistroFormViewModelTest {
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
     private val motoAtual = MotoAtual(motos, FakePreferencias())
     private val registros = FakeRegistroDao()
+    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), relogio)
+    private val plano = PlanoRepositorio(FakeItemDoPlanoDao(), relogio)
     private val repositorio = RegistroRepositorio(
         registros,
         FakeFotoRegistroDao(),
-        HodometroRepositorio(FakeLeituraHodometroDao(), relogio),
+        hodometro,
+        plano,
         TransacaoFalsa(),
         relogio,
     )
@@ -64,7 +69,7 @@ class RegistroFormViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun novo(args: Map<String, Any?> = emptyMap()) =
-        RegistroFormViewModel(SavedStateHandle(args), repositorio, fotos, motoAtual, relogio)
+        RegistroFormViewModel(SavedStateHandle(args), repositorio, fotos, motoAtual, plano, hodometro, relogio)
 
     @Test
     fun registroNovoUsaAMotoAtualEOTipoPedido() = runTest {
@@ -110,5 +115,19 @@ class RegistroFormViewModelTest {
         assertEquals(listOf("foto-1.jpg"), fotos.apagadas)
         vm.descartarFotosNaoSalvas()
         assertEquals(listOf("foto-1.jpg", "foto-2.jpg"), fotos.apagadas)
+    }
+
+    @Test
+    fun feitoDoPlanoAbreComTituloEKmPreenchidos() = runTest {
+        val moto = motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        hodometro.registrar(moto.id, 14_900)
+        plano.semearPlanoBase(moto, kmInicial = 10_000)
+        val oleo = plano.abertos().single { it.nome == "Troca de óleo" }
+        val vm = novo(mapOf(RegistroFormViewModel.ARG_ITEM_ID to oleo.id))
+        assertEquals(TipoRegistro.MANUTENCAO, vm.estado.value.tipo)
+        assertEquals("Troca de óleo", vm.estado.value.titulo)
+        assertEquals("14900", vm.estado.value.km)
+        vm.salvar()
+        assertEquals(14_900, plano.buscar(oleo.id)?.ultimaVezKm)
     }
 }

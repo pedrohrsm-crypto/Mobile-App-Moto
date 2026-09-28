@@ -3,6 +3,7 @@ package com.pedrohrsm.diariodebordo.diario.data
 import com.pedrohrsm.diariodebordo.core.database.Transacao
 import com.pedrohrsm.diariodebordo.diario.dominio.MAXIMO_FOTOS
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
+import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
 import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -15,6 +16,7 @@ class RegistroRepositorio @Inject constructor(
     private val dao: RegistroDao,
     private val fotos: FotoRegistroDao,
     private val hodometro: HodometroRepositorio,
+    private val plano: PlanoRepositorio,
     private val transacao: Transacao,
     private val relogio: Clock,
 ) {
@@ -53,6 +55,7 @@ class RegistroRepositorio @Inject constructor(
             }
             val removidos = sincronizarFotos(salvo.id, arquivosDasFotos, agora)
             salvo.hodometroKm?.let { hodometro.registrarSeAvancar(salvo.motoId, it, salvo.dataEm) }
+            aplicarNoPlano(salvo)
             Salvo(salvo, removidos)
         }
     }
@@ -65,6 +68,18 @@ class RegistroRepositorio @Inject constructor(
         fotos.doRegistro(id).map { foto ->
             check(fotos.marcarExcluido(foto.id, agora) == 1) { "Foto ${foto.id} não foi excluída" }
             foto.arquivo
+        }
+    }
+
+    /** Manutenção de um item do plano o dá por feito; ocorrência cria as pendências de inspeção. */
+    private suspend fun aplicarNoPlano(registro: Registro) {
+        when (registro.tipo) {
+            TipoRegistro.MANUTENCAO -> registro.itemPlanoId?.let { itemId ->
+                val km = registro.hodometroKm ?: hodometro.kmAtual(registro.motoId) ?: return
+                plano.registrarFeito(itemId, km, registro.dataEm, registro.id)
+            }
+            TipoRegistro.OCORRENCIA -> plano.criarPendencias(registro)
+            else -> Unit
         }
     }
 

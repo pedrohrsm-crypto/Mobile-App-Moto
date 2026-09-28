@@ -34,6 +34,9 @@ import com.pedrohrsm.diariodebordo.garagem.ui.AcoesMoto
 import com.pedrohrsm.diariodebordo.garagem.ui.GaragemRoute
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoDetalheRoute
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoFormRoute
+import com.pedrohrsm.diariodebordo.plano.ui.AcoesPlano
+import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormRoute
+import com.pedrohrsm.diariodebordo.plano.ui.PlanoRoute
 
 /**
  * Lista única dos destinos da barra inferior: a barra e o grafo leem daqui, e o rótulo é o
@@ -42,6 +45,7 @@ import com.pedrohrsm.diariodebordo.garagem.ui.MotoFormRoute
 enum class Destino(val rota: String, @StringRes val rotulo: Int, @DrawableRes val icone: Int) {
     GARAGEM(Rotas.GARAGEM, R.string.garagem_titulo, R.drawable.ic_garagem),
     DIARIO(Rotas.DIARIO, R.string.diario_titulo, R.drawable.ic_diario),
+    PLANO(Rotas.PLANO, R.string.plano_titulo, R.drawable.ic_plano),
 }
 
 /** Todas as rotas do app. Rotas com argumento têm a função que monta o caminho. */
@@ -52,6 +56,9 @@ object Rotas {
     const val MOTO_EDITAR = "moto/{motoId}/editar"
 
     const val DIARIO = "diario"
+    const val PLANO = "plano"
+    const val ITEM_NOVO = "plano/item/novo"
+    const val ITEM = "plano/item/{itemId}"
     const val REGISTRO_NOVO = "registro/novo?tipo={tipo}&itemId={itemId}"
     const val REGISTRO = "registro/editar/{registroId}"
 
@@ -60,6 +67,7 @@ object Rotas {
         "registro/novo" + listOfNotNull(tipo?.let { "tipo=$it" }, itemId?.let { "itemId=$it" })
             .joinToString("&").let { if (it.isEmpty()) "" else "?$it" }
     fun registro(registroId: String) = "registro/editar/$registroId"
+    fun item(itemId: String) = "plano/item/$itemId"
     fun motoEditar(motoId: String) = "moto/$motoId/editar"
 }
 
@@ -92,6 +100,7 @@ fun DiarioNavHost(navController: NavHostController = rememberNavController()) {
         ) {
             grafoGaragem(navController)
             grafoDiario(navController)
+            grafoPlano(navController)
         }
     }
 }
@@ -124,6 +133,7 @@ private fun NavGraphBuilder.grafoGaragem(nav: NavController) {
             acoes = AcoesMoto(
                 onEditar = { nav.navigate(Rotas.motoEditar(motoId)) },
                 onDiario = { nav.irParaAba(Destino.DIARIO) },
+                onPlano = { nav.irParaAba(Destino.PLANO) },
             ),
         )
     }
@@ -155,4 +165,19 @@ private fun NavArgumentBuilder.opcional() {
     type = NavType.StringType
     nullable = true
     defaultValue = null
+}
+
+private fun NavGraphBuilder.grafoPlano(nav: NavController) {
+    composable(Rotas.PLANO) {
+        PlanoRoute(
+            AcoesPlano(
+                onNovoItem = { nav.navigate(Rotas.ITEM_NOVO) },
+                onEditarItem = { nav.navigate(Rotas.item(it)) },
+                onRegistrarFeito = { nav.navigate(Rotas.registroNovo(itemId = it.id)) },
+                onCadastrarMoto = { nav.navigate(Rotas.MOTO_NOVA) },
+            ),
+        )
+    }
+    composable(Rotas.ITEM_NOVO) { ItemPlanoFormRoute(onConcluido = { nav.popBackStack() }) }
+    composable(Rotas.ITEM) { ItemPlanoFormRoute(onConcluido = { nav.popBackStack() }) }
 }
