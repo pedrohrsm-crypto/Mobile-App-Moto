@@ -48,4 +48,40 @@
     <string name="plano_titulo">Plano</string>
     <string name="rotas_titulo">Rotas</string>
     <string name="ajustes_titulo">Ajustes</string>
+
+    <string name="ok">OK</string>
+    <string name="remover">Remover</string>
+
+    <!-- Diário -->
+    <string name="diario_titulo_moto">Diário · %1$s</string>
+    <string name="diario_novo">Novo registro</string>
+    <string name="diario_vazio">Nenhum registro ainda. Anote a próxima manutenção, abastecimento ou rolê.</string>
+    <string name="tipo_manutencao">Manutenção</string>
+    <string name="tipo_abastecimento">Abastecimento</string>
+    <string name="tipo_ocorrencia">Ocorrência</string>
+    <string name="tipo_role">Rolê</string>
+    <string name="tipo_nota">Nota</string>
+    <string name="ocorrencia_queda">Queda</string>
+    <string name="ocorrencia_barulho">Barulho</string>
+    <string name="ocorrencia_vazamento">Vazamento</string>
+    <string name="ocorrencia_outra">Outra</string>
+    <string name="registro_novo">Novo registro</string>
+    <string name="registro_editar">Editar registro</string>
+    <string name="registro_titulo">Título</string>
+    <string name="registro_data">Data: %1$s</string>
+    <string name="registro_km">Hodômetro (km, opcional)</string>
+    <string name="registro_valor">Valor em R$ (opcional)</string>
+    <string name="registro_valor_invalido">Digite o valor como 123,45.</string>
+    <string name="registro_litros">Litros (opcional)</string>
+    <string name="registro_litros_invalido">Digite os litros como 12,5.</string>
+    <string name="registro_tanque_cheio">Completei o tanque</string>
+    <string name="registro_ocorrencia">O que aconteceu</string>
+    <string name="registro_descricao">Observações (opcional)</string>
+    <string name="registro_fotos">Fotos (%1$d de %2$d)</string>
+    <string name="registro_foto_descricao">Foto %1$d do registro</string>
+    <string name="registro_adicionar_foto">Adicionar foto</string>
+    <string name="registro_falha_foto">Não foi possível usar essa foto. %1$s</string>
+    <string name="registro_nao_encontrado">Este registro não existe mais.</string>
+    <string name="registro_excluir_titulo">Excluir este registro?</string>
+    <string name="registro_excluir_texto">O registro e as fotos dele saem do diário.</string>
 </resources>

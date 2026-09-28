@@ -87,3 +87,13 @@ object Leitor {
         return inteira.toLong() * fator + fracao.padEnd(casas, '0').ifEmpty { "0" }.toLong()
     }
 }
+
+/** Texto para preencher um campo em edição, no formato que o [Leitor] lê de volta. */
+object TextoDeNumero {
+    fun dinheiro(centavos: Long): String = "%d,%02d".format(centavos / 100, Math.abs(centavos % 100))
+
+    fun litros(mililitros: Long): String {
+        val fracao = "%03d".format(mililitros % 1000).trimEnd('0')
+        return if (fracao.isEmpty()) "${mililitros / 1000}" else "${mililitros / 1000},$fracao"
+    }
+}

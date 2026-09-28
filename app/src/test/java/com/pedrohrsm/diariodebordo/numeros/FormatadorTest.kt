@@ -77,3 +77,17 @@ class LeitorTest {
         assertNull(Leitor.litros("1,2345"))
     }
 }
+
+class TextoDeNumeroTest {
+
+    @Test
+    fun textoDeEdicaoVoltaAoMesmoValorPeloLeitor() {
+        listOf(0L, 5L, 1_000L, 123_456L).forEach {
+            assertEquals(it, Leitor.dinheiro(TextoDeNumero.dinheiro(it)))
+        }
+        listOf(0L, 500L, 9_000L, 12_345L).forEach {
+            assertEquals(it, Leitor.litros(TextoDeNumero.litros(it)))
+        }
+        assertEquals("12,5", TextoDeNumero.litros(12_500))
+    }
+}
