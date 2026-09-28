@@ -7,6 +7,7 @@ import com.pedrohrsm.diariodebordo.garagem.dominio.LeituraRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoLeitura
 import com.pedrohrsm.diariodebordo.plano.data.FakeItemDoPlanoDao
 import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -23,8 +24,9 @@ class HodometroRepositorioTest {
     private val instante = Instant.parse("2026-10-01T12:00:00Z")
     private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
     private val dao = FakeLeituraHodometroDao()
-    private val hodometro = HodometroRepositorio(dao, relogio)
-    private val plano = PlanoRepositorio(FakeItemDoPlanoDao(), relogio)
+    private val agendador = AgendadorFalso()
+    private val hodometro = HodometroRepositorio(dao, relogio, agendador)
+    private val plano = PlanoRepositorio(FakeItemDoPlanoDao(), relogio, AgendadorFalso())
 
     @Test
     fun registrarPreencheControleEViraKmAtual() = runTest {
@@ -72,5 +74,12 @@ class HodometroRepositorioTest {
             CadastroMoto(MotoRepositorio(FakeMotoDao(), relogio), hodometro, plano, Premium(false), TransacaoFalsa())
         cadastro.cadastrar(Moto(apelido = "A", marca = "Honda", modelo = "CG"), 0)
         cadastro.cadastrar(Moto(apelido = "B", marca = "Yamaha", modelo = "Fazer"), 0)
+    }
+
+    @Test
+    fun cadaLeituraAceitaRecalculaOsLembretesUmaVez() = runTest {
+        hodometro.registrar("moto", 1_000)
+        runCatching { hodometro.registrar("moto", 900) }
+        assertEquals(1, agendador.recalculos)
     }
 }

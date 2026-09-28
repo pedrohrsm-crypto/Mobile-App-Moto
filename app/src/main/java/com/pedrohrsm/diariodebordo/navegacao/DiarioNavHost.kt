@@ -11,6 +11,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -59,6 +60,7 @@ object Rotas {
     const val PLANO = "plano"
     const val ITEM_NOVO = "plano/item/novo"
     const val ITEM = "plano/item/{itemId}"
+    const val PLANO_DA_MOTO = "moto/{motoId}/plano?destaque={destaque}"
     const val REGISTRO_NOVO = "registro/novo?tipo={tipo}&itemId={itemId}"
     const val REGISTRO = "registro/editar/{registroId}"
 
@@ -68,11 +70,28 @@ object Rotas {
             .joinToString("&").let { if (it.isEmpty()) "" else "?$it" }
     fun registro(registroId: String) = "registro/editar/$registroId"
     fun item(itemId: String) = "plano/item/$itemId"
+    fun planoDaMoto(motoId: String, destaque: String?) =
+        "moto/$motoId/plano" + (destaque?.let { "?destaque=$it" } ?: "")
     fun motoEditar(motoId: String) = "moto/$motoId/editar"
 }
 
+/** Destino pedido de fora do app (notificação de lembrete). */
+data class Abertura(val motoId: String, val itemId: String?)
+
 @Composable
-fun DiarioNavHost(navController: NavHostController = rememberNavController()) {
+fun DiarioNavHost(
+    abertura: Abertura? = null,
+    onAberturaTratada: () -> Unit = {},
+    navController: NavHostController = rememberNavController(),
+) {
+    LaunchedEffect(abertura) {
+        if (abertura != null) {
+            // A moto é o hub: o voltar a partir do plano leva à moto (docs/PLANEJAMENTO.md, UX/UI).
+            navController.navigate(Rotas.moto(abertura.motoId)) { popUpTo(Rotas.GARAGEM) }
+            navController.navigate(Rotas.planoDaMoto(abertura.motoId, abertura.itemId))
+            onAberturaTratada()
+        }
+    }
     val entrada by navController.currentBackStackEntryAsState()
     val rotaAtual = entrada?.destination?.route
     Scaffold(
@@ -168,15 +187,15 @@ private fun NavArgumentBuilder.opcional() {
 }
 
 private fun NavGraphBuilder.grafoPlano(nav: NavController) {
-    composable(Rotas.PLANO) {
-        PlanoRoute(
-            AcoesPlano(
-                onNovoItem = { nav.navigate(Rotas.ITEM_NOVO) },
-                onEditarItem = { nav.navigate(Rotas.item(it)) },
-                onRegistrarFeito = { nav.navigate(Rotas.registroNovo(itemId = it.id)) },
-                onCadastrarMoto = { nav.navigate(Rotas.MOTO_NOVA) },
-            ),
-        )
+    val acoes = AcoesPlano(
+        onNovoItem = { nav.navigate(Rotas.ITEM_NOVO) },
+        onEditarItem = { nav.navigate(Rotas.item(it)) },
+        onRegistrarFeito = { nav.navigate(Rotas.registroNovo(itemId = it.id)) },
+        onCadastrarMoto = { nav.navigate(Rotas.MOTO_NOVA) },
+    )
+    composable(Rotas.PLANO) { PlanoRoute(acoes) }
+    composable(Rotas.PLANO_DA_MOTO, arguments = listOf(navArgument("destaque") { opcional() })) { entrada ->
+        PlanoRoute(acoes, destaque = entrada.arguments?.getString("destaque"))
     }
     composable(Rotas.ITEM_NOVO) { ItemPlanoFormRoute(onConcluido = { nav.popBackStack() }) }
     composable(Rotas.ITEM) { ItemPlanoFormRoute(onConcluido = { nav.popBackStack() }) }

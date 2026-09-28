@@ -13,6 +13,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
 import com.pedrohrsm.diariodebordo.plano.dominio.planoBase
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import com.pedrohrsm.diariodebordo.plano.ui.montarPlano
 import java.time.Clock
 import java.time.Instant
@@ -29,8 +30,8 @@ class PlanoRepositorioTest {
     private val instante = Instant.parse("2026-10-01T12:00:00Z")
     private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
     private val dao = FakeItemDoPlanoDao()
-    private val plano = PlanoRepositorio(dao, relogio)
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), relogio)
+    private val plano = PlanoRepositorio(dao, relogio, AgendadorFalso())
+    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), relogio, AgendadorFalso())
     private val registros = RegistroRepositorio(
         FakeRegistroDao(),
         FakeFotoRegistroDao(),

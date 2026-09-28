@@ -4,12 +4,17 @@ import com.pedrohrsm.diariodebordo.diario.data.Registro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.plano.dominio.inspecoesDaOcorrencia
 import com.pedrohrsm.diariodebordo.plano.dominio.planoBase
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorLembretes
 import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
 /** Único lugar que escreve no plano de manutenção. Confere as linhas de toda atualização. */
-class PlanoRepositorio @Inject constructor(private val dao: ItemDoPlanoDao, private val relogio: Clock) {
+class PlanoRepositorio @Inject constructor(
+    private val dao: ItemDoPlanoDao,
+    private val relogio: Clock,
+    private val lembretes: AgendadorLembretes,
+) {
 
     fun observarDaMoto(motoId: String): Flow<List<ItemDoPlano>> = dao.observarDaMoto(motoId)
 
@@ -45,6 +50,7 @@ class PlanoRepositorio @Inject constructor(private val dao: ItemDoPlanoDao, priv
                 item.ultimaVezEm ?: relogio.millis(),
             )
             inserir(novo)
+            lembretes.recalcularAgora()
             return novo
         }
         val alterado = existente.copy(
@@ -56,6 +62,7 @@ class PlanoRepositorio @Inject constructor(private val dao: ItemDoPlanoDao, priv
             alteradoEm = relogio.millis(),
         )
         atualizar(alterado)
+        lembretes.recalcularAgora()
         return alterado
     }
 

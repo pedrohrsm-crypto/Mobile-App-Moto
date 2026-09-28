@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.ListItem
@@ -13,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,10 +46,10 @@ data class AcoesPlano(
 )
 
 @Composable
-fun PlanoRoute(acoes: AcoesPlano, viewModel: PlanoViewModel = hiltViewModel()) {
+fun PlanoRoute(acoes: AcoesPlano, destaque: String? = null, viewModel: PlanoViewModel = hiltViewModel()) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     val falha by viewModel.falha.collectAsStateWithLifecycle()
-    PlanoScreen(estado, acoes.copy(onResolver = viewModel::resolver))
+    PlanoScreen(estado, acoes.copy(onResolver = viewModel::resolver), destaque)
     falha?.let { detalhe ->
         AlertDialog(
             onDismissRequest = viewModel::limparFalha,
@@ -58,8 +60,16 @@ fun PlanoRoute(acoes: AcoesPlano, viewModel: PlanoViewModel = hiltViewModel()) {
 }
 
 @Composable
-fun PlanoScreen(estado: PlanoEstado, acoes: AcoesPlano = AcoesPlano()) {
+fun PlanoScreen(estado: PlanoEstado, acoes: AcoesPlano = AcoesPlano(), destaque: String? = null) {
     val d = LocalDimensoes.current
+    val lista = rememberLazyListState()
+    // Aberto por um lembrete: rola até o item avisado.
+    LaunchedEffect(estado is PlanoEstado.Pronto, destaque) {
+        val pronto = estado as? PlanoEstado.Pronto ?: return@LaunchedEffect
+        val indice = pronto.itens.indexOfFirst { it.item.id == destaque }
+        val antes = 2 + if (pronto.pendencias.isEmpty()) 0 else pronto.pendencias.size + 1 // aviso, seções e pendências
+        if (indice >= 0) lista.animateScrollToItem(antes + indice)
+    }
     val titulo = (estado as? PlanoEstado.Pronto)?.moto?.apelido
         ?.let { stringResource(R.string.plano_titulo_moto, it) }
         ?: stringResource(R.string.plano_titulo)
@@ -81,7 +91,8 @@ fun PlanoScreen(estado: PlanoEstado, acoes: AcoesPlano = AcoesPlano()) {
             PlanoEstado.Carregando -> EstadoCarregando(conteudo)
             PlanoEstado.SemMoto -> EstadoSemMoto(acoes.onCadastrarMoto, conteudo)
             is PlanoEstado.Erro -> EstadoErro(estado.detalhe, conteudo)
-            is PlanoEstado.Pronto -> LazyColumn(contentPadding = padding) {
+            is PlanoEstado.Pronto -> LazyColumn(state = lista, contentPadding = padding) {
+                item { AvisoPermissaoNotificacao() }
                 if (estado.pendencias.isNotEmpty()) {
                     item { Secao(stringResource(R.string.plano_pendencias)) }
                     items(estado.pendencias, key = { it.id }) { PendenciaItem(it, acoes.onResolver) }

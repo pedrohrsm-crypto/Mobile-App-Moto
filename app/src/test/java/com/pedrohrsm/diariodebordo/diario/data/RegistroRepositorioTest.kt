@@ -5,6 +5,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.FakeLeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.plano.data.FakeItemDoPlanoDao
 import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -20,13 +21,13 @@ class RegistroRepositorioTest {
     private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
     private val dao = FakeRegistroDao()
     private val fotos = FakeFotoRegistroDao()
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), relogio)
+    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), relogio, AgendadorFalso())
     private val repositorio =
         RegistroRepositorio(
             dao,
             fotos,
             hodometro,
-            PlanoRepositorio(FakeItemDoPlanoDao(), relogio),
+            PlanoRepositorio(FakeItemDoPlanoDao(), relogio, AgendadorFalso()),
             TransacaoFalsa(),
             relogio,
         )

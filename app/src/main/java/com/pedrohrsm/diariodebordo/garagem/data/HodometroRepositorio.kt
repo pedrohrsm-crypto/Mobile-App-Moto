@@ -3,12 +3,17 @@ package com.pedrohrsm.diariodebordo.garagem.data
 import com.pedrohrsm.diariodebordo.garagem.dominio.LeituraRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoLeitura
 import com.pedrohrsm.diariodebordo.garagem.dominio.validarLeitura
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorLembretes
 import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 
 /** Único lugar que escreve leituras de hodômetro. Toda leitura passa por [validarLeitura]. */
-class HodometroRepositorio @Inject constructor(private val dao: LeituraHodometroDao, private val relogio: Clock) {
+class HodometroRepositorio @Inject constructor(
+    private val dao: LeituraHodometroDao,
+    private val relogio: Clock,
+    private val lembretes: AgendadorLembretes,
+) {
     fun observarDaMoto(motoId: String): Flow<List<LeituraHodometro>> = dao.observarDaMoto(motoId)
 
     fun observarKmAtuais(): Flow<List<KmAtual>> = dao.observarKmAtuais()
@@ -29,6 +34,8 @@ class HodometroRepositorio @Inject constructor(private val dao: LeituraHodometro
             fusoHorario = relogio.zone.id,
         )
         dao.inserir(nova)
+        // Lembretes por km dependem do hodômetro: recalcula todos numa tarefa só.
+        lembretes.recalcularAgora()
         return nova
     }
 

@@ -108,4 +108,11 @@
     <string name="item_plano_dias">A cada quantos dias (opcional)</string>
     <string name="item_plano_dias_invalido">Digite de 1 a 3650 dias.</string>
     <string name="item_plano_sem_intervalo">Informe km, dias ou os dois.</string>
+
+    <!-- Lembretes -->
+    <string name="lembrete_vencido">Venceu: %1$s</string>
+    <string name="lembrete_proximo">Vence logo: %1$s</string>
+    <string name="lembrete_texto">%1$s · toque para ver o plano</string>
+    <string name="lembrete_permissao">Ative as notificações para receber os lembretes de manutenção.</string>
+    <string name="lembrete_ativar">Ativar</string>
 </resources>
