@@ -47,9 +47,6 @@ fun TemaDiario.colorScheme(): ColorScheme = when (this) {
 }
 
 @Composable
-fun DiarioTheme(
-    tema: TemaDiario = TemaDiario.OFICINA,
-    content: @Composable () -> Unit,
-) {
+fun DiarioTheme(tema: TemaDiario = TemaDiario.OFICINA, content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = tema.colorScheme(), content = content)
 }

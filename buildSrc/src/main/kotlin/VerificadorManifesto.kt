@@ -1,5 +1,5 @@
-import org.w3c.dom.Element
 import javax.xml.parsers.DocumentBuilderFactory
+import org.w3c.dom.Element
 
 /**
  * Regras de segurança do manifesto final (já mesclado com o das bibliotecas).
