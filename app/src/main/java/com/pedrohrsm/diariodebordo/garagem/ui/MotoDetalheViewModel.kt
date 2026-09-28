@@ -11,6 +11,8 @@ import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.garagem.dominio.LeituraRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoLeitura
 import com.pedrohrsm.diariodebordo.numeros.Leitor
+import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
+import com.pedrohrsm.diariodebordo.plano.dominio.itemDeTrocaDeOleo
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +28,10 @@ import kotlinx.coroutines.launch
 sealed interface MotoDetalheEstado {
     data object Carregando : MotoDetalheEstado
     data object NaoEncontrada : MotoDetalheEstado
-    data class Pronto(val moto: Moto, val leituras: List<LeituraHodometro>) : MotoDetalheEstado {
+
+    /** [trocaDeOleoId]: item do plano usado pelo atalho "registrar troca de óleo"; null esconde o atalho. */
+    data class Pronto(val moto: Moto, val leituras: List<LeituraHodometro>, val trocaDeOleoId: String? = null) :
+        MotoDetalheEstado {
         val kmAtual: Int? get() = leituras.maxOfOrNull { it.km }
     }
     data class Erro(val detalhe: String?) : MotoDetalheEstado
@@ -46,6 +51,7 @@ class MotoDetalheViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     motos: MotoRepositorio,
     private val hodometro: HodometroRepositorio,
+    plano: PlanoRepositorio,
     motoAtual: MotoAtual,
 ) : ViewModel() {
 
@@ -56,8 +62,16 @@ class MotoDetalheViewModel @Inject constructor(
     }
 
     val estado: StateFlow<MotoDetalheEstado> =
-        combine(motos.observar(motoId), hodometro.observarDaMoto(motoId)) { moto, leituras ->
-            if (moto == null) MotoDetalheEstado.NaoEncontrada else MotoDetalheEstado.Pronto(moto, leituras)
+        combine(motos.observar(motoId), hodometro.observarDaMoto(motoId), plano.observarDaMoto(motoId)) {
+                moto,
+                leituras,
+                itens,
+            ->
+            if (moto == null) {
+                MotoDetalheEstado.NaoEncontrada
+            } else {
+                MotoDetalheEstado.Pronto(moto, leituras, itemDeTrocaDeOleo(itens)?.id)
+            }
         }
             .catch { emit(MotoDetalheEstado.Erro(it.message)) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MotoDetalheEstado.Carregando)

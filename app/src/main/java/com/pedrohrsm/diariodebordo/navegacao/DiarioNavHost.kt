@@ -28,6 +28,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.pedrohrsm.diariodebordo.R
+import com.pedrohrsm.diariodebordo.ajustes.AjustesRoute
 import com.pedrohrsm.diariodebordo.diario.ui.DiarioRoute
 import com.pedrohrsm.diariodebordo.diario.ui.RegistroFormRoute
 import com.pedrohrsm.diariodebordo.diario.ui.RegistroFormViewModel
@@ -55,6 +56,7 @@ enum class Destino(val rota: String, @StringRes val rotulo: Int, @DrawableRes va
 /** Todas as rotas do app. Rotas com argumento têm a função que monta o caminho. */
 object Rotas {
     const val GARAGEM = "garagem"
+    const val AJUSTES = "ajustes"
     const val MOTO_NOVA = "motos/nova"
     const val MOTO = "moto/{motoId}"
     const val MOTO_EDITAR = "moto/{motoId}/editar"
@@ -144,9 +146,10 @@ private fun NavGraphBuilder.grafoGaragem(nav: NavController) {
         GaragemRoute(
             onAbrirMoto = { nav.navigate(Rotas.moto(it)) },
             onNovaMoto = { nav.navigate(Rotas.MOTO_NOVA) },
-            onAjustes = {},
+            onAjustes = { nav.navigate(Rotas.AJUSTES) },
         )
     }
+    composable(Rotas.AJUSTES) { AjustesRoute() }
     composable(Rotas.MOTO_NOVA) {
         MotoFormRoute(onSalvo = { id -> nav.navigate(Rotas.moto(id)) { popUpTo(Rotas.GARAGEM) } })
     }
@@ -161,6 +164,7 @@ private fun NavGraphBuilder.grafoGaragem(nav: NavController) {
                 onDiario = { nav.irParaAba(Destino.DIARIO) },
                 onPlano = { nav.irParaAba(Destino.PLANO) },
                 onRotas = { nav.irParaAba(Destino.ROTAS) },
+                onTrocaDeOleo = { nav.navigate(Rotas.registroNovo(itemId = it)) },
             ),
         )
     }

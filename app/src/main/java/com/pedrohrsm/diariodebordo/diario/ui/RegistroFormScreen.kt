@@ -98,6 +98,14 @@ fun RegistroFormScreen(estado: RegistroFormEstado, acoes: AcoesRegistroForm = Ac
             if (estado.editando && !estado.carregando) {
                 TextButton(onClick = { confirmarExclusao = true }) { Text(stringResource(R.string.excluir)) }
             }
+            // Salvar também no topo: sem rolar a tela, o que conta no modo oficina (troca de óleo em 3 toques).
+            if (!estado.carregando && estado.motoId != null) {
+                TextButton(
+                    onClick = acoes.onSalvar,
+                    enabled = !estado.salvando,
+                    modifier = Modifier.heightIn(min = LocalDimensoes.current.toqueMinimo),
+                ) { Text(stringResource(R.string.salvar)) }
+            }
         },
     ) { padding ->
         if (estado.carregando) {

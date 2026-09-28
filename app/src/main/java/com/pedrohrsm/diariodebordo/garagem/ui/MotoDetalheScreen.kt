@@ -41,6 +41,8 @@ data class AcoesMoto(
     val onDiario: () -> Unit = {},
     val onPlano: () -> Unit = {},
     val onRotas: () -> Unit = {},
+    /** Recebe o item do plano de troca de óleo: abre o registro já preenchido, só falta salvar. */
+    val onTrocaDeOleo: (String) -> Unit = {},
 )
 
 @Composable
@@ -79,7 +81,7 @@ fun MotoDetalheScreen(
             MotoDetalheEstado.NaoEncontrada -> EstadoVazio(stringResource(R.string.moto_nao_encontrada), conteudo)
             is MotoDetalheEstado.Erro -> EstadoErro(estado.detalhe, conteudo)
             is MotoDetalheEstado.Pronto -> LazyColumn(contentPadding = padding) {
-                item { Cabecalho(estado.moto, estado.kmAtual, acoes, onAtualizarHodometro) }
+                item { Cabecalho(estado, acoes, onAtualizarHodometro) }
                 item {
                     ListItem(
                         headlineContent = {
@@ -97,15 +99,19 @@ fun MotoDetalheScreen(
 }
 
 @Composable
-private fun Cabecalho(moto: Moto, kmAtual: Int?, acoes: AcoesMoto, onAtualizarHodometro: () -> Unit) {
+private fun Cabecalho(estado: MotoDetalheEstado.Pronto, acoes: AcoesMoto, onAtualizarHodometro: () -> Unit) {
     val d = LocalDimensoes.current
+    val moto = estado.moto
     Column(Modifier.fillMaxWidth().padding(d.espaco), verticalArrangement = Arrangement.spacedBy(d.espacoPequeno)) {
         Text(stringResource(R.string.garagem_marca_modelo, moto.marca, moto.modelo))
         Text(
-            text = kmAtual?.let { Formatador.km(it) } ?: stringResource(R.string.hodometro_sem_leitura),
+            text = estado.kmAtual?.let { Formatador.km(it) } ?: stringResource(R.string.hodometro_sem_leitura),
             style = MaterialTheme.typography.headlineMedium,
         )
         BotaoPrincipal(stringResource(R.string.hodometro_atualizar), onAtualizarHodometro)
+        estado.trocaDeOleoId?.let { itemId ->
+            BotaoSecundario(stringResource(R.string.moto_registrar_troca_oleo), { acoes.onTrocaDeOleo(itemId) })
+        }
         BotaoSecundario(stringResource(R.string.diario_titulo), acoes.onDiario)
         BotaoSecundario(stringResource(R.string.plano_titulo), acoes.onPlano)
         BotaoSecundario(stringResource(R.string.rotas_titulo), acoes.onRotas)

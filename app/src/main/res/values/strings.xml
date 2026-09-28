@@ -142,4 +142,12 @@
     <string name="rota_tracado_descricao">Traçado da rota</string>
     <string name="rota_sem_mapa">Só o traçado, sem mapa de fundo: nada é baixado da internet.</string>
     <string name="rota_excluir_titulo">Excluir esta rota?</string>
+    <!-- Ajustes e modo oficina -->
+    <string name="ajustes_tema">Tema</string>
+    <string name="tema_oficina">Oficina</string>
+    <string name="tema_estrada">Estrada</string>
+    <string name="tema_cromo">Cromo</string>
+    <string name="ajustes_modo_oficina">Modo oficina</string>
+    <string name="ajustes_modo_oficina_explicacao">Letras e botões maiores, para usar de luva ou com a mão suja.</string>
+    <string name="moto_registrar_troca_oleo">Registrar troca de óleo</string>
 </resources>

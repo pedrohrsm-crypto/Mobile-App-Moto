@@ -12,7 +12,7 @@ data class ItemBase(val nome: String, val km: Int?, val dias: Int?)
  */
 fun planoBase(categoria: CategoriaMoto?): List<ItemBase> = when (categoria ?: CategoriaMoto.STREET) {
     CategoriaMoto.STREET -> listOf(
-        ItemBase("Troca de óleo", km = 5_000, dias = 180),
+        ItemBase(NOME_TROCA_DE_OLEO, km = 5_000, dias = 180),
         ItemBase("Filtro de óleo", km = 10_000, dias = 365),
         ItemBase("Filtro de ar", km = 10_000, dias = 365),
         ItemBase("Lubrificar a relação", km = 1_000, dias = 30),
@@ -23,7 +23,7 @@ fun planoBase(categoria: CategoriaMoto?): List<ItemBase> = when (categoria ?: Ca
         ItemBase("Pneus (inspeção)", km = 3_000, dias = 90),
     )
     CategoriaMoto.CUSTOM -> listOf(
-        ItemBase("Troca de óleo", km = 8_000, dias = 365),
+        ItemBase(NOME_TROCA_DE_OLEO, km = 8_000, dias = 365),
         ItemBase("Filtro de óleo", km = 8_000, dias = 365),
         ItemBase("Filtro de ar", km = 16_000, dias = 730),
         ItemBase("Correia ou relação (inspeção)", km = 8_000, dias = 365),
@@ -34,7 +34,7 @@ fun planoBase(categoria: CategoriaMoto?): List<ItemBase> = when (categoria ?: Ca
         ItemBase("Bateria (inspeção)", km = null, dias = 365),
     )
     CategoriaMoto.TRAIL -> listOf(
-        ItemBase("Troca de óleo", km = 4_000, dias = 180),
+        ItemBase(NOME_TROCA_DE_OLEO, km = 4_000, dias = 180),
         ItemBase("Filtro de óleo", km = 8_000, dias = 365),
         ItemBase("Limpar o filtro de ar", km = 2_000, dias = 90),
         ItemBase("Lubrificar a relação", km = 500, dias = 15),
@@ -45,7 +45,7 @@ fun planoBase(categoria: CategoriaMoto?): List<ItemBase> = when (categoria ?: Ca
         ItemBase("Rolamentos e suspensão (inspeção)", km = 10_000, dias = 365),
     )
     CategoriaMoto.SCOOTER -> listOf(
-        ItemBase("Troca de óleo", km = 3_000, dias = 180),
+        ItemBase(NOME_TROCA_DE_OLEO, km = 3_000, dias = 180),
         ItemBase("Óleo da transmissão", km = 6_000, dias = 365),
         ItemBase("Filtro de ar", km = 6_000, dias = 365),
         ItemBase("Correia do CVT", km = 20_000, dias = 730),

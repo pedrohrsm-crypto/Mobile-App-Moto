@@ -2,6 +2,7 @@ package com.pedrohrsm.diariodebordo.core.preferencias
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.pedrohrsm.diariodebordo.core.designsystem.theme.TemaDiario
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -24,6 +25,20 @@ class PreferenciasAndroid @Inject constructor(@ApplicationContext context: Conte
         prefs.edit().putString(MOTO_SELECIONADA, id).apply()
     }
 
+    override val tema: Flow<TemaDiario> = observar { p ->
+        TemaDiario.entries.find { it.name == p.getString(TEMA, null) } ?: TemaDiario.OFICINA
+    }
+
+    override fun definirTema(tema: TemaDiario) {
+        prefs.edit().putString(TEMA, tema.name).apply()
+    }
+
+    override val modoOficina: Flow<Boolean> = observar { it.getBoolean(MODO_OFICINA, false) }
+
+    override fun definirModoOficina(ligado: Boolean) {
+        prefs.edit().putBoolean(MODO_OFICINA, ligado).apply()
+    }
+
     private fun <T> observar(ler: (SharedPreferences) -> T): Flow<T> = callbackFlow {
         trySend(ler(prefs))
         val ouvinte = SharedPreferences.OnSharedPreferenceChangeListener { p, _ -> trySend(ler(p)) }
@@ -34,6 +49,8 @@ class PreferenciasAndroid @Inject constructor(@ApplicationContext context: Conte
     private companion object {
         const val ARQUIVO = "preferencias"
         const val MOTO_SELECIONADA = "moto_selecionada"
+        const val TEMA = "tema"
+        const val MODO_OFICINA = "modo_oficina"
     }
 }
 
