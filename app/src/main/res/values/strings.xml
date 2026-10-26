@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Diário de Bordo</string>
+    <string name="garagem_titulo">Garagem</string>
+    <string name="garagem_vazio">Nenhuma moto cadastrada ainda.</string>
+    <string name="garagem_marca_modelo">%1$s %2$s</string>
+    <string name="canal_lembretes_nome">Lembretes de manutenção</string>
+</resources>
