@@ -25,5 +25,4 @@ data class Moto(
     val fusoHorario: String = "",
     val excluidoEm: Long? = null,
     val pendenteSync: Boolean = false,
-    val corPlantada: String? = null,
 )
