@@ -45,8 +45,9 @@ jobs:
       - name: Formatação (ktlint)
         run: |
           curl -sSLf -o "$RUNNER_TEMP/ktlint" "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSAO}/ktlint"
-          saida="$(java -jar "$RUNNER_TEMP/ktlint" "**/*.kt" "**/*.kts" "!**/build/**")"
-          status=$?
+          # bash -e: sem o "|| status=$?", a falha encerraria o passo antes do echo e o log não mostraria os arquivos.
+          status=0
+          saida="$(java -jar "$RUNNER_TEMP/ktlint" "**/*.kt" "**/*.kts" "!**/build/**" 2>&1)" || status=$?
           [ -n "$saida" ] && echo "$saida"
           # Portão 2 do CLAUDE.md: exit 0 e saída vazia.
           [ "$status" -eq 0 ] && [ -z "$saida" ]
