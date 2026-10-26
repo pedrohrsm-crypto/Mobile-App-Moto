@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Tema só da janela. As cores de verdade vêm do ColorScheme em Compose (core/designsystem/theme). -->
-    <style name="Theme.DiarioDeBordo" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- O fundo da janela é o do Oficina, o tema de partida: sem piscar branco na abertura. -->
+    <style name="Theme.DiarioDeBordo" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/janela_fundo</item>
+    </style>
 </resources>
