@@ -15,16 +15,14 @@ permissions:
 jobs:
   build:
     name: Lint, build e testes
-    # Runner próprio: os minutos do Actions hospedado estão bloqueados na conta.
-    # Runner dedicado a este app, com o rótulo "moto", para não ocupar o runner de outros projetos.
-    runs-on: [self-hosted, moto]
+    # Actions hospedado (decisão #10); plano B, se a cobrança da conta bloquear: runner próprio.
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
       # Datas e fusos dos testes sempre em UTC, igual em qualquer runner.
       TZ: UTC
     defaults:
       run:
-        # Git Bash no Windows, bash no Linux/macOS: o mesmo ./gradlew nos dois.
         shell: bash
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +37,7 @@ jobs:
       # Instala (ou reaproveita) o Android SDK e a plataforma do compileSdk.
       - uses: android-actions/setup-android@v3
         with:
-          packages: "platforms;android-37 build-tools;36.0.0"
+          packages: "platforms;android-37.0 build-tools;36.0.0"
 
       - name: Guardas (idioma, cor, texto fixo)
         run: bash ferramentas/guardas.sh
@@ -47,7 +45,12 @@ jobs:
       - name: Formatação (ktlint)
         run: |
           curl -sSLf -o "$RUNNER_TEMP/ktlint" "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSAO}/ktlint"
-          java -jar "$RUNNER_TEMP/ktlint" "**/*.kt" "**/*.kts" "!**/build/**"
+          # bash -e: sem o "|| status=$?", a falha encerraria o passo antes do echo e o log não mostraria os arquivos.
+          status=0
+          saida="$(java -jar "$RUNNER_TEMP/ktlint" "**/*.kt" "**/*.kts" "!**/build/**" 2>&1)" || status=$?
+          [ -n "$saida" ] && echo "$saida"
+          # Portão 2 do CLAUDE.md: exit 0 e saída vazia.
+          [ "$status" -eq 0 ] && [ -z "$saida" ]
         env:
           KTLINT_VERSAO: 1.7.1
 
@@ -68,6 +71,16 @@ jobs:
 
       - name: AAB de release
         run: ./gradlew bundleRelease
+
+      # O build regera app/schemas/. Schema alterado, novo ou apagado sem commit reprova (regra da segunda ocorrência, decisão #12).
+      - name: Schema do Room commitado
+        run: |
+          mudancas="$(git status --porcelain -- app/schemas)"
+          if [ -n "$mudancas" ]; then
+            echo "app/schemas/ difere do commitado depois do build; rode ./gradlew assembleDebug e commite:"
+            echo "$mudancas"
+            exit 1
+          fi
 
       - name: Relatórios
         if: always()

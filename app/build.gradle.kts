@@ -49,16 +49,17 @@ android {
         buildConfig = true
     }
 
-    lint {
-        abortOnError = true
-        checkDependencies = true
-    }
-
     testOptions {
-        // Robolectric precisa dos recursos do app (strings, temas) para os testes de Compose e as capturas na JVM.
+        // Robolectric abre o Room de verdade na JVM (teste de abertura do banco, decisão #12) e compõe as telas
+        // dos testes de Compose e das capturas (precisa dos recursos do app: strings, temas).
         unitTests.isIncludeAndroidResources = true
         // Robolectric 4.17 lê jdk.internal.access, que o JDK 21 fecha por padrão.
         unitTests.all { it.jvmArgs("--add-opens=java.base/jdk.internal.access=ALL-UNNAMED") }
+    }
+
+    lint {
+        abortOnError = true
+        checkDependencies = true
     }
 }
 
@@ -119,8 +120,8 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.robolectric)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.roborazzi)
     testImplementation(libs.roborazzi.compose)
     testImplementation(platform(libs.androidx.compose.bom))
