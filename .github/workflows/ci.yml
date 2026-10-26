@@ -15,16 +15,14 @@ permissions:
 jobs:
   build:
     name: Lint, build e testes
-    # Runner próprio: os minutos do Actions hospedado estão bloqueados na conta.
-    # Runner dedicado a este app, com o rótulo "moto", para não ocupar o runner de outros projetos.
-    runs-on: [self-hosted, moto]
+    # Actions hospedado (decisão #10); plano B, se a cobrança da conta bloquear: runner próprio.
+    runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
       # Datas e fusos dos testes sempre em UTC, igual em qualquer runner.
       TZ: UTC
     defaults:
       run:
-        # Git Bash no Windows, bash no Linux/macOS: o mesmo ./gradlew nos dois.
         shell: bash
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +37,7 @@ jobs:
       # Instala (ou reaproveita) o Android SDK e a plataforma do compileSdk.
       - uses: android-actions/setup-android@v3
         with:
-          packages: "platforms;android-37 build-tools;36.0.0"
+          packages: "platforms;android-37.0 build-tools;36.0.0"
 
       - name: Guardas (idioma, cor, texto fixo)
         run: bash ferramentas/guardas.sh
