@@ -48,6 +48,11 @@ android {
         buildConfig = true
     }
 
+    testOptions {
+        // Robolectric abre o Room de verdade na JVM (teste de abertura do banco, decisão #12).
+        unitTests.isIncludeAndroidResources = true
+    }
+
     lint {
         abortOnError = true
         checkDependencies = true
@@ -111,6 +116,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
 
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.test.junit)
     androidTestImplementation(libs.androidx.test.espresso.core)
