@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+. Mesma decisão de backup_rules.xml: só o arquivo exportado, nunca o banco aberto. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="exportacao/" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="exportacao/" />
+    </device-transfer>
+</data-extraction-rules>
