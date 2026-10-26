@@ -1,0 +1,9 @@
+package com.pedrohrsm.diariodebordo.__PACOTE__.ui
+
+import com.pedrohrsm.diariodebordo.__PACOTE__.data.__ENTIDADE__
+
+sealed interface __ENTIDADE__Estado {
+    data object Carregando : __ENTIDADE__Estado
+
+    data class Pronto(val itens: List<__ENTIDADE__>) : __ENTIDADE__Estado
+}

@@ -38,6 +38,12 @@
             </intent-filter>
         </activity>
 
+        <!-- Gravação de rota em primeiro plano: só o app inicia (não exportado). -->
+        <service
+            android:name=".rota.servico.GravacaoRotaService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
         <!-- O WorkManager é iniciado sob demanda pelo DiarioApp, com a fábrica do Hilt. -->
         <provider
             android:name="androidx.startup.InitializationProvider"

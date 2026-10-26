@@ -11,6 +11,9 @@ class FakeMotoDao : MotoDao {
     override fun observarAtivos(): Flow<List<Moto>> =
         linhas.map { todos -> todos.filter { it.excluidoEm == null }.sortedBy { it.apelido.lowercase() } }
 
+    override fun observar(id: String): Flow<Moto?> =
+        linhas.map { todos -> todos.find { it.id == id && it.excluidoEm == null } }
+
     override suspend fun inserir(item: Moto) {
         require(linhas.value.none { it.id == item.id }) { "id repetido: ${item.id}" }
         linhas.value = linhas.value + item

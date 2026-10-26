@@ -5,4 +5,166 @@
     <string name="garagem_vazio">Nenhuma moto cadastrada ainda.</string>
     <string name="garagem_marca_modelo">%1$s %2$s</string>
     <string name="canal_lembretes_nome">Lembretes de manutenção</string>
+    <!-- Comuns -->
+    <string name="salvar">Salvar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="editar">Editar</string>
+    <string name="excluir">Excluir</string>
+    <string name="campo_obrigatorio">Preencha este campo.</string>
+    <string name="erro_ao_carregar">Não foi possível carregar os dados.</string>
+    <string name="erro_ao_salvar">Não foi possível salvar. %1$s</string>
+    <string name="km_invalido">Digite o km só com números, por exemplo 12.345.</string>
+    <string name="sem_moto_mensagem">Cadastre sua moto para começar o diário.</string>
+
+    <!-- Garagem e hodômetro -->
+    <string name="garagem_cadastrar">Cadastrar moto</string>
+    <string name="garagem_adicionar">Adicionar moto</string>
+    <string name="garagem_limite_gratis">O plano grátis guarda 1 moto. Mais motos virão no premium.</string>
+    <string name="moto_titulo">Moto</string>
+    <string name="moto_form_nova">Nova moto</string>
+    <string name="moto_form_editar">Editar moto</string>
+    <string name="moto_apelido">Apelido</string>
+    <string name="moto_marca">Marca</string>
+    <string name="moto_modelo">Modelo</string>
+    <string name="moto_ano">Ano (opcional)</string>
+    <string name="moto_ano_invalido">Digite um ano entre 1900 e o ano que vem.</string>
+    <string name="moto_km_inicial">Hodômetro hoje (km)</string>
+    <string name="moto_categoria">Categoria</string>
+    <string name="moto_categoria_ajuda">A categoria sugere um plano de manutenção inicial. Os intervalos são seus e podem ser ajustados.</string>
+    <string name="moto_nao_encontrada">Esta moto não existe mais.</string>
+    <string name="categoria_custom">Custom</string>
+    <string name="categoria_street">Street</string>
+    <string name="categoria_trail">Trail</string>
+    <string name="categoria_scooter">Scooter</string>
+    <string name="hodometro_atualizar">Atualizar hodômetro</string>
+    <string name="hodometro_km_atual">Km no painel</string>
+    <string name="hodometro_historico">Histórico do hodômetro</string>
+    <string name="hodometro_sem_leitura">Hodômetro sem leitura</string>
+    <string name="hodometro_menor">O hodômetro não volta: a última leitura foi %1$s.</string>
+    <string name="hodometro_igual">Esse km já está registrado (%1$s).</string>
+
+    <!-- Abas -->
+    <string name="diario_titulo">Diário</string>
+    <string name="plano_titulo">Plano</string>
+    <string name="rotas_titulo">Rotas</string>
+    <string name="ajustes_titulo">Ajustes</string>
+
+    <string name="ok">OK</string>
+    <string name="remover">Remover</string>
+
+    <!-- Diário -->
+    <string name="diario_titulo_moto">Diário · %1$s</string>
+    <string name="diario_novo">Novo registro</string>
+    <string name="diario_vazio">Nenhum registro ainda. Anote a próxima manutenção, abastecimento ou rolê.</string>
+    <string name="tipo_manutencao">Manutenção</string>
+    <string name="tipo_abastecimento">Abastecimento</string>
+    <string name="tipo_ocorrencia">Ocorrência</string>
+    <string name="tipo_role">Rolê</string>
+    <string name="tipo_nota">Nota</string>
+    <string name="ocorrencia_queda">Queda</string>
+    <string name="ocorrencia_barulho">Barulho</string>
+    <string name="ocorrencia_vazamento">Vazamento</string>
+    <string name="ocorrencia_outra">Outra</string>
+    <string name="registro_novo">Novo registro</string>
+    <string name="registro_editar">Editar registro</string>
+    <string name="registro_titulo">Título</string>
+    <string name="registro_data">Data: %1$s</string>
+    <string name="registro_km">Hodômetro (km, opcional)</string>
+    <string name="registro_valor">Valor em R$ (opcional)</string>
+    <string name="registro_valor_invalido">Digite o valor como 123,45.</string>
+    <string name="registro_litros">Litros (opcional)</string>
+    <string name="registro_litros_invalido">Digite os litros como 12,5.</string>
+    <string name="registro_tanque_cheio">Completei o tanque</string>
+    <string name="registro_ocorrencia">O que aconteceu</string>
+    <string name="registro_descricao">Observações (opcional)</string>
+    <string name="registro_fotos">Fotos (%1$d de %2$d)</string>
+    <string name="registro_foto_descricao">Foto %1$d do registro</string>
+    <string name="registro_adicionar_foto">Adicionar foto</string>
+    <string name="registro_falha_foto">Não foi possível usar essa foto. %1$s</string>
+    <string name="registro_nao_encontrado">Este registro não existe mais.</string>
+    <string name="registro_excluir_titulo">Excluir este registro?</string>
+    <string name="registro_excluir_texto">O registro e as fotos dele saem do diário.</string>
+
+    <!-- Plano de manutenção -->
+    <string name="plano_titulo_moto">Plano · %1$s</string>
+    <string name="plano_pendencias">Pendências de ocorrências</string>
+    <string name="plano_pendencia_origem">Criada por uma ocorrência no diário.</string>
+    <string name="plano_resolver">Resolvida</string>
+    <string name="plano_itens">Manutenção periódica</string>
+    <string name="plano_vencido">Vencido</string>
+    <string name="plano_proximo">Vence logo</string>
+    <string name="plano_em_dia">Em dia</string>
+    <string name="plano_proxima">Próxima: %1$s</string>
+    <string name="plano_ou">" ou "</string>
+    <string name="plano_faltam">faltam %1$s</string>
+    <string name="plano_passou">passou %1$s</string>
+    <string name="plano_desde_cadastro">" (contando desde o cadastro)"</string>
+    <string name="plano_registrar_feito">Feito</string>
+    <string name="plano_dado_do_usuario">Os intervalos são sugestões para começar. Confira no manual da sua moto e ajuste: o plano é seu.</string>
+    <string name="item_plano_novo">Novo item</string>
+    <string name="item_plano_editar">Editar item</string>
+    <string name="item_plano_nome">Nome</string>
+    <string name="item_plano_km">A cada quantos km (opcional)</string>
+    <string name="item_plano_dias">A cada quantos dias (opcional)</string>
+    <string name="item_plano_dias_invalido">Digite de 1 a 3650 dias.</string>
+    <string name="item_plano_sem_intervalo">Informe km, dias ou os dois.</string>
+
+    <!-- Lembretes -->
+    <string name="lembrete_vencido">Venceu: %1$s</string>
+    <string name="lembrete_proximo">Vence logo: %1$s</string>
+    <string name="lembrete_texto">%1$s · toque para ver o plano</string>
+    <string name="lembrete_permissao">Ative as notificações para receber os lembretes de manutenção.</string>
+    <string name="lembrete_ativar">Ativar</string>
+    <!-- Local do registro -->
+    <string name="local_titulo">Local (opcional)</string>
+    <string name="local_usar_atual">Usar local atual</string>
+    <string name="local_buscando">Buscando o GPS…</string>
+    <string name="local_sem_permissao">Sem permissão de localização. O registro pode ser salvo sem o local.</string>
+    <string name="local_indisponivel">O GPS não respondeu. Tente num lugar aberto ou salve sem o local.</string>
+
+    <!-- Rotas -->
+    <string name="rotas_titulo_moto">Rotas · %1$s</string>
+    <string name="rotas_explicacao">Grave o trajeto do rolê. Funciona sem internet e com a tela desligada; a notificação fica visível enquanto grava.</string>
+    <string name="rotas_vazio">Nenhuma rota salva ainda.</string>
+    <string name="rota_titulo">Rota</string>
+    <string name="rota_gravar">Gravar rota</string>
+    <string name="rota_parar">Parar e salvar</string>
+    <string name="rota_gravando">Gravando a rota do rolê</string>
+    <string name="rota_gravando_desde">Gravando desde %1$s · %2$d pontos</string>
+    <string name="rota_interrompida">A gravação parou com %1$d pontos. Salvar o que foi gravado?</string>
+    <string name="rota_salvar">Salvar rota</string>
+    <string name="rota_descartar">Descartar</string>
+    <string name="rota_sem_permissao">Sem permissão de localização: a rota não foi gravada.</string>
+    <string name="rota_falha_gps">O GPS parou: %1$s</string>
+    <string name="rota_notificacao_titulo">Diário de Bordo</string>
+    <string name="rota_canal_nome">Gravação de rota</string>
+    <string name="rota_nao_encontrada">Rota não encontrada.</string>
+    <string name="rota_tracado_descricao">Traçado da rota</string>
+    <string name="rota_sem_mapa">Só o traçado, sem mapa de fundo: nada é baixado da internet.</string>
+    <string name="rota_excluir_titulo">Excluir esta rota?</string>
+    <!-- Ajustes e modo oficina -->
+    <string name="ajustes_tema">Tema</string>
+    <string name="tema_oficina">Oficina</string>
+    <string name="tema_estrada">Estrada</string>
+    <string name="tema_cromo">Cromo</string>
+    <string name="ajustes_modo_oficina">Modo oficina</string>
+    <string name="ajustes_modo_oficina_explicacao">Letras e botões maiores, para usar de luva ou com a mão suja.</string>
+    <string name="moto_registrar_troca_oleo">Registrar troca de óleo</string>
+    <!-- Backup (exportar e importar) -->
+    <string name="backup_titulo">Backup</string>
+    <string name="backup_explicacao">Um arquivo .zip com as motos, o diário, o plano, as fotos e as rotas. Guarde no Drive, no computador ou mande para você mesmo.</string>
+    <string name="backup_exportar">Exportar backup</string>
+    <string name="backup_importar">Importar backup</string>
+    <string name="backup_importar_explicacao">Importar junta o arquivo com o que já está no aparelho: nada é apagado e, se um item estiver nos dois, fica a versão alterada por último.</string>
+    <string name="backup_aviso_titulo">O arquivo tem dados pessoais</string>
+    <string name="backup_aviso_texto">Leva o diário, as fotos e os locais dos registros. Quem tiver o arquivo consegue ler tudo: guarde num lugar só seu.</string>
+    <string name="backup_incluir_rotas">Incluir as rotas gravadas</string>
+    <string name="backup_escolher_local">Escolher onde salvar</string>
+    <string name="backup_trabalhando">Trabalhando no backup…</string>
+    <string name="backup_exportado">Backup salvo. Motos: %1$d · Registros: %2$d · Fotos: %3$d · Rotas: %4$d</string>
+    <string name="backup_fotos_faltando">Fotos não encontradas no aparelho, que ficaram de fora: %1$d</string>
+    <string name="backup_importado">Importação concluída. Itens novos: %1$d · Atualizados: %2$d · Fotos: %3$d</string>
+    <string name="backup_arquivo_invalido">Este arquivo não é um backup do Diário de Bordo ou está corrompido. Nada foi alterado.</string>
+    <string name="backup_versao_nova">Este backup foi feito numa versão mais nova do app. Atualize o app e tente de novo. Nada foi alterado.</string>
+    <string name="backup_falha">Não foi possível concluir. Nada foi alterado. %1$s</string>
 </resources>

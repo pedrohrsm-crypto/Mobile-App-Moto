@@ -1,0 +1,30 @@
+package com.pedrohrsm.diariodebordo.__PACOTE__.data
+
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+
+/** DAO em memória para testes na JVM, sem Room nem emulador. */
+class Fake__ENTIDADE__Dao : __ENTIDADE__Dao {
+    val linhas = MutableStateFlow<List<__ENTIDADE__>>(emptyList())
+
+    override fun observarAtivos(): Flow<List<__ENTIDADE__>> =
+        linhas.map { todos -> todos.filter { it.excluidoEm == null }.sortedByDescending { it.criadoEm } }
+
+    override suspend fun inserir(item: __ENTIDADE__) {
+        require(linhas.value.none { it.id == item.id }) { "id repetido: ${item.id}" }
+        linhas.value = linhas.value + item
+    }
+
+    override suspend fun atualizar(item: __ENTIDADE__): Int {
+        if (linhas.value.none { it.id == item.id }) return 0
+        linhas.value = linhas.value.map { if (it.id == item.id) item else it }
+        return 1
+    }
+
+    override suspend fun marcarExcluido(id: String, quando: Long): Int {
+        val alvo = linhas.value.find { it.id == id && it.excluidoEm == null } ?: return 0
+        linhas.value = linhas.value.map { if (it === alvo) it.copy(excluidoEm = quando, alteradoEm = quando) else it }
+        return 1
+    }
+}
