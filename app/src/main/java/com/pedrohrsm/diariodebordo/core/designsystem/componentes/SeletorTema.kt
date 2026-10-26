@@ -24,16 +24,10 @@ import com.pedrohrsm.diariodebordo.core.designsystem.theme.AjusteTema
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.LocalEscalaDiario
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.TemaDiario
 
-/** Tela de ajuste do tema: a troca vale na hora, na mesma Activity, porque o estado vive acima do [DiarioTheme]. */
-@Composable
-fun AjusteTemaScreen(ajuste: AjusteTema, aoAjustar: (AjusteTema) -> Unit) {
-    TelaDiario(titulo = stringResource(R.string.ajuste_tema_titulo)) { padding ->
-        FormularioDiario(padding) {
-            SeletorTema(ajuste, aoAjustar)
-        }
-    }
-}
-
+/**
+ * Escolha do tema e do modo oficina, como componente reutilizável (a tela de ajustes da Fase 1 o usa).
+ * A troca vale na hora, na mesma Activity: o estado vive acima do [DiarioTheme].
+ */
 @Composable
 fun SeletorTema(ajuste: AjusteTema, aoAjustar: (AjusteTema) -> Unit, modifier: Modifier = Modifier) {
     val escala = LocalEscalaDiario.current

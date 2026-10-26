@@ -10,7 +10,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.AjusteTema
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.DiarioTheme
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.escuro
@@ -25,7 +24,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             // O ajuste vive aqui, acima do tema: mudar o tema recompõe, não recria a Activity.
-            var ajuste by rememberSaveable(stateSaver = AjusteTema.Saver) { mutableStateOf(AjusteTema()) }
+            // A fatia de ajustes da Fase 1 liga o SeletorTema a este estado.
+            val ajuste by rememberSaveable(stateSaver = AjusteTema.Saver) { mutableStateOf(AjusteTema()) }
             // Os ícones das barras seguem o tema do app, não o modo escuro do sistema.
             val escuro = ajuste.tema.tokens().escuro()
             DisposableEffect(escuro) {
@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
                 onDispose { }
             }
             DiarioTheme(tema = ajuste.tema, modoOficina = ajuste.modoOficina) {
-                DiarioNavHost(ajuste = ajuste, aoAjustarTema = { ajuste = it })
+                DiarioNavHost()
             }
         }
     }

@@ -2,11 +2,15 @@ package com.pedrohrsm.diariodebordo.core.designsystem.capturas
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import com.github.takahirom.roborazzi.captureRoboImage
-import com.pedrohrsm.diariodebordo.core.designsystem.componentes.AjusteTemaScreen
+import com.pedrohrsm.diariodebordo.R
+import com.pedrohrsm.diariodebordo.core.designsystem.componentes.FormularioDiario
+import com.pedrohrsm.diariodebordo.core.designsystem.componentes.SeletorTema
+import com.pedrohrsm.diariodebordo.core.designsystem.componentes.TelaDiario
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.AjusteTema
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.DiarioTheme
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.TemaDiario
@@ -51,7 +55,11 @@ class CapturasTemaTest(private val caso: Caso) {
                 DiarioTheme(tema = caso.tema, modoOficina = caso.modoOficina) {
                     when (caso.tela) {
                         Tela.GARAGEM -> GaragemScreen(GaragemEstado.Pronto(motosDeExemplo))
-                        Tela.AJUSTE_TEMA -> AjusteTemaScreen(AjusteTema(caso.tema, caso.modoOficina)) {}
+                        Tela.AJUSTE_TEMA -> TelaDiario(stringResource(R.string.ajuste_tema_titulo)) { padding ->
+                            FormularioDiario(padding) {
+                                SeletorTema(AjusteTema(caso.tema, caso.modoOficina), aoAjustar = {})
+                            }
+                        }
                         Tela.PALETA -> PaletaDeTokens()
                     }
                 }
