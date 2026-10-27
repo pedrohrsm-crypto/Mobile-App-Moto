@@ -37,7 +37,8 @@ data class EscolhaDeMoto(val uri: String, val candidatas: List<Moto>)
 data class BackupEstado(
     /** Aviso de dados pessoais aberto, antes de escolher onde salvar. */
     val confirmandoExportacao: Boolean = false,
-    val comRotas: Boolean = true,
+    /** Privacidade por padrão (risco #23, decisão do PM em 27-Out-2026): as rotas só saem se a pessoa marcar. */
+    val comRotas: Boolean = false,
     val escolhendoMoto: EscolhaDeMoto? = null,
     val ocupado: Boolean = false,
     val resultado: ResultadoBackup? = null,

@@ -4,12 +4,14 @@ import androidx.room.Room
 import com.pedrohrsm.diariodebordo.backup.data.ArquivosFalsos
 import com.pedrohrsm.diariodebordo.backup.data.BackupRepositorio
 import com.pedrohrsm.diariodebordo.backup.data.CanalDeDocumentos
+import com.pedrohrsm.diariodebordo.backup.data.PacoteZip
 import com.pedrohrsm.diariodebordo.core.database.DiarioDatabase
 import com.pedrohrsm.diariodebordo.core.database.TransacaoRoom
 import com.pedrohrsm.diariodebordo.core.premium.Premium
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
+import com.pedrohrsm.diariodebordo.rota.data.Rota
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
@@ -93,6 +95,23 @@ class BackupViewModelTest {
         assertNull(vm.estado.value.escolhendoMoto)
         assertEquals(ResultadoBackup.Importado::class, vm.estado.value.resultado!!::class)
         assertEquals(listOf("a"), runBlocking { dao.motos() }.filter { it.excluidoEm == null }.map { it.id })
+    }
+
+    @Test
+    fun exportarSemMarcarNadaDeixaAsRotasDeFora() {
+        runBlocking {
+            dao.gravarMotos(listOf(doArquivo))
+            dao.gravarRotas(
+                listOf(Rota(id = "rota", motoId = "m", iniciadaEm = 1, emGravacao = false, polilinha = "_p~iF~ps|U")),
+            )
+        }
+        val vm = BackupViewModel(repositorio, canal, relogio)
+        vm.pedirExportacao()
+        assertFalse("o aviso abre com as rotas desmarcadas", vm.estado.value.comRotas)
+        vm.exportar("content://backup.zip")
+        esperar(vm)
+        val copia = PacoteZip.lerDados(checkNotNull(documentos["content://backup.zip"]).inputStream())
+        assertEquals(emptyList<Rota>(), copia.rotas)
     }
 
     @Test
