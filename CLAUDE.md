@@ -25,15 +25,16 @@ Framework: v2.0 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 ## Portões (rodar separados, nunca com `| tail` sem `PIPESTATUS`; o CI roda os mesmos, nesta ordem)
 1. `bash ferramentas/guardas.sh` → 0 (idioma pt-BR, cor só do tema, nenhum texto fixo)
 2. `ktlint "**/*.kt" "**/*.kts"` → 0 **e** saída vazia (configuração em `.editorconfig`)
-3. `./gradlew -p buildSrc test` → verde
-4. `./gradlew lintDebug` → 0
-5. `./gradlew assembleDebug` → 0 (compila Kotlin, KSP de Room e Hilt; é o typecheck do kit)
-6. `./gradlew testDebugUnitTest` → verde; teste novo precisa ter sido **visto falhar** (bug plantado → vermelho → revertido)
+3. `bash ferramentas/testes/teto-aab.test.sh` e `bash ferramentas/testes/provas-negativas.test.sh` → 0 (testes dos scripts de `ferramentas/`; script novo ou alterado precisa ter o caso **visto falhar** com bug plantado)
+4. Provas negativas: `CORPO_PR="$(cat corpo.md)" bash ferramentas/provas-negativas.sh` → 0 (todo `@Test` novo do diff, contra o primeiro pai do merge ref no CI ou `BASE_SHA=<sha>` na bancada, aparece pelo nome no corpo do PR; o CI lê o corpo por `env:`, nunca interpolado no `run:`; editar o corpo reexecuta o CI)
+5. `./gradlew -p buildSrc test` → verde
+6. `./gradlew lintDebug` → 0
+7. `./gradlew assembleDebug` → 0 (compila Kotlin, KSP de Room e Hilt; é o typecheck do kit)
+8. `./gradlew testDebugUnitTest` → verde; teste novo precisa ter sido **visto falhar** (bug plantado → vermelho → revertido)
    - Logo depois: `./gradlew verifyRoborazziDebug` → verde **e** `git status --porcelain -- app/src/test/snapshots` vazio (captura mudou ou é nova: `recordRoborazziDebug` e commitar)
-   - Provas negativas: `BASE_SHA=<base> CORPO_PR="$(cat corpo.md)" bash ferramentas/provas-negativas.sh` → 0 (todo `@Test` novo do diff aparece pelo nome no corpo do PR; o CI lê o corpo por `env:`, nunca interpolado no `run:`; editar o corpo reexecuta o CI)
-7. `./gradlew verificarManifestoRelease` → 0 (componente exportado entra na lista em `app/build.gradle.kts` com motivo)
-8. `./gradlew bundleRelease` → 0, depois `bash ferramentas/teto-aab.sh` → 0 (o AAB não passa de `ferramentas/teto-aab.txt`; subir o teto só no PR, com o motivo na mensagem do commit, e o PM aceita; o script avisa quando o AAB cai, para baixar o teto)
-9. Visual: 3 temas (Oficina, Estrada, Cromo) × modo oficina × fonte 140% e 200% × tela de 360 dp × teclado aberto, quando houver interface
+9. `./gradlew verificarManifestoRelease` → 0 (componente exportado entra na lista em `app/build.gradle.kts` com motivo)
+10. `./gradlew bundleRelease` → 0, depois `bash ferramentas/teto-aab.sh` → 0 (o AAB não passa de `ferramentas/teto-aab.txt`, teto + tolerância; subir o teto é decisão do dono, por issue `decisao`, e vai no PR com o motivo na mensagem do commit; o script avisa quando o AAB cai, para baixar o teto)
+11. Visual: 3 temas (Oficina, Estrada, Cromo) × modo oficina × fonte 140% e 200% × tela de 360 dp × teclado aberto, quando houver interface
 
 ## Regras inegociáveis
 - Nunca descartar erro: `Result`/exceção tratada ou propagada; um `Flow` do Room que falha nunca vira lista vazia. Escrita confere as linhas afetadas.

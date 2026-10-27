@@ -5,6 +5,7 @@
 #   Decisão #53 do dono: o aumento do play-services-location (+331 KB) foi aceito.
 # tolerancia: ruído de build medido: até 331 B (PR #51, #54); não é folga para crescer.
 #   O script reprova acima de teto + tolerancia e avisa abaixo de teto - tolerancia, para baixar o teto.
-# Subir o teto exige editar este arquivo no PR com o motivo na mensagem do commit; quem aceita é o PM.
+# Subir o teto é decisão do dono, por issue decisao (#53); exige editar este arquivo no PR com o motivo na mensagem do commit.
+#   A tolerância de 2.048 B é decisão do PM, registrada na #52.
 teto: 4919394
 tolerancia: 2048
