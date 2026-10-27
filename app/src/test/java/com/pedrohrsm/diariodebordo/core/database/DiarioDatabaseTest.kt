@@ -1,6 +1,10 @@
 package com.pedrohrsm.diariodebordo.core.database
 
+import androidx.paging.PagingSource
 import androidx.room.Room
+import com.pedrohrsm.diariodebordo.diario.data.Registro
+import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
+import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -31,22 +35,72 @@ class DiarioDatabaseTest {
     @After
     fun fechar() = banco.close()
 
+    private fun nomes(sql: String): Set<String> = banco.openHelper.writableDatabase.query(sql).use {
+        buildSet { while (it.moveToNext()) add(it.getString(0)) }
+    }
+
     @Test
-    fun abreNaVersao1ComATabelaDeMotos() {
+    fun abreNaVersao1ComAsTabelasDaFase1() {
         val db = banco.openHelper.writableDatabase
         db.query("PRAGMA user_version").use {
             assertTrue(it.moveToFirst())
             assertEquals(1, it.getInt(0))
         }
-        db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'motos'").use {
-            assertEquals(1, it.count)
-        }
+        val tabelas = nomes("SELECT name FROM sqlite_master WHERE type = 'table'")
+        assertTrue(
+            tabelas.toString(),
+            tabelas.containsAll(listOf("motos", "leituras_hodometro", "registros", "fotos_registro")),
+        )
     }
+
+    /** PLANEJAMENTO §4: índice em toda coluna de relação e de ordenação das consultas principais. */
+    @Test
+    fun indicesDasConsultasPrincipais() {
+        assertEquals(setOf("index_leituras_hodometro_motoId_km"), nomes(indices("leituras_hodometro")))
+        assertEquals(setOf("index_registros_motoId_dataEm"), nomes(indices("registros")))
+        assertEquals(setOf("index_fotos_registro_registroId"), nomes(indices("fotos_registro")))
+    }
+
+    private fun indices(tabela: String) =
+        "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = '$tabela' AND name LIKE 'index_%'"
 
     @Test
     fun gravaELeUmaMotoDeVolta() = runTest {
         val moto = Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "Sportster 883", ano = 2012)
         banco.motoDao().inserir(moto)
         assertEquals(listOf(moto), banco.motoDao().observarAtivos().first())
+    }
+
+    @Test
+    fun kmAtualEhAMaiorLeituraAtiva() = runTest {
+        val dao = banco.leituraHodometroDao()
+        dao.inserir(LeituraHodometro(motoId = "a", km = 1_000, lidaEm = 2))
+        dao.inserir(LeituraHodometro(motoId = "a", km = 1_500, lidaEm = 1))
+        dao.inserir(LeituraHodometro(motoId = "b", km = 9_000, lidaEm = 3))
+        assertEquals(1_500, dao.kmAtual("a"))
+        assertEquals(1_500, dao.observarKmAtual("a").first())
+        assertEquals(null, dao.kmAtual("sem-leitura"))
+    }
+
+    @Test
+    fun diarioPaginadoDoMaisRecenteComFiltroDeTipoESemExcluidos() = runTest {
+        val dao = banco.registroDao()
+        fun registro(titulo: String, tipo: TipoRegistro, dataEm: Long, motoId: String = "a") =
+            Registro(motoId = motoId, tipo = tipo, titulo = titulo, dataEm = dataEm)
+        dao.inserir(registro("nota antiga", TipoRegistro.NOTA, 1))
+        dao.inserir(registro("abastecimento", TipoRegistro.ABASTECIMENTO, 3))
+        dao.inserir(registro("nota nova", TipoRegistro.NOTA, 2))
+        dao.inserir(registro("outra moto", TipoRegistro.NOTA, 4, motoId = "b"))
+        val excluido = registro("excluído", TipoRegistro.NOTA, 5)
+        dao.inserir(excluido)
+        assertEquals(1, dao.marcarExcluido(excluido.id, quando = 6))
+
+        assertEquals(listOf("abastecimento", "nota nova", "nota antiga"), primeiraPagina(dao.paginarDaMoto("a", null)))
+        assertEquals(listOf("nota nova", "nota antiga"), primeiraPagina(dao.paginarDaMoto("a", TipoRegistro.NOTA.name)))
+    }
+
+    private suspend fun primeiraPagina(fonte: PagingSource<Int, Registro>): List<String> {
+        val carga = fonte.load(PagingSource.LoadParams.Refresh(key = null, loadSize = 10, placeholdersEnabled = false))
+        return (carga as PagingSource.LoadResult.Page).data.map { it.titulo }
     }
 }

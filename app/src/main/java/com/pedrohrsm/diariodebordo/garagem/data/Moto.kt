@@ -10,7 +10,7 @@ enum class CategoriaMoto { CUSTOM, STREET, TRAIL, SCOOTER }
 /**
  * Os campos de controle (id, criadoEm, alteradoEm, fusoHorario, excluidoEm, pendenteSync)
  * seguem docs/offline-first.md e são preenchidos pelo [MotoRepositorio], nunca pela tela.
- * O km atual não fica aqui: é a leitura de hodômetro mais recente (tabela futura).
+ * O km atual não fica aqui: é a maior leitura de [LeituraHodometro].
  */
 @Entity(tableName = "motos")
 data class Moto(
