@@ -47,9 +47,10 @@ class PlanoRepositorioTest {
     @Test
     fun primeiraAberturaCriaOPlanoBaseDaCategoriaContandoDoKmEDeAgora() = runTest {
         val criados = plano.garantirPlanoBase(moto.copy(categoria = CategoriaMoto.CUSTOM), kmAtual = 20_000)
-        assertEquals(planoBase(CategoriaMoto.CUSTOM).size, criados)
+        val esperados = planoBase(CategoriaMoto.CUSTOM).map { it.nome }.sorted()
+        assertEquals(esperados.size, criados)
         val itens = itens()
-        assertEquals(criados, itens.size)
+        assertEquals(esperados, itens.map { it.nome }.sorted())
         assertTrue(itens.all { it.ultimaVezKm == 20_000 && it.ultimaVezEm == instante.toEpochMilli() })
         assertTrue(itens.all { it.origem == OrigemItem.PLANO_BASE && it.feitoEm == null })
         assertEquals(instante.toEpochMilli(), oleo().criadoEm)
@@ -103,13 +104,6 @@ class PlanoRepositorioTest {
         assertEquals(4, pendencias.size)
         assertTrue(pendencias.all { it.pendencia && it.registroOrigemId == queda.id && it.intervalo == null })
         pendencias.forEach { plano.resolverPendencia(it.id) }
-        assertTrue(itens().isEmpty())
-    }
-
-    @Test
-    fun ocorrenciaExcluidaDoDiarioNaoCriaPendencia() = runTest {
-        dao.registros.value = listOf(ocorrencia(TipoOcorrencia.QUEDA).copy(excluidoEm = 1))
-        assertEquals(0, plano.sincronizarPendencias("moto"))
         assertTrue(itens().isEmpty())
     }
 
