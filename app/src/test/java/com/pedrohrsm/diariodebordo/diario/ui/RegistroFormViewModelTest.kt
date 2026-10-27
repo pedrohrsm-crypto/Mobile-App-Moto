@@ -46,7 +46,7 @@ class RegistroFormViewModelTest {
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
     private val motoAtual = MotoAtual(motos)
     private val registros = FakeRegistroDao()
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), relogio)
+    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio)
     private val repositorio =
         RegistroRepositorio(registros, FakeFotoRegistroDao(), hodometro, TransacaoFalsa(), relogio)
     private val fotos = GuardaFotosFalsa()

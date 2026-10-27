@@ -17,7 +17,7 @@ class RegistroRepositorioTest {
     private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
     private val dao = FakeRegistroDao()
     private val fotos = FakeFotoRegistroDao()
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), relogio)
+    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio)
     private val repositorio = RegistroRepositorio(dao, fotos, hodometro, TransacaoFalsa(), relogio)
 
     private fun oleo(km: Int? = 12_000) = Registro(

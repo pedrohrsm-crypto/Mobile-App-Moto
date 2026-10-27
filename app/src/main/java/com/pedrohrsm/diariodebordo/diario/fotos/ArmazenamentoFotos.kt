@@ -36,8 +36,10 @@ class ArmazenamentoFotos @Inject constructor(@ApplicationContext private val con
         val origem = Uri.parse(uri)
         val resolver = context.contentResolver
         val limites = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        resolver.openInputStream(origem)?.use { BitmapFactory.decodeStream(it, null, limites) }
-            ?: throw IOException("Foto indisponível")
+        // Com inJustDecodeBounds o decodeStream devolve null de propósito e só preenche as medidas:
+        // o que indica foto indisponível é o stream não abrir.
+        val entrada = resolver.openInputStream(origem) ?: throw IOException("Foto indisponível")
+        entrada.use { BitmapFactory.decodeStream(it, null, limites) }
         if (limites.outWidth <= 0 || limites.outHeight <= 0) throw IOException("Arquivo não é uma imagem")
 
         val opcoes = BitmapFactory.Options().apply {

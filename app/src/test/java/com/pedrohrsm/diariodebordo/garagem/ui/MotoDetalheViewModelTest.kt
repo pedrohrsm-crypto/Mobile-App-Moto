@@ -1,6 +1,7 @@
 package com.pedrohrsm.diariodebordo.garagem.ui
 
 import androidx.lifecycle.SavedStateHandle
+import com.pedrohrsm.diariodebordo.core.database.TransacaoFalsa
 import com.pedrohrsm.diariodebordo.garagem.data.FakeLeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.FakeMotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
@@ -29,7 +30,7 @@ class MotoDetalheViewModelTest {
 
     private val relogio = Clock.fixed(Instant.parse("2026-10-01T12:00:00Z"), ZoneId.of("America/Sao_Paulo"))
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), relogio)
+    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio)
     private val motoAtual = MotoAtual(motos)
 
     @Before

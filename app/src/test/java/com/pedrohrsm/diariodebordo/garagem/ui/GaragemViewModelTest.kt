@@ -1,5 +1,6 @@
 package com.pedrohrsm.diariodebordo.garagem.ui
 
+import com.pedrohrsm.diariodebordo.core.database.TransacaoFalsa
 import com.pedrohrsm.diariodebordo.garagem.data.FakeLeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.FakeMotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
@@ -28,7 +29,7 @@ class GaragemViewModelTest {
 
     private val relogio = Clock.fixed(Instant.parse("2026-10-01T12:00:00Z"), ZoneId.of("America/Sao_Paulo"))
     private val repositorio = MotoRepositorio(FakeMotoDao(), relogio)
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), relogio)
+    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio)
 
     @Before
     fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())

@@ -12,11 +12,8 @@ class FakeRegistroDao : RegistroDao {
         .filter { it.motoId == motoId && it.excluidoEm == null && (tipo == null || it.tipo.name == tipo) }
         .sortedWith(compareByDescending<Registro> { it.dataEm }.thenByDescending { it.criadoEm })
 
-    /** Falha que a próxima página devolve, para os testes do estado de erro. */
-    var falhaAoPaginar: Exception? = null
-
     override fun paginarDaMoto(motoId: String, tipo: String?): PagingSource<Int, Registro> =
-        PaginasDeLista(daMoto(motoId, tipo)) { falhaAoPaginar }
+        PaginasDeLista(daMoto(motoId, tipo))
 
     override suspend fun buscar(id: String): Registro? = linhas.value.find { it.id == id && it.excluidoEm == null }
 
@@ -39,12 +36,10 @@ class FakeRegistroDao : RegistroDao {
 }
 
 /** PagingSource sobre uma lista fixa, com a chave sendo o índice do primeiro item da página. */
-class PaginasDeLista<T : Any>(private val itens: List<T>, private val falha: () -> Exception? = { null }) :
-    PagingSource<Int, T>() {
+class PaginasDeLista<T : Any>(private val itens: List<T>) : PagingSource<Int, T>() {
     override fun getRefreshKey(state: PagingState<Int, T>): Int? = null
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, T> {
-        falha()?.let { return LoadResult.Error(it) }
         val inicio = params.key ?: 0
         val fim = minOf(inicio + params.loadSize, itens.size)
         return LoadResult.Page(itens.subList(inicio, fim), prevKey = null, nextKey = fim.takeIf { it < itens.size })

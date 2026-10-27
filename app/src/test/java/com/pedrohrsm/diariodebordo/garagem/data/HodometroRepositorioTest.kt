@@ -1,6 +1,7 @@
 package com.pedrohrsm.diariodebordo.garagem.data
 
 import com.pedrohrsm.diariodebordo.core.database.TransacaoFalsa
+import com.pedrohrsm.diariodebordo.garagem.dominio.KM_MAXIMO
 import com.pedrohrsm.diariodebordo.garagem.dominio.LeituraRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.LimiteDeMotosException
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoLeitura
@@ -20,7 +21,7 @@ class HodometroRepositorioTest {
     private val instante = Instant.parse("2026-10-01T12:00:00Z")
     private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
     private val dao = FakeLeituraHodometroDao()
-    private val hodometro = HodometroRepositorio(dao, relogio)
+    private val hodometro = HodometroRepositorio(dao, TransacaoFalsa(), relogio)
 
     @Test
     fun registrarPreencheControleEViraKmAtual() = runTest {
@@ -51,6 +52,39 @@ class HodometroRepositorioTest {
         assertTrue(hodometro.registrarSeAvancar("moto", 10_500, lidaEm = 0))
         assertEquals(10_500, hodometro.kmAtual("moto"))
         assertEquals(2, dao.linhas.value.size)
+    }
+
+    @Test
+    fun leituraDoKmAtualEInsercaoFicamNaMesmaTransacao() = runTest {
+        val transacao = TransacaoFalsa()
+        val vigiado = FakeLeituraHodometroDao(transacao)
+        val repositorio = HodometroRepositorio(vigiado, transacao, relogio)
+        // O vigia funciona: uma leitura feita fora de transação é anotada.
+        vigiado.kmAtual("moto")
+        assertEquals(listOf("kmAtual"), vigiado.foraDaTransacao)
+        vigiado.foraDaTransacao.clear()
+
+        repositorio.registrar("moto", 1_000)
+        assertTrue(repositorio.registrarSeAvancar("moto", 1_200, lidaEm = 0))
+        assertFalse(repositorio.registrarSeAvancar("moto", 900, lidaEm = 0))
+        runCatching { repositorio.registrar("moto", 1_100) }
+        assertEquals(emptyList<String>(), vigiado.foraDaTransacao)
+        assertEquals(listOf(1_000, 1_200), vigiado.linhas.value.map { it.km })
+        // E a transação fecha: depois dela, uma leitura solta volta a ser anotada.
+        vigiado.kmAtual("moto")
+        assertEquals(listOf("kmAtual"), vigiado.foraDaTransacao)
+    }
+
+    @Test
+    fun registroDoDiarioComKmInvalidoEhRecusadoPelaMesmaRegra() = runTest {
+        hodometro.registrar("moto", 1_000)
+        try {
+            hodometro.registrarSeAvancar("moto", KM_MAXIMO + 1, lidaEm = 0)
+            fail("aceitou km acima do limite")
+        } catch (e: LeituraRecusadaException) {
+            assertEquals(ValidacaoLeitura.AcimaDoLimite, e.motivo)
+        }
+        assertEquals(1_000, hodometro.kmAtual("moto"))
     }
 
     @Test

@@ -37,7 +37,7 @@ class DiarioViewModelTest {
     private val repositorio = RegistroRepositorio(
         dao,
         FakeFotoRegistroDao(),
-        HodometroRepositorio(FakeLeituraHodometroDao(), relogio),
+        HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio),
         TransacaoFalsa(),
         relogio,
     )
@@ -91,5 +91,7 @@ class DiarioViewModelTest {
         // Sem rolar, só a primeira carga (3 páginas, o padrão do Paging) chega à tela; o resto vem ao rolar.
         val primeiraCarga = vm.registros.asSnapshot()
         assertEquals(RegistroRepositorio.TAMANHO_DA_PAGINA * 3, primeiraCarga.size)
+        val ateOFim = vm.registros.asSnapshot { scrollTo(index = RegistroRepositorio.TAMANHO_DA_PAGINA * 4 - 1) }
+        assertEquals(RegistroRepositorio.TAMANHO_DA_PAGINA * 4, ateOFim.size)
     }
 }
