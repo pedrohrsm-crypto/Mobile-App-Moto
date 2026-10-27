@@ -7,15 +7,19 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -151,12 +155,16 @@ fun DiarioNavHost(
 @Composable
 fun BarraDestinos(rotaAtual: String?, onEscolher: (Destino) -> Unit) {
     val fonteGrande = LocalDensity.current.fontScale * LocalEscalaDiario.current.fator >= FONTE_GRANDE
+    val cores = NavigationBarItemDefaults.colors(
+        selectedTextColor = corRotuloSelecionadoBarra(MaterialTheme.colorScheme),
+    )
     NavigationBar {
         Destino.entries.forEach { destino ->
             val nome = stringResource(destino.rotulo)
             NavigationBarItem(
                 selected = destino.rota == rotaAtual,
                 onClick = { onEscolher(destino) },
+                colors = cores,
                 icon = {
                     Icon(painterResource(destino.icone), contentDescription = nome.takeIf { fonteGrande })
                 },
@@ -169,6 +177,12 @@ fun BarraDestinos(rotaAtual: String?, onEscolher: (Destino) -> Unit) {
         }
     }
 }
+
+/**
+ * Rótulo do destino selecionado. O padrão do Material (`secondary`) sobre `surfaceContainer` dava 3,75:1 no
+ * Estrada (erro #55); `primary` dá de 5,54 a 11,21:1 nos 3 temas e é conferido pelo `ContrasteTemaTest`.
+ */
+internal fun corRotuloSelecionadoBarra(cores: ColorScheme): Color = cores.primary
 
 /** Fonte do sistema × escala do modo oficina a partir da qual o rótulo de todos os destinos não cabe. */
 private const val FONTE_GRANDE = 1.8f

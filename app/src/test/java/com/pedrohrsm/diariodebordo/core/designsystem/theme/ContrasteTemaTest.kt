@@ -3,6 +3,7 @@ package com.pedrohrsm.diariodebordo.core.designsystem.theme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import kotlin.math.pow
+import com.pedrohrsm.diariodebordo.navegacao.corRotuloSelecionadoBarra
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -47,6 +48,14 @@ class ContrasteTemaTest {
         borda("outline/background", { outline }, { background }),
         borda("outline/surface", { outline }, { surface }),
         borda("primary/background", { primary }, { background }), // traço da rota (TracadoRota), PR #51
+        // Pares que o Material usa por padrão e o app não define (erro #55). Barra: container surfaceContainer.
+        texto("barra rótulo selecionado/surfaceContainer", { corRotuloSelecionadoBarra(this) }, { surfaceContainer }),
+        texto("barra rótulo não selecionado/surfaceContainer", { onSurfaceVariant }, { surfaceContainer }),
+        texto("barra ícone selecionado/secondaryContainer", { onSecondaryContainer }, { secondaryContainer }),
+        // AlertDialog (7 usos): container surfaceContainerHigh; TextButton em primary.
+        texto("diálogo título onSurface/surfaceContainerHigh", { onSurface }, { surfaceContainerHigh }),
+        texto("diálogo texto onSurfaceVariant/surfaceContainerHigh", { onSurfaceVariant }, { surfaceContainerHigh }),
+        texto("diálogo botão primary/surfaceContainerHigh", { primary }, { surfaceContainerHigh }),
     )
 
     private fun luminanciaRelativa(cor: Color): Double {
@@ -94,6 +103,30 @@ class ContrasteTemaTest {
         assertAcusa(estradaAntigoBorda, "outline/background")
         assertAcusa(estradaAntigoRealce, "onSecondary/secondary")
         assertAcusa(cromoAntigoErro, "error/background")
+    }
+
+    @Test
+    fun rotuloSelecionadoDaBarraPassaDoMinimoEPadraoAntigoNao() {
+        // Erro #55: o padrão do NavigationBarItem (secondary sobre surfaceContainer) dava 3,75:1 no Estrada.
+        val estrada = TemaDiario.ESTRADA.tokens().paraColorScheme()
+        assertEquals(3.75, contraste(estrada.secondary, estrada.surfaceContainer), 0.01)
+        TemaDiario.entries.forEach { tema ->
+            listOf(false, true).forEach { modoOficina ->
+                val esquema = tema.tokens().let { if (modoOficina) it.paraModoOficina() else it }.paraColorScheme()
+                val razao = contraste(corRotuloSelecionadoBarra(esquema), esquema.surfaceContainer)
+                val msg = "$tema (oficina=$modoOficina) rótulo selecionado %.2f:1".format(razao)
+                assertTrue(msg, razao >= MINIMO_TEXTO)
+            }
+        }
+    }
+
+    @Test
+    fun parPadraoDeOutroComponentePlantadoAbaixoDoMinimoReprova() {
+        // Canário de classe (#55): TEXTO_SECUNDARIO rebaixado quebra o rótulo não selecionado da barra e o texto
+        // do diálogo, pares padrão do Material que o app não define.
+        val rebaixado = TemaDiario.ESTRADA.tokens() + (PapelCor.TEXTO_SECUNDARIO to Color(0xFF8A9499))
+        assertAcusa(rebaixado, "barra rótulo não selecionado/surfaceContainer")
+        assertAcusa(rebaixado, "diálogo texto onSurfaceVariant/surfaceContainerHigh")
     }
 
     @Test
