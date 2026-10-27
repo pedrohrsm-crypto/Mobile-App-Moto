@@ -18,6 +18,7 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 
 class PacoteZipTest {
@@ -105,11 +106,16 @@ class PacoteZipTest {
         PacoteZip.ler(zip(PacoteZip.DADOS to json).inputStream()) { _, _ -> }
     }
 
-    @Test(expected = ArquivoInvalidoException::class)
+    @Test
     fun itemQueSeExpandeAlemDoLimiteEhRecusado() {
-        // 4 MB de zeros comprimem para poucos KB: o tamanho é contado na leitura, não no cabeçalho do zip.
-        val bomba = zip(PacoteZip.DADOS to ByteArray(4 * 1024 * 1024))
-        PacoteZip.ler(bomba.inputStream(), LimitesDoPacote(dadosBytes = 1024 * 1024)) { _, _ -> }
+        // JSON válido com 4 MB de espaços comprime para poucos KB: o tamanho é contado na leitura, não no cabeçalho.
+        val bomba = zip(PacoteZip.DADOS to dadosJson + ByteArray(4 * 1024 * 1024) { ' '.code.toByte() })
+        try {
+            PacoteZip.ler(bomba.inputStream(), LimitesDoPacote(dadosBytes = 1024 * 1024)) { _, _ -> }
+            fail("deveria recusar o item grande demais")
+        } catch (e: ArquivoInvalidoException) {
+            assertEquals("Item maior que o permitido", e.message)
+        }
     }
 
     @Test
