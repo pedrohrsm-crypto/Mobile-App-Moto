@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "7a64772c34d4088b3d6887b67c5d86e5",
+    "identityHash": "a8a9f95f10aac0243266b54c68c9a830",
     "entities": [
       {
         "tableName": "motos",
@@ -372,6 +372,136 @@
         ]
       },
       {
+        "tableName": "itens_plano",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `motoId` TEXT NOT NULL, `chave` TEXT, `nome` TEXT NOT NULL, `intervaloKm` INTEGER, `intervaloDias` INTEGER, `ultimaVezKm` INTEGER, `ultimaVezEm` INTEGER, `feitoEm` INTEGER, `origem` TEXT NOT NULL, `registroOrigemId` TEXT, `resolvidoEm` INTEGER, `avisadoComo` TEXT, `criadoEm` INTEGER NOT NULL, `alteradoEm` INTEGER NOT NULL, `fusoHorario` TEXT NOT NULL, `excluidoEm` INTEGER, `pendenteSync` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "motoId",
+            "columnName": "motoId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chave",
+            "columnName": "chave",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "nome",
+            "columnName": "nome",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "intervaloKm",
+            "columnName": "intervaloKm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "intervaloDias",
+            "columnName": "intervaloDias",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "ultimaVezKm",
+            "columnName": "ultimaVezKm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "ultimaVezEm",
+            "columnName": "ultimaVezEm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "feitoEm",
+            "columnName": "feitoEm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "origem",
+            "columnName": "origem",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "registroOrigemId",
+            "columnName": "registroOrigemId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "resolvidoEm",
+            "columnName": "resolvidoEm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "avisadoComo",
+            "columnName": "avisadoComo",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "criadoEm",
+            "columnName": "criadoEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alteradoEm",
+            "columnName": "alteradoEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fusoHorario",
+            "columnName": "fusoHorario",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "excluidoEm",
+            "columnName": "excluidoEm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pendenteSync",
+            "columnName": "pendenteSync",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_itens_plano_motoId",
+            "unique": false,
+            "columnNames": [
+              "motoId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_itens_plano_motoId` ON `${TABLE_NAME}` (`motoId`)"
+          },
+          {
+            "name": "index_itens_plano_registroOrigemId",
+            "unique": false,
+            "columnNames": [
+              "registroOrigemId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_itens_plano_registroOrigemId` ON `${TABLE_NAME}` (`registroOrigemId`)"
+          }
+        ]
+      },
+      {
         "tableName": "rotas",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `motoId` TEXT NOT NULL, `iniciadaEm` INTEGER NOT NULL, `terminadaEm` INTEGER, `distanciaM` INTEGER NOT NULL, `duracaoS` INTEGER NOT NULL, `polilinha` TEXT NOT NULL, `emGravacao` INTEGER NOT NULL, `criadoEm` INTEGER NOT NULL, `alteradoEm` INTEGER NOT NULL, `fusoHorario` TEXT NOT NULL, `excluidoEm` INTEGER, `pendenteSync` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
@@ -562,7 +692,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7a64772c34d4088b3d6887b67c5d86e5')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a8a9f95f10aac0243266b54c68c9a830')"
     ]
   }
 }

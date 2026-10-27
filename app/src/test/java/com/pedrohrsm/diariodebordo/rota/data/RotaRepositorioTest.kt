@@ -8,6 +8,7 @@ import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
 import com.pedrohrsm.diariodebordo.garagem.data.FakeLeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.localizacao.Ponto
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import com.pedrohrsm.diariodebordo.rota.dominio.Polilinha
 import java.time.Clock
 import java.time.Instant
@@ -30,7 +31,7 @@ class RotaRepositorioTest {
     private val registros = RegistroRepositorio(
         registroDao,
         FakeFotoRegistroDao(),
-        HodometroRepositorio(FakeLeituraHodometroDao(), transacao, relogio),
+        HodometroRepositorio(FakeLeituraHodometroDao(), transacao, relogio, AgendadorFalso()),
         transacao,
         relogio,
     )

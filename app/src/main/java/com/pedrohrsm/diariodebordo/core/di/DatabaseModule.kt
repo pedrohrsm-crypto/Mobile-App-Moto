@@ -10,6 +10,7 @@ import com.pedrohrsm.diariodebordo.diario.data.FotoRegistroDao
 import com.pedrohrsm.diariodebordo.diario.data.RegistroDao
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
+import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlanoDao
 import com.pedrohrsm.diariodebordo.rota.data.PontoDeRotaDao
 import com.pedrohrsm.diariodebordo.rota.data.RotaDao
 import dagger.Module
@@ -57,6 +58,9 @@ object DatabaseModule {
 
     @Provides
     fun providePontoDeRotaDao(database: DiarioDatabase): PontoDeRotaDao = database.pontoDeRotaDao()
+
+    @Provides
+    fun provideItemDoPlanoDao(database: DiarioDatabase): ItemDoPlanoDao = database.itemDoPlanoDao()
 
     @Provides
     fun provideTransacao(database: DiarioDatabase): Transacao = TransacaoRoom(database)

@@ -1,5 +1,6 @@
 package com.pedrohrsm.diariodebordo.numeros
 
+import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -59,6 +60,12 @@ class FormatadorTest {
     @Test
     fun coordenadaComCincoCasasEPontoDecimal() {
         assertEquals("-23.55052, -46.63331", Formatador.coordenada(-23.550518, -46.633308))
+    }
+
+    @Test
+    fun diaDoCalendarioNaoDependeDeFuso() {
+        assertEquals("28/10/2026", Formatador.data(LocalDate.of(2026, 10, 28)))
+        assertEquals("01/01/2027", Formatador.data(LocalDate.of(2027, 1, 1)))
     }
 
     @Test

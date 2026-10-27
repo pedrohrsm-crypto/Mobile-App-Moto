@@ -3,9 +3,13 @@ package com.pedrohrsm.diariodebordo.core.database
 import androidx.paging.PagingSource
 import androidx.room.Room
 import com.pedrohrsm.diariodebordo.diario.data.Registro
+import com.pedrohrsm.diariodebordo.diario.data.TipoOcorrencia
 import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
+import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
+import com.pedrohrsm.diariodebordo.plano.data.OrigemItem
+import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
 import com.pedrohrsm.diariodebordo.rota.data.PontoDeRota
 import com.pedrohrsm.diariodebordo.rota.data.Rota
 import kotlinx.coroutines.flow.first
@@ -52,7 +56,15 @@ class DiarioDatabaseTest {
         assertTrue(
             tabelas.toString(),
             tabelas.containsAll(
-                listOf("motos", "leituras_hodometro", "registros", "fotos_registro", "rotas", "pontos_rota"),
+                listOf(
+                    "motos",
+                    "leituras_hodometro",
+                    "registros",
+                    "fotos_registro",
+                    "itens_plano",
+                    "rotas",
+                    "pontos_rota",
+                ),
             ),
         )
     }
@@ -68,6 +80,10 @@ class DiarioDatabaseTest {
         assertEquals(setOf("index_fotos_registro_registroId"), nomes(indices("fotos_registro")))
         assertEquals(setOf("index_rotas_motoId_iniciadaEm"), nomes(indices("rotas")))
         assertEquals(setOf("index_pontos_rota_rotaId_instante"), nomes(indices("pontos_rota")))
+        assertEquals(
+            setOf("index_itens_plano_motoId", "index_itens_plano_registroOrigemId"),
+            nomes(indices("itens_plano")),
+        )
     }
 
     private fun indices(tabela: String) =
@@ -130,5 +146,60 @@ class DiarioDatabaseTest {
         assertTrue(pontos.daRota(a.id).isEmpty())
         assertEquals(1, pontos.daRota(b.id).size)
         assertEquals(b, rotas.emGravacao())
+    }
+
+    @Test
+    fun planoDaMotoMostraSoOsAbertosEGuardaAUrgenciaAvisada() = runTest {
+        val dao = banco.itemDoPlanoDao()
+        fun item(nome: String, motoId: String = "a", origem: OrigemItem = OrigemItem.USUARIO) =
+            ItemDoPlano(motoId = motoId, nome = nome, intervaloKm = 5_000, origem = origem)
+        val oleo = item("Óleo")
+        val resolvido = item("Resolvido")
+        val excluido = item("Excluído")
+        listOf(oleo, item("Filtro"), item("De outra moto", motoId = "b"), resolvido, excluido).forEach {
+            dao.inserir(it)
+        }
+        assertEquals(1, dao.atualizar(resolvido.copy(resolvidoEm = 5)))
+        assertEquals(1, dao.marcarExcluido(excluido.id, quando = 6))
+        assertEquals(listOf("Filtro", "Óleo"), dao.observarDaMoto("a").first().map { it.nome })
+
+        assertEquals(1, dao.marcarAvisado(oleo.id, Urgencia.PROXIMO, quando = 7))
+        assertEquals(Urgencia.PROXIMO, dao.buscar(oleo.id)?.avisadoComo)
+        assertEquals(1, dao.marcarAvisado(oleo.id, Urgencia.VENCIDO, quando = 8))
+        assertEquals(Urgencia.VENCIDO, dao.buscar(oleo.id)?.avisadoComo)
+        // Item excluído ou resolvido não é marcado: zero linhas, para quem chama saber.
+        assertEquals(0, dao.marcarAvisado(excluido.id, Urgencia.VENCIDO, quando = 9))
+        assertEquals(0, dao.marcarAvisado(resolvido.id, Urgencia.VENCIDO, quando = 9))
+    }
+
+    @Test
+    fun planoBaseContaTambemOsExcluidosParaNaoVoltar() = runTest {
+        val dao = banco.itemDoPlanoDao()
+        val base = ItemDoPlano(motoId = "a", nome = "Óleo", intervaloKm = 5_000, origem = OrigemItem.PLANO_BASE)
+        dao.inserir(base)
+        assertEquals(1, dao.contarPlanoBase("a"))
+        assertEquals(1, dao.marcarExcluido(base.id, quando = 1))
+        assertEquals(1, dao.contarPlanoBase("a"))
+        assertEquals(0, dao.contarPlanoBase("b"))
+    }
+
+    @Test
+    fun ocorrenciasDaMotoLeOsRegistrosDoDiarioSoDoTipoOcorrenciaAtivos() = runTest {
+        val registros = banco.registroDao()
+        fun registro(titulo: String, tipo: TipoRegistro, motoId: String = "a", ocorrencia: TipoOcorrencia? = null) =
+            Registro(motoId = motoId, tipo = tipo, titulo = titulo, dataEm = 1, ocorrencia = ocorrencia)
+        val queda = registro("Tombo", TipoRegistro.OCORRENCIA, ocorrencia = TipoOcorrencia.QUEDA)
+        val apagada = registro("Apagada", TipoRegistro.OCORRENCIA, ocorrencia = TipoOcorrencia.BARULHO)
+        listOf(
+            queda,
+            apagada,
+            registro("Nota", TipoRegistro.NOTA),
+            registro("Outra moto", TipoRegistro.OCORRENCIA, motoId = "b", ocorrencia = TipoOcorrencia.QUEDA),
+        ).forEach { registros.inserir(it) }
+        assertEquals(1, registros.marcarExcluido(apagada.id, quando = 2))
+
+        val achadas = banco.itemDoPlanoDao().ocorrenciasDaMoto("a")
+        assertEquals(listOf("Tombo"), achadas.map { it.titulo })
+        assertEquals(TipoOcorrencia.QUEDA, achadas.single().ocorrencia)
     }
 }

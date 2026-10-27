@@ -5,6 +5,7 @@ import com.pedrohrsm.diariodebordo.garagem.dominio.KM_MAXIMO
 import com.pedrohrsm.diariodebordo.garagem.dominio.LeituraRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.LimiteDeMotosException
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoLeitura
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -21,7 +22,8 @@ class HodometroRepositorioTest {
     private val instante = Instant.parse("2026-10-01T12:00:00Z")
     private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
     private val dao = FakeLeituraHodometroDao()
-    private val hodometro = HodometroRepositorio(dao, TransacaoFalsa(), relogio)
+    private val agendador = AgendadorFalso()
+    private val hodometro = HodometroRepositorio(dao, TransacaoFalsa(), relogio, agendador)
 
     @Test
     fun registrarPreencheControleEViraKmAtual() = runTest {
@@ -55,10 +57,22 @@ class HodometroRepositorioTest {
     }
 
     @Test
+    fun cadaLeituraGravadaPedeUmRecalculoDosLembretesELeituraRecusadaNaoPede() = runTest {
+        hodometro.registrar("moto", 10_000)
+        assertEquals(1, agendador.recalculos)
+        assertTrue(hodometro.registrarSeAvancar("moto", 10_500, lidaEm = 0))
+        assertEquals(2, agendador.recalculos)
+        // Retroativo e recusada: o km atual não mudou, então não há o que recalcular.
+        assertFalse(hodometro.registrarSeAvancar("moto", 8_000, lidaEm = 0))
+        runCatching { hodometro.registrar("moto", 9_000) }
+        assertEquals(2, agendador.recalculos)
+    }
+
+    @Test
     fun leituraDoKmAtualEInsercaoFicamNaMesmaTransacao() = runTest {
         val transacao = TransacaoFalsa()
         val vigiado = FakeLeituraHodometroDao(transacao)
-        val repositorio = HodometroRepositorio(vigiado, transacao, relogio)
+        val repositorio = HodometroRepositorio(vigiado, transacao, relogio, AgendadorFalso())
         // O vigia funciona: uma leitura feita fora de transação é anotada.
         vigiado.kmAtual("moto")
         assertEquals(listOf("kmAtual"), vigiado.foraDaTransacao)

@@ -12,6 +12,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.localizacao.Ponto
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import com.pedrohrsm.diariodebordo.rota.data.FakePontoDeRotaDao
 import com.pedrohrsm.diariodebordo.rota.data.FakeRotaDao
 import com.pedrohrsm.diariodebordo.rota.data.RotaRepositorio
@@ -55,7 +56,7 @@ class RotasViewModelTest {
     private val registros = RegistroRepositorio(
         FakeRegistroDao(),
         FakeFotoRegistroDao(),
-        HodometroRepositorio(FakeLeituraHodometroDao(), transacao, relogio),
+        HodometroRepositorio(FakeLeituraHodometroDao(), transacao, relogio, AgendadorFalso()),
         transacao,
         relogio,
     )

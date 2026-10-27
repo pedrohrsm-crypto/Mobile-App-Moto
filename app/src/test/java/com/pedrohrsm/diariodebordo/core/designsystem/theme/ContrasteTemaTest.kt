@@ -41,6 +41,9 @@ class ContrasteTemaTest {
         texto("onSecondaryContainer/secondaryContainer", { onSecondaryContainer }, { secondaryContainer }),
         texto("onTertiaryContainer/tertiaryContainer", { onTertiaryContainer }, { tertiaryContainer }),
         texto("onErrorContainer/errorContainer", { onErrorContainer }, { errorContainer }),
+        // Rótulo "Vence logo" do PlanoScreen. O item destacado pela notificação não troca de fundo (borda em
+        // outline): sobre secondaryContainer o "Vencido" dava 4,08:1 no Cromo e 4,45:1 no Oficina (PR #50).
+        texto("primary/surface", { primary }, { surface }),
         borda("outline/background", { outline }, { background }),
         borda("outline/surface", { outline }, { surface }),
     )

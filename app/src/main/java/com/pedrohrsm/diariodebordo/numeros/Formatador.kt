@@ -3,6 +3,7 @@ package com.pedrohrsm.diariodebordo.numeros
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -45,6 +46,9 @@ object Formatador {
     fun data(millis: Long, fuso: ZoneId): String = data.format(Instant.ofEpochMilli(millis).atZone(fuso))
 
     fun dataHora(millis: Long, fuso: ZoneId): String = dataHora.format(Instant.ofEpochMilli(millis).atZone(fuso))
+
+    /** Dia do calendário, sem fuso: para datas calculadas, como a próxima revisão do plano. */
+    fun data(dia: LocalDate): String = data.format(dia)
 
     /** Fuso gravado no registro; se estiver vazio ou inválido, o do aparelho. */
     fun fuso(id: String): ZoneId = runCatching { ZoneId.of(id) }.getOrDefault(ZoneId.systemDefault())

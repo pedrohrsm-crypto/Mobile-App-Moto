@@ -1,5 +1,7 @@
 package com.pedrohrsm.diariodebordo.navegacao
 
+import android.content.Intent
+import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.WindowInsets
@@ -11,6 +13,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -35,17 +38,23 @@ import com.pedrohrsm.diariodebordo.garagem.ui.GaragemRoute
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoDetalheRoute
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoDetalheViewModel
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoFormRoute
+import com.pedrohrsm.diariodebordo.plano.lembretes.NotificadorLembretes
+import com.pedrohrsm.diariodebordo.plano.ui.AcoesPlano
+import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormRoute
+import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormViewModel
+import com.pedrohrsm.diariodebordo.plano.ui.PlanoRoute
 import com.pedrohrsm.diariodebordo.rota.ui.RotaDetalheRoute
 import com.pedrohrsm.diariodebordo.rota.ui.RotaDetalheViewModel
 import com.pedrohrsm.diariodebordo.rota.ui.RotasRoute
 
 /**
  * Lista única dos destinos da barra inferior: a barra e o grafo leem daqui, e o rótulo é o
- * mesmo título da tela (docs/PLANEJAMENTO.md, UX/UI). Plano e números entram com as frentes deles.
+ * mesmo título da tela (docs/PLANEJAMENTO.md, UX/UI). Números entra com a frente dele.
  */
 enum class Destino(val rota: String, @StringRes val rotulo: Int, @DrawableRes val icone: Int) {
     GARAGEM(Rotas.GARAGEM, R.string.garagem_titulo, R.drawable.ic_garagem),
     DIARIO(Rotas.DIARIO, R.string.diario_titulo, R.drawable.ic_diario),
+    PLANO(Rotas.PLANO, R.string.plano_titulo, R.drawable.ic_plano),
     ROTAS(Rotas.ROTAS, R.string.rotas_titulo, R.drawable.ic_rotas),
 }
 
@@ -63,16 +72,49 @@ object Rotas {
     const val ROTAS = "rotas"
     const val ROTA = "rota/{${RotaDetalheViewModel.ARG_ROTA_ID}}"
 
+    const val PLANO = "plano"
+    const val ITEM_NOVO = "plano/item/novo"
+    const val ITEM = "plano/item/{${ItemPlanoFormViewModel.ARG_ITEM_ID}}"
+    const val PLANO_DA_MOTO = "moto/{${MotoDetalheViewModel.ARG_MOTO_ID}}/plano?$ARG_DESTAQUE={$ARG_DESTAQUE}"
+
     fun moto(motoId: String) = "moto/$motoId"
     fun motoEditar(motoId: String) = "moto/$motoId/editar"
     fun registroNovo(tipo: String? = null) =
         "registro/novo" + (tipo?.let { "?${RegistroFormViewModel.ARG_TIPO}=$it" } ?: "")
     fun registro(registroId: String) = "registro/editar/$registroId"
     fun rota(rotaId: String) = "rota/$rotaId"
+    fun item(itemId: String) = "plano/item/$itemId"
+
+    /** Plano da moto aberto por um lembrete, com o item avisado em destaque. */
+    fun planoDaMoto(motoId: String, destaque: String?) =
+        "moto/$motoId/plano" + (destaque?.let { "?$ARG_DESTAQUE=${Uri.encode(it)}" } ?: "")
+}
+
+private const val ARG_DESTAQUE = "destaque"
+
+/** Destino pedido de fora do app (notificação de lembrete). */
+data class Abertura(val motoId: String, val itemId: String?)
+
+/** Lê o destino que o toque na notificação de lembrete mandou (extras de [NotificadorLembretes]). */
+fun Intent.comoAbertura(): Abertura? {
+    val motoId = getStringExtra(NotificadorLembretes.EXTRA_MOTO_ID) ?: return null
+    return Abertura(motoId, getStringExtra(NotificadorLembretes.EXTRA_ITEM_ID))
 }
 
 @Composable
-fun DiarioNavHost(navController: NavHostController = rememberNavController()) {
+fun DiarioNavHost(
+    abertura: Abertura? = null,
+    onAberturaTratada: () -> Unit = {},
+    navController: NavHostController = rememberNavController(),
+) {
+    LaunchedEffect(abertura) {
+        if (abertura != null) {
+            // A moto é o hub: o voltar a partir do plano leva à moto (docs/PLANEJAMENTO.md, UX/UI).
+            navController.navigate(Rotas.moto(abertura.motoId)) { popUpTo(Rotas.GARAGEM) }
+            navController.navigate(Rotas.planoDaMoto(abertura.motoId, abertura.itemId))
+            onAberturaTratada()
+        }
+    }
     val entrada by navController.currentBackStackEntryAsState()
     val rotaAtual = entrada?.destination?.route
     Scaffold(
@@ -100,6 +142,7 @@ fun DiarioNavHost(navController: NavHostController = rememberNavController()) {
         ) {
             grafoGaragem(navController)
             grafoDiario(navController)
+            grafoPlano(navController)
             grafoRotas(navController)
         }
     }
@@ -169,4 +212,18 @@ private fun NavArgumentBuilder.opcional() {
     type = NavType.StringType
     nullable = true
     defaultValue = null
+}
+
+private fun NavGraphBuilder.grafoPlano(nav: NavController) {
+    val acoes = AcoesPlano(
+        onNovoItem = { nav.navigate(Rotas.ITEM_NOVO) },
+        onEditarItem = { nav.navigate(Rotas.item(it)) },
+        onCadastrarMoto = { nav.navigate(Rotas.MOTO_NOVA) },
+    )
+    composable(Rotas.PLANO) { PlanoRoute(acoes) }
+    composable(Rotas.PLANO_DA_MOTO, arguments = listOf(navArgument(ARG_DESTAQUE) { opcional() })) { entrada ->
+        PlanoRoute(acoes, destaque = entrada.arguments?.getString(ARG_DESTAQUE))
+    }
+    composable(Rotas.ITEM_NOVO) { ItemPlanoFormRoute(onConcluido = { nav.popBackStack() }) }
+    composable(Rotas.ITEM) { ItemPlanoFormRoute(onConcluido = { nav.popBackStack() }) }
 }

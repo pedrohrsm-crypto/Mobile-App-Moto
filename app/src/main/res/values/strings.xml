@@ -115,4 +115,40 @@
     <string name="rota_tracado_descricao">Traçado da rota</string>
     <string name="rota_sem_mapa">Só o traçado, sem mapa de fundo: nada é baixado da internet.</string>
     <string name="rota_excluir_titulo">Excluir esta rota?</string>
+    <!-- Plano de manutenção e lembretes -->
+    <string name="plano_titulo">Plano</string>
+    <string name="plano_titulo_moto">Plano · %1$s</string>
+    <string name="plano_pendencias">Pendências de ocorrências</string>
+    <string name="plano_pendencia_origem">Criada por uma ocorrência no diário.</string>
+    <string name="plano_resolver">Resolvida</string>
+    <string name="plano_itens">Manutenção periódica</string>
+    <string name="plano_vencido">Vencido</string>
+    <string name="plano_proximo">Vence logo</string>
+    <string name="plano_em_dia">Em dia</string>
+    <string name="plano_proxima">Próxima: %1$s</string>
+    <string name="plano_ou">" ou "</string>
+    <string name="plano_separador">" · "</string>
+    <string name="plano_faltam">faltam %1$s</string>
+    <string name="plano_passou">passou %1$s</string>
+    <plurals name="plano_dias">
+        <item quantity="one">%d dia</item>
+        <item quantity="other">%d dias</item>
+    </plurals>
+    <string name="plano_desde_criacao">" (contando desde que o plano foi criado)"</string>
+    <string name="plano_marcar_feito">Fiz agora</string>
+    <string name="plano_dado_do_usuario">Os intervalos são sugestões para começar. Confira no manual da sua moto e ajuste: o plano é seu.</string>
+    <string name="item_plano_novo">Novo item</string>
+    <string name="item_plano_editar">Editar item</string>
+    <string name="item_plano_nome">Nome</string>
+    <string name="item_plano_km">A cada quantos km (opcional)</string>
+    <string name="item_plano_dias">A cada quantos dias (opcional)</string>
+    <string name="item_plano_dias_invalido">Digite de 1 a 3650 dias.</string>
+    <string name="item_plano_excluir_titulo">Excluir este item?</string>
+    <string name="item_plano_excluir_texto">O item sai do plano e deixa de gerar lembretes.</string>
+    <string name="item_plano_sem_intervalo">Informe km, dias ou os dois.</string>
+    <string name="lembrete_vencido">Venceu: %1$s</string>
+    <string name="lembrete_proximo">Vence logo: %1$s</string>
+    <string name="lembrete_texto">%1$s · toque para ver o plano</string>
+    <string name="lembrete_permissao">Ative as notificações para receber os lembretes de manutenção.</string>
+    <string name="lembrete_ativar">Ativar</string>
 </resources>
