@@ -1,6 +1,7 @@
 package com.pedrohrsm.diariodebordo.garagem.data
 
 import com.pedrohrsm.diariodebordo.core.database.TransacaoFalsa
+import com.pedrohrsm.diariodebordo.core.premium.Premium
 import com.pedrohrsm.diariodebordo.garagem.dominio.KM_MAXIMO
 import com.pedrohrsm.diariodebordo.garagem.dominio.LeituraRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.LimiteDeMotosException
@@ -104,7 +105,8 @@ class HodometroRepositorioTest {
     @Test
     fun cadastroCriaMotoELeituraInicialNumaTransacao() = runTest {
         val transacao = TransacaoFalsa()
-        val cadastro = CadastroMoto(MotoRepositorio(FakeMotoDao(), relogio), hodometro, transacao)
+        val cadastro =
+            CadastroMoto(MotoRepositorio(FakeMotoDao(), relogio), hodometro, transacao, Premium(habilitado = false))
         val moto = cadastro.cadastrar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"), 23_450)
         assertEquals(23_450, hodometro.kmAtual(moto.id))
         assertEquals(1, transacao.execucoes)
@@ -112,7 +114,13 @@ class HodometroRepositorioTest {
 
     @Test(expected = LimiteDeMotosException::class)
     fun gratisNaoCadastraSegundaMoto() = runTest {
-        val cadastro = CadastroMoto(MotoRepositorio(FakeMotoDao(), relogio), hodometro, TransacaoFalsa())
+        val cadastro =
+            CadastroMoto(
+                MotoRepositorio(FakeMotoDao(), relogio),
+                hodometro,
+                TransacaoFalsa(),
+                Premium(habilitado = false),
+            )
         cadastro.cadastrar(Moto(apelido = "A", marca = "Honda", modelo = "CG"), 0)
         cadastro.cadastrar(Moto(apelido = "B", marca = "Yamaha", modelo = "Fazer"), 0)
     }
