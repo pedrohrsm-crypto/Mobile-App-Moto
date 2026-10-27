@@ -11,8 +11,15 @@
 - [ ] `lint`: exit 0 **e** saída vazia
 - [ ] `typecheck`: 0
 - [ ] testes unitários: N ✓ — cada teste novo foi **visto falhar** (bug plantado → vermelho → revertido)
+- [ ] capturas: `verifyRoborazziDebug` verde e `app/src/test/snapshots` sem mudança não commitada (se houver interface)
+- [ ] teto do AAB: `ferramentas/teto-aab.sh` → 0; subir o teto é decisão do dono (issue `decisao`) e vai com o motivo na mensagem do commit
 - [ ] e2e: suíte inteira (sem arquivo fixo)
 - [ ] tabela de rotas do build igual à baseline (ou a mudança explicada abaixo)
+
+## Provas negativas
+<!-- Uma linha por @Test novo, citado pelo NOME da função (o CI reprova nome ausente). Também cada passo novo do CI, visto vermelho no próprio CI, com o link do run. -->
+| Teste ou passo | Bug plantado ou causa do vermelho | Visto vermelho (link do run ou saída) |
+|---|---|---|
 
 ## Definition of Done
 - [ ] Nenhum `error` descartado; toda escrita confere as linhas afetadas
