@@ -1,7 +1,9 @@
-# Teto do AAB de release, em bytes (uma linha com o número). Lido por ferramentas/teto-aab.sh no CI.
-# PROVISÓRIO: 4587931 B é o AAB medido no CI (run 40555042019, PR #54 sobre a main a70ba2d, sem o PR #51);
-# a issue #52 cita 4587880 B medidos fora do CI (51 B a menos). A decisão #53 do dono aceitou o aumento do
-# play-services-location; quando o #51 entrar, o teto passa a ser o AAB medido na main nova (cerca de 4.914.768 B).
+# Teto do AAB de release, em bytes. Lido por ferramentas/teto-aab.sh no CI. Formato: chave: valor.
+# teto: PROVISÓRIO em 4587931 B, o AAB medido no CI (run 40555042019, PR #54 sobre a main a70ba2d, sem o PR #51).
+#   Definitivo (decisão do PM, 27-Out-2026): o AAB medido no CI do push na main depois que o PR #51 entrar
+#   (decisão #53 do dono: aumento do play-services-location aceito).
+# tolerancia: ruído de build medido: até 331 B (PR #51, #54); não é folga para crescer.
+#   O script reprova acima de teto + tolerancia e avisa abaixo de teto - tolerancia, para baixar o teto.
 # Subir o teto exige editar este arquivo no PR com o motivo na mensagem do commit; quem aceita é o PM.
-# Quando o script avisar que o AAB caiu, baixe o teto.
-4587931
+teto: 4587931
+tolerancia: 2048

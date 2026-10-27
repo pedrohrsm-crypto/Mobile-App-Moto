@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Teto do AAB: reprova se o AAB passar do teto; avisa, sem reprovar, quando cair (para baixar o teto).
+# Teto do AAB: reprova se o AAB passar de teto + tolerância; avisa, sem reprovar, quando cair abaixo de teto - tolerância.
 # Uso: bash ferramentas/teto-aab.sh [arquivo.aab] [arquivo-do-teto]
 set -uo pipefail
 raiz="$(git rev-parse --show-toplevel)"
@@ -15,19 +15,24 @@ if [ ! -f "$arquivo_teto" ]; then
   exit 1
 fi
 
-teto="$(grep -vE '^[[:space:]]*(#|$)' "$arquivo_teto" | head -n 1 | tr -d '[:space:]')"
-if ! [[ "$teto" =~ ^[0-9]+$ ]]; then
-  echo "✗ $arquivo_teto não tem um número de bytes na primeira linha útil: '$teto'"
-  exit 1
-fi
+valor() { grep -E "^$1:" "$arquivo_teto" | head -n 1 | cut -d: -f2 | tr -d '[:space:]'; }
+teto="$(valor teto)"
+tolerancia="$(valor tolerancia)"
+for chave in teto tolerancia; do
+  if ! [[ "${!chave}" =~ ^[0-9]+$ ]]; then
+    echo "✗ $arquivo_teto precisa de uma linha '$chave: <bytes>' com número inteiro (achei '${!chave}')"
+    exit 1
+  fi
+done
 
 tamanho="$(stat -c %s "$aab")"
-echo "AAB: $tamanho B · teto: $teto B"
-if [ "$tamanho" -gt "$teto" ]; then
-  echo "✗ o AAB passou do teto em $((tamanho - teto)) B. Suba o teto em ferramentas/teto-aab.txt com o motivo na mensagem do commit (o PM aceita) ou reduza o AAB."
+limite=$((teto + tolerancia))
+echo "AAB: $tamanho B · teto: $teto B · tolerância: $tolerancia B · limite: $limite B"
+if [ "$tamanho" -gt "$limite" ]; then
+  echo "✗ o AAB passou do limite (teto + tolerância) em $((tamanho - limite)) B. Suba o teto em ferramentas/teto-aab.txt com o motivo na mensagem do commit (o PM aceita) ou reduza o AAB."
   exit 1
 fi
-if [ "$tamanho" -lt "$teto" ]; then
+if [ "$tamanho" -lt $((teto - tolerancia)) ]; then
   echo "::warning::o AAB está $((teto - tamanho)) B abaixo do teto; baixe ferramentas/teto-aab.txt para $tamanho."
   echo "Aviso: teto pode baixar para $tamanho (sem reprovar)."
 fi
