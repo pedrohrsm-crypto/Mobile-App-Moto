@@ -1,5 +1,6 @@
 package com.pedrohrsm.diariodebordo.navegacao
 
+import android.content.Intent
 import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
@@ -37,6 +38,7 @@ import com.pedrohrsm.diariodebordo.garagem.ui.GaragemRoute
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoDetalheRoute
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoDetalheViewModel
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoFormRoute
+import com.pedrohrsm.diariodebordo.plano.lembretes.NotificadorLembretes
 import com.pedrohrsm.diariodebordo.plano.ui.AcoesPlano
 import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormRoute
 import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormViewModel
@@ -84,6 +86,12 @@ private const val ARG_DESTAQUE = "destaque"
 
 /** Destino pedido de fora do app (notificação de lembrete). */
 data class Abertura(val motoId: String, val itemId: String?)
+
+/** Lê o destino que o toque na notificação de lembrete mandou (extras de [NotificadorLembretes]). */
+fun Intent.comoAbertura(): Abertura? {
+    val motoId = getStringExtra(NotificadorLembretes.EXTRA_MOTO_ID) ?: return null
+    return Abertura(motoId, getStringExtra(NotificadorLembretes.EXTRA_ITEM_ID))
+}
 
 @Composable
 fun DiarioNavHost(

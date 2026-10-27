@@ -16,6 +16,9 @@ class FakeItemDoPlanoDao : ItemDoPlanoDao {
     /** Quando preenchido, toda leitura e escrita falha com ele: o banco indisponível. */
     var falha: Throwable? = null
 
+    /** Quando preenchido, `atualizar` devolve este número de linhas sem gravar: o item some no meio da escrita. */
+    var linhasDaAtualizacao: Int? = null
+
     private fun conferir() {
         falha?.let { throw it }
     }
@@ -64,6 +67,7 @@ class FakeItemDoPlanoDao : ItemDoPlanoDao {
 
     override suspend fun atualizar(item: ItemDoPlano): Int {
         conferir()
+        linhasDaAtualizacao?.let { return it }
         if (linhas.value.none { it.id == item.id }) return 0
         linhas.value = linhas.value.map { if (it.id == item.id) item else it }
         return 1

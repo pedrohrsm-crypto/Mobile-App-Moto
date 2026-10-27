@@ -157,6 +157,25 @@ class PlanoRepositorioTest {
     }
 
     @Test
+    fun atualizacaoQueNaoAchaALinhaFalhaEmVezDeFingirQueGravou() = runTest {
+        plano.garantirPlanoBase(moto, kmAtual = 10_000)
+        val id = oleo().id
+        dao.linhasDaAtualizacao = 0
+        listOf<suspend () -> Unit>(
+            { plano.marcarFeito(id, kmAtual = 11_000) },
+            { plano.salvar(oleo().copy(nome = "Outro nome"), kmAtual = 11_000) },
+            { plano.resolverPendencia(id) },
+        ).forEach { escrita ->
+            try {
+                escrita()
+                fail("fingiu que gravou")
+            } catch (e: IllegalStateException) {
+                assertTrue(e.message.orEmpty().contains("0 linhas"))
+            }
+        }
+    }
+
+    @Test
     fun excluirItemInexistenteFalhaEmVezDeSumir() = runTest {
         try {
             plano.excluir("nao-existe")

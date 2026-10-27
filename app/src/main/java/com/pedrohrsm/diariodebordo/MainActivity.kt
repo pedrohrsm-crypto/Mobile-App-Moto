@@ -18,7 +18,7 @@ import com.pedrohrsm.diariodebordo.core.designsystem.theme.tokens
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.navegacao.Abertura
 import com.pedrohrsm.diariodebordo.navegacao.DiarioNavHost
-import com.pedrohrsm.diariodebordo.plano.lembretes.NotificadorLembretes
+import com.pedrohrsm.diariodebordo.navegacao.comoAbertura
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -63,8 +63,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun lerAbertura(intent: Intent) {
-        val motoId = intent.getStringExtra(NotificadorLembretes.EXTRA_MOTO_ID) ?: return
-        motoAtual.selecionar(motoId)
-        abertura.value = Abertura(motoId, intent.getStringExtra(NotificadorLembretes.EXTRA_ITEM_ID))
+        val pedida = intent.comoAbertura() ?: return
+        motoAtual.selecionar(pedida.motoId)
+        abertura.value = pedida
     }
 }
