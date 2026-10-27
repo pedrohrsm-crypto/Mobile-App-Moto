@@ -2,6 +2,7 @@ package com.pedrohrsm.diariodebordo.diario.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -113,7 +114,9 @@ private fun ListaDeRegistros(
         }
     }
     if (registros.itemCount > 0) {
-        LazyColumn {
+        // Espaço no fim do tamanho do botão flutuante: o último registro não fica coberto por ele.
+        val escala = LocalEscalaDiario.current
+        LazyColumn(contentPadding = PaddingValues(bottom = escala.alvoMinimo + escala.espaco(32.dp))) {
             items(registros.itemCount, key = registros.itemKey { it.id }) { indice ->
                 registros[indice]?.let { registro ->
                     RegistroItem(registro, onClick = { onAbrirRegistro(registro.id) })
