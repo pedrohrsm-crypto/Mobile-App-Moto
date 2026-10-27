@@ -5,6 +5,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.pedrohrsm.diariodebordo.core.database.Transacao
 import com.pedrohrsm.diariodebordo.diario.dominio.MAXIMO_FOTOS
+import com.pedrohrsm.diariodebordo.diario.dominio.cabemAsFotos
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import java.time.Clock
 import javax.inject.Inject
@@ -34,7 +35,7 @@ class RegistroRepositorio @Inject constructor(
      * Devolve o registro salvo e os arquivos que deixaram de ser usados, para quem chamou apagar.
      */
     suspend fun salvar(registro: Registro, arquivosDasFotos: List<String>): Salvo {
-        require(arquivosDasFotos.size <= MAXIMO_FOTOS) { "No máximo $MAXIMO_FOTOS fotos por registro" }
+        require(cabemAsFotos(arquivosDasFotos.size)) { "No máximo $MAXIMO_FOTOS fotos por registro" }
         return transacao.executar {
             val agora = relogio.millis()
             val existente = dao.buscar(registro.id)

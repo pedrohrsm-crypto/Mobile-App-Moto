@@ -72,4 +72,26 @@ class DatabaseModuleTest {
             banco.close()
         }
     }
+
+    /**
+     * O caso do dia a dia da v1 aberta: o schema muda e a versão continua 1. O Room não trata isso como
+     * migração (nem o fallback do debug recria): ele recusa abrir. No aparelho de teste, limpar os dados do app.
+     */
+    @Test
+    fun schemaDiferenteNaMesmaVersaoRecusaAbrirAteNoDebug() {
+        val caminho = contexto.getDatabasePath(nome).path
+        SQLiteDatabase.openDatabase(caminho, null, SQLiteDatabase.OPEN_READWRITE).use {
+            it.version = 1
+            it.execSQL("UPDATE room_master_table SET identity_hash = 'schema-de-outro-build'")
+        }
+        val banco = DatabaseModule.criarBanco(contexto, nome, debug = true)
+        try {
+            banco.openHelper.writableDatabase
+            fail("abriu um banco com o schema de outro build")
+        } catch (esperado: IllegalStateException) {
+            assertTrue(esperado.message.orEmpty(), esperado.message.orEmpty().contains("verify the data integrity"))
+        } finally {
+            banco.close()
+        }
+    }
 }

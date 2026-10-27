@@ -27,8 +27,10 @@ object DatabaseModule {
         criarBanco(context, DiarioDatabase.NOME, debug = BuildConfig.DEBUG)
 
     /**
-     * Decisão #12: a versão 1 fica aberta até a primeira publicação, e só o build de debug recria o banco
-     * quando o schema muda sem Migration. No release, faltar Migration é erro: o diário nunca é apagado.
+     * Decisão #12: só o build de debug recria o banco quando a versão gravada no aparelho difere da do app
+     * e falta Migration; no release isso é erro, e o diário nunca é apagado. Com a versão 1 aberta, o schema
+     * muda sem mudar a versão: aí o Room recusa abrir até no debug (identity hash), e o aparelho de teste
+     * precisa ter os dados do app limpos. `DatabaseModuleTest` prova os três casos.
      */
     fun criarBanco(context: Context, nome: String, debug: Boolean): DiarioDatabase {
         val construtor = Room.databaseBuilder(context, DiarioDatabase::class.java, nome)

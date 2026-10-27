@@ -5,6 +5,9 @@ import com.pedrohrsm.diariodebordo.numeros.Leitor
 
 const val MAXIMO_FOTOS = 3
 
+/** Regra única do limite de fotos: o formulário, a validação e o repositório perguntam aqui. */
+fun cabemAsFotos(quantidade: Int): Boolean = quantidade <= MAXIMO_FOTOS
+
 /** Lado maior da foto guardada, em pixels: legível na tela e leve no armazenamento. */
 const val LADO_MAXIMO_FOTO = 1600
 
@@ -26,7 +29,7 @@ fun validarRegistro(
         val ml = Leitor.litros(litrosTexto)
         if (ml == null || ml == 0L) add(CampoRegistro.LITROS)
     }
-    if (quantidadeFotos > MAXIMO_FOTOS) add(CampoRegistro.FOTOS)
+    if (!cabemAsFotos(quantidadeFotos)) add(CampoRegistro.FOTOS)
 }
 
 /**

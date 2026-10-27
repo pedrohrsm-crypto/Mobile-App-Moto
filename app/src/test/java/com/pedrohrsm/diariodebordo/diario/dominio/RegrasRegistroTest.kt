@@ -2,6 +2,7 @@ package com.pedrohrsm.diariodebordo.diario.dominio
 
 import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -34,5 +35,12 @@ class RegrasRegistroTest {
         assertEquals(4, fatorDeReducao(8000, 6000))
         assertEquals(0.4, escalaFinal(4000, 3000), 0.0001)
         assertEquals(1.0, escalaFinal(1000, 800), 0.0)
+    }
+
+    @Test
+    fun cabemAteTresFotos() {
+        assertTrue(cabemAsFotos(0))
+        assertTrue(cabemAsFotos(MAXIMO_FOTOS))
+        assertFalse(cabemAsFotos(MAXIMO_FOTOS + 1))
     }
 }

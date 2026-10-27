@@ -2,6 +2,8 @@ package com.pedrohrsm.diariodebordo.diario.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.pedrohrsm.diariodebordo.diario.data.Registro
@@ -53,9 +55,16 @@ class DiarioViewModel @Inject constructor(motoAtual: MotoAtual, repositorio: Reg
         .flatMapLatest { (motoId, tipo) ->
             if (motoId == null) flowOf(PagingData.empty()) else repositorio.paginarDaMoto(motoId, tipo)
         }
-        // Falha da moto atual já vira DiarioEstado.Erro, que a tela mostra no lugar da lista; falha do Room
-        // dentro da paginação chega como LoadState.Error.
-        .catch { emit(PagingData.empty()) }
+        // As duas coletas assinam o Room cada uma por conta própria: se só esta falhar, a lista mostra o erro,
+        // nunca um diário vazio. Falha do Room dentro da paginação já chega como LoadState.Error.
+        .catch { falha ->
+            val erro = LoadStates(
+                refresh = LoadState.Error(falha),
+                prepend = LoadState.NotLoading(endOfPaginationReached = false),
+                append = LoadState.NotLoading(endOfPaginationReached = false),
+            )
+            emit(PagingData.empty(erro))
+        }
         .cachedIn(viewModelScope)
 
     fun filtrar(tipo: TipoRegistro?) {

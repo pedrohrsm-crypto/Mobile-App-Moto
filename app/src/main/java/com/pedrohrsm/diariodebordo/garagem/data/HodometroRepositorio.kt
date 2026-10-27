@@ -23,6 +23,8 @@ class HodometroRepositorio @Inject constructor(
 
     suspend fun kmAtual(motoId: String): Int? = dao.kmAtual(motoId)
 
+    fun observarKmAtual(motoId: String): Flow<Int?> = dao.observarKmAtual(motoId)
+
     /** Grava a leitura ou lança [LeituraRecusadaException] se o km não avança ou é inválido. */
     suspend fun registrar(motoId: String, km: Int, lidaEm: Long = relogio.millis()): LeituraHodometro =
         transacao.executar {

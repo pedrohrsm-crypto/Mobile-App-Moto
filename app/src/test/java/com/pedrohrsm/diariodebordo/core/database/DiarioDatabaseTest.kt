@@ -78,6 +78,7 @@ class DiarioDatabaseTest {
         dao.inserir(LeituraHodometro(motoId = "a", km = 1_500, lidaEm = 1))
         dao.inserir(LeituraHodometro(motoId = "b", km = 9_000, lidaEm = 3))
         assertEquals(1_500, dao.kmAtual("a"))
+        assertEquals(1_500, dao.observarKmAtual("a").first())
         assertEquals(null, dao.kmAtual("sem-leitura"))
     }
 

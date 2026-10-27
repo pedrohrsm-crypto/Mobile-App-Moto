@@ -25,6 +25,8 @@ class FakeLeituraHodometroDao(private val transacao: TransacaoFalsa? = null) : L
         return ativas(motoId).maxOfOrNull { it.km }
     }
 
+    override fun observarKmAtual(motoId: String): Flow<Int?> = linhas.map { _ -> ativas(motoId).maxOfOrNull { it.km } }
+
     override fun observarKmAtuais(): Flow<List<KmAtual>> = linhas.map { todas ->
         todas.filter { it.excluidoEm == null }.groupBy { it.motoId }.map { (id, l) -> KmAtual(id, l.maxOf { it.km }) }
     }

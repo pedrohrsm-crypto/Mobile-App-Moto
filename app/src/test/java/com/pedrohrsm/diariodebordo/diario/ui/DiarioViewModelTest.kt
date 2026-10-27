@@ -12,12 +12,15 @@ import com.pedrohrsm.diariodebordo.garagem.data.FakeMotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
+import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
@@ -93,5 +96,15 @@ class DiarioViewModelTest {
         assertEquals(RegistroRepositorio.TAMANHO_DA_PAGINA * 3, primeiraCarga.size)
         val ateOFim = vm.registros.asSnapshot { scrollTo(index = RegistroRepositorio.TAMANHO_DA_PAGINA * 4 - 1) }
         assertEquals(RegistroRepositorio.TAMANHO_DA_PAGINA * 4, ateOFim.size)
+    }
+
+    @Test
+    fun falhaDoBancoNaMotoAtualViraErroNaListaENaoDiarioVazio() = runTest {
+        val quebrado = object : MotoDao by FakeMotoDao() {
+            override fun observarAtivos(): Flow<List<Moto>> = flow { throw IllegalStateException("disco cheio") }
+        }
+        val vm = DiarioViewModel(MotoAtual(MotoRepositorio(quebrado, relogio)), repositorio)
+        val falha = runCatching { vm.registros.asSnapshot() }.exceptionOrNull()
+        assertEquals("disco cheio", falha?.message)
     }
 }

@@ -21,7 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pedrohrsm.diariodebordo.R
 import com.pedrohrsm.diariodebordo.core.designsystem.componentes.TelaDiario
@@ -164,5 +164,5 @@ private fun DialogoHodometroView(
 private fun MotoDetalhePreview() {
     val moto = Moto(id = "1", apelido = "Bandida", marca = "Harley-Davidson", modelo = "Sportster 883")
     val leitura = LeituraHodometro(motoId = "1", km = 23_450, lidaEm = 1_790_000_000_000)
-    DiarioTheme { MotoDetalheScreen(estado = MotoDetalheEstado.Pronto(moto, listOf(leitura))) }
+    DiarioTheme { MotoDetalheScreen(estado = MotoDetalheEstado.Pronto(moto, listOf(leitura), kmAtual = leitura.km)) }
 }

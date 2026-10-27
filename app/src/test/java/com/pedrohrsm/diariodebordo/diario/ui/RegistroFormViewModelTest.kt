@@ -13,12 +13,15 @@ import com.pedrohrsm.diariodebordo.garagem.data.FakeMotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
+import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -113,6 +116,35 @@ class RegistroFormViewModelTest {
         vm.alterar { it.copy(titulo = "Nota") }
         vm.salvar()
         assertTrue(registros.linhas.value.isEmpty())
+    }
+
+    /** A tela preenche o título padrão por alterar() logo depois da carga: o aviso de carga não pode sumir. */
+    @Test
+    fun avisoDeCargaSobreviveAoTituloPadraoEAEdicao() = runTest {
+        val semMoto = novo()
+        semMoto.alterar { it.copy(titulo = "Manutenção") }
+        semMoto.adicionarFoto("content://foto")
+        assertEquals(ErroRegistroForm.SemMoto, semMoto.estado.value.erro)
+
+        val inexistente = novo(mapOf(RegistroFormViewModel.ARG_REGISTRO_ID to "nao-existe"))
+        inexistente.alterar { it.copy(titulo = "Manutenção") }
+        assertEquals(ErroRegistroForm.NaoEncontrado, inexistente.estado.value.erro)
+    }
+
+    @Test
+    fun falhaAoCarregarSobreviveAoTituloPadrao() = runTest {
+        val quebrado = object : MotoDao by FakeMotoDao() {
+            override fun observarAtivos(): Flow<List<Moto>> = flow { throw IllegalStateException("disco cheio") }
+        }
+        val vm = RegistroFormViewModel(
+            SavedStateHandle(),
+            repositorio,
+            fotos,
+            MotoAtual(MotoRepositorio(quebrado, relogio)),
+            relogio,
+        )
+        vm.alterar { it.copy(titulo = "Manutenção") }
+        assertTrue(vm.estado.value.erro.toString(), vm.estado.value.erro?.toString().orEmpty().contains("disco cheio"))
     }
 
     @Test

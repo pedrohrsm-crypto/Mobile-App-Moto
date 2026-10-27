@@ -55,9 +55,12 @@ class MotoDetalheViewModelTest {
     fun mostraOKmAtualEAMotoViraAAtual() = runTest {
         motos.criar(Moto(apelido = "Antes", marca = "Honda", modelo = "CG"))
         val moto = motoComKm(23_450)
+        hodometro.registrar(moto.id, 24_010)
         val vm = abrir(moto)
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.estado.collect {} }
-        assertEquals(23_450, (vm.estado.value as MotoDetalheEstado.Pronto).kmAtual)
+        val pronto = vm.estado.value as MotoDetalheEstado.Pronto
+        assertEquals(24_010, pronto.kmAtual)
+        assertEquals(listOf(24_010, 23_450), pronto.leituras.map { it.km })
         assertEquals(moto.id, motoAtual.moto.first()?.id)
     }
 

@@ -45,9 +45,10 @@ class ArmazenamentoFotos @Inject constructor(@ApplicationContext private val con
         val opcoes = BitmapFactory.Options().apply {
             inSampleSize = fatorDeReducao(limites.outWidth, limites.outHeight)
         }
+        val rotacao = resolver.openInputStream(origem)?.use { rotacaoExif(ExifInterface(it)) }
+            ?: throw IOException("Não foi possível ler a orientação da foto")
         val reduzida = resolver.openInputStream(origem)?.use { BitmapFactory.decodeStream(it, null, opcoes) }
             ?: throw IOException("Não foi possível abrir a foto")
-        val rotacao = resolver.openInputStream(origem)?.use { rotacaoExif(ExifInterface(it)) } ?: 0f
 
         val escala = escalaFinal(reduzida.width, reduzida.height).toFloat()
         val matriz = Matrix().apply {

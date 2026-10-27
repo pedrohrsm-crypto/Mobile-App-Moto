@@ -13,8 +13,12 @@ interface LeituraHodometroDao {
     )
     fun observarDaMoto(motoId: String): Flow<List<LeituraHodometro>>
 
+    /** O km atual da moto é a maior leitura ativa: a regra mora nesta consulta e na de baixo. */
     @Query("SELECT MAX(km) FROM leituras_hodometro WHERE motoId = :motoId AND excluidoEm IS NULL")
     suspend fun kmAtual(motoId: String): Int?
+
+    @Query("SELECT MAX(km) FROM leituras_hodometro WHERE motoId = :motoId AND excluidoEm IS NULL")
+    fun observarKmAtual(motoId: String): Flow<Int?>
 
     @Query("SELECT motoId, MAX(km) AS km FROM leituras_hodometro WHERE excluidoEm IS NULL GROUP BY motoId")
     fun observarKmAtuais(): Flow<List<KmAtual>>

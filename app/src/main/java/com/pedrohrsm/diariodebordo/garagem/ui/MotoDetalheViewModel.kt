@@ -27,9 +27,8 @@ sealed interface MotoDetalheEstado {
     data object Carregando : MotoDetalheEstado
     data object NaoEncontrada : MotoDetalheEstado
 
-    data class Pronto(val moto: Moto, val leituras: List<LeituraHodometro>) : MotoDetalheEstado {
-        val kmAtual: Int? get() = leituras.maxOfOrNull { it.km }
-    }
+    /** [kmAtual] vem do hodômetro (maior leitura ativa), não é recalculado a partir da lista. */
+    data class Pronto(val moto: Moto, val leituras: List<LeituraHodometro>, val kmAtual: Int?) : MotoDetalheEstado
     data class Erro(val detalhe: String?) : MotoDetalheEstado
 }
 
@@ -57,8 +56,12 @@ class MotoDetalheViewModel @Inject constructor(
     }
 
     val estado: StateFlow<MotoDetalheEstado> =
-        combine(motos.observar(motoId), hodometro.observarDaMoto(motoId)) { moto, leituras ->
-            if (moto == null) MotoDetalheEstado.NaoEncontrada else MotoDetalheEstado.Pronto(moto, leituras)
+        combine(
+            motos.observar(motoId),
+            hodometro.observarDaMoto(motoId),
+            hodometro.observarKmAtual(motoId),
+        ) { moto, leituras, kmAtual ->
+            if (moto == null) MotoDetalheEstado.NaoEncontrada else MotoDetalheEstado.Pronto(moto, leituras, kmAtual)
         }
             .catch { emit(MotoDetalheEstado.Erro(it.message)) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), MotoDetalheEstado.Carregando)

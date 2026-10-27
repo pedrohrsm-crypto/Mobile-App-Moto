@@ -32,7 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pedrohrsm.diariodebordo.R
 import com.pedrohrsm.diariodebordo.core.designsystem.componentes.FormularioDiario
@@ -292,6 +292,8 @@ fun rotuloOcorrencia(tipo: TipoOcorrencia): String = stringResource(
 private fun textoDoErro(erro: ErroRegistroForm): String = when (erro) {
     ErroRegistroForm.SemMoto -> stringResource(R.string.sem_moto_mensagem)
     ErroRegistroForm.NaoEncontrado -> stringResource(R.string.registro_nao_encontrado)
+    is ErroRegistroForm.FalhaAoCarregar ->
+        stringResource(R.string.erro_ao_carregar) + (erro.detalhe?.let { "\n$it" } ?: "")
     is ErroRegistroForm.FalhaFoto -> stringResource(R.string.registro_falha_foto, erro.detalhe.orEmpty())
     is ErroRegistroForm.Falha -> stringResource(R.string.erro_ao_salvar, erro.detalhe.orEmpty())
 }

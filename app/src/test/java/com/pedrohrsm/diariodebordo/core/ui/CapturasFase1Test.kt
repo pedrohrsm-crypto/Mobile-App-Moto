@@ -140,7 +140,7 @@ class CapturasFase1Test(private val caso: Caso) {
                     invalidos = setOf(CampoMoto.MODELO, CampoMoto.KM),
                 ),
             )
-            Tela.MOTO_DETALHE -> MotoDetalheScreen(MotoDetalheEstado.Pronto(estradeira, leituras))
+            Tela.MOTO_DETALHE -> MotoDetalheScreen(MotoDetalheEstado.Pronto(estradeira, leituras, kmAtual = 187_450))
             Tela.DIARIO -> DiarioScreen(
                 DiarioEstado.Pronto(estradeira, filtro = null),
                 flowOf(PagingData.from(historico)).collectAsLazyPagingItems(),

@@ -8,7 +8,7 @@ import com.pedrohrsm.diariodebordo.diario.data.RegistroRepositorio
 import com.pedrohrsm.diariodebordo.diario.data.TipoOcorrencia
 import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
 import com.pedrohrsm.diariodebordo.diario.dominio.CampoRegistro
-import com.pedrohrsm.diariodebordo.diario.dominio.MAXIMO_FOTOS
+import com.pedrohrsm.diariodebordo.diario.dominio.cabemAsFotos
 import com.pedrohrsm.diariodebordo.diario.dominio.validarRegistro
 import com.pedrohrsm.diariodebordo.diario.fotos.GuardaFotos
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
@@ -24,9 +24,19 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** [deCarga]: o erro vem de abrir o formulário e só some quando a carga muda, nunca porque a pessoa editou. */
 sealed interface ErroRegistroForm {
-    data object SemMoto : ErroRegistroForm
-    data object NaoEncontrado : ErroRegistroForm
+    val deCarga: Boolean get() = false
+
+    data object SemMoto : ErroRegistroForm {
+        override val deCarga = true
+    }
+    data object NaoEncontrado : ErroRegistroForm {
+        override val deCarga = true
+    }
+    data class FalhaAoCarregar(val detalhe: String?) : ErroRegistroForm {
+        override val deCarga = true
+    }
     data class FalhaFoto(val detalhe: String?) : ErroRegistroForm
     data class Falha(val detalhe: String?) : ErroRegistroForm
 }
@@ -51,7 +61,7 @@ data class RegistroFormEstado(
     val salvando: Boolean = false,
     val concluido: Boolean = false,
 ) {
-    val podeAdicionarFoto: Boolean get() = fotos.size < MAXIMO_FOTOS && !importandoFoto
+    val podeAdicionarFoto: Boolean get() = cabemAsFotos(fotos.size + 1) && !importandoFoto
 }
 
 @HiltViewModel
@@ -78,7 +88,7 @@ class RegistroFormViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { carregar(tipoInicial) }
                 .onFailure { e ->
-                    _estado.update { it.copy(carregando = false, erro = ErroRegistroForm.Falha(e.message)) }
+                    _estado.update { it.copy(carregando = false, erro = ErroRegistroForm.FalhaAoCarregar(e.message)) }
                 }
         }
     }
@@ -107,11 +117,15 @@ class RegistroFormViewModel @Inject constructor(
         _estado.update { estadoDe(registro, fotos) }
     }
 
-    fun alterar(mudanca: (RegistroFormEstado) -> RegistroFormEstado) = _estado.update { mudanca(it).copy(erro = null) }
+    /** Editar apaga o erro da última ação (foto, salvar), mas não o aviso de carga. */
+    fun alterar(mudanca: (RegistroFormEstado) -> RegistroFormEstado) =
+        _estado.update { mudanca(it).copy(erro = it.erroQueFica()) }
+
+    private fun RegistroFormEstado.erroQueFica(): ErroRegistroForm? = erro?.takeIf { it.deCarga }
 
     fun adicionarFoto(uri: String) {
         if (!_estado.value.podeAdicionarFoto) return
-        _estado.update { it.copy(importandoFoto = true, erro = null) }
+        _estado.update { it.copy(importandoFoto = true, erro = it.erroQueFica()) }
         viewModelScope.launch {
             runCatching { guardaFotos.importar(uri) }
                 .onSuccess { arquivo ->
