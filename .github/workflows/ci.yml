@@ -31,6 +31,7 @@ jobs:
         with:
           # Histórico inteiro: a conferência das provas negativas faz diff contra a base do PR.
           fetch-depth: 0
+          persist-credentials: false
 
       - uses: actions/setup-java@v4
         with:
@@ -65,11 +66,12 @@ jobs:
           bash ferramentas/testes/provas-negativas.test.sh
 
       # Corpo do PR é entrada não confiável: só por env, nunca interpolado no run. Em push na main não há PR.
+      # A base do diff é o primeiro pai do merge ref (HEAD^1, a main atual), calculada no script: a base.sha do
+      # evento pode ser antiga e cobraria testes que a main ganhou depois.
       - name: Provas negativas citadas no corpo do PR
         if: github.event_name == 'pull_request'
         run: bash ferramentas/provas-negativas.sh
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
           CORPO_PR: ${{ github.event.pull_request.body }}
 
       - name: Testes do buildSrc
