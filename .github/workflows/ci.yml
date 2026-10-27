@@ -27,7 +27,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Histórico inteiro: a conferência das provas negativas faz diff contra a base do PR.
           fetch-depth: 0
