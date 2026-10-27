@@ -10,6 +10,8 @@ import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
 import com.pedrohrsm.diariodebordo.plano.data.OrigemItem
 import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
+import com.pedrohrsm.diariodebordo.rota.data.PontoDeRota
+import com.pedrohrsm.diariodebordo.rota.data.Rota
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -53,7 +55,17 @@ class DiarioDatabaseTest {
         val tabelas = nomes("SELECT name FROM sqlite_master WHERE type = 'table'")
         assertTrue(
             tabelas.toString(),
-            tabelas.containsAll(listOf("motos", "leituras_hodometro", "registros", "fotos_registro", "itens_plano")),
+            tabelas.containsAll(
+                listOf(
+                    "motos",
+                    "leituras_hodometro",
+                    "registros",
+                    "fotos_registro",
+                    "itens_plano",
+                    "rotas",
+                    "pontos_rota",
+                ),
+            ),
         )
     }
 
@@ -61,8 +73,13 @@ class DiarioDatabaseTest {
     @Test
     fun indicesDasConsultasPrincipais() {
         assertEquals(setOf("index_leituras_hodometro_motoId_km"), nomes(indices("leituras_hodometro")))
-        assertEquals(setOf("index_registros_motoId_dataEm"), nomes(indices("registros")))
+        assertEquals(
+            setOf("index_registros_motoId_dataEm", "index_registros_rotaId"),
+            nomes(indices("registros")),
+        )
         assertEquals(setOf("index_fotos_registro_registroId"), nomes(indices("fotos_registro")))
+        assertEquals(setOf("index_rotas_motoId_iniciadaEm"), nomes(indices("rotas")))
+        assertEquals(setOf("index_pontos_rota_rotaId_instante"), nomes(indices("pontos_rota")))
         assertEquals(
             setOf("index_itens_plano_motoId", "index_itens_plano_registroOrigemId"),
             nomes(indices("itens_plano")),
@@ -110,6 +127,42 @@ class DiarioDatabaseTest {
     private suspend fun primeiraPagina(fonte: PagingSource<Int, Registro>): List<String> {
         val carga = fonte.load(PagingSource.LoadParams.Refresh(key = null, loadSize = 10, placeholdersEnabled = false))
         return (carga as PagingSource.LoadResult.Page).data.map { it.titulo }
+    }
+
+    /** Decisão #17 no banco de verdade: apagar os pontos brutos de uma rota não toca nos de outra. */
+    @Test
+    fun pontosBrutosSaemSoDaRotaPedida() = runTest {
+        val rotas = banco.rotaDao()
+        val pontos = banco.pontoDeRotaDao()
+        val a = Rota(motoId = "m", iniciadaEm = 1)
+        val b = Rota(motoId = "m", iniciadaEm = 2)
+        rotas.inserir(a)
+        rotas.inserir(b)
+        pontos.inserir(PontoDeRota(rotaId = a.id, latitude = -23.5, longitude = -46.6, instante = 10))
+        pontos.inserir(PontoDeRota(rotaId = a.id, latitude = -23.6, longitude = -46.7, instante = 20))
+        pontos.inserir(PontoDeRota(rotaId = b.id, latitude = -22.9, longitude = -43.2, instante = 30))
+
+        assertEquals(2, pontos.apagarDaRota(a.id))
+        assertTrue(pontos.daRota(a.id).isEmpty())
+        assertEquals(1, pontos.daRota(b.id).size)
+        assertEquals(b, rotas.emGravacao())
+    }
+
+    /** Risco #23 na consulta de verdade: excluir a rota apaga o traçado e mantém a linha excluída. */
+    @Test
+    fun excluirRotaApagaOTracado() = runTest {
+        val rotas = banco.rotaDao()
+        val rota = Rota(motoId = "m", iniciadaEm = 1, polilinha = "_p~iF~ps|U", emGravacao = false)
+        rotas.inserir(rota)
+        assertEquals(1, rotas.marcarExcluido(rota.id, quando = 5))
+        val linha = banco.openHelper.writableDatabase
+            .query("SELECT polilinha, excluidoEm FROM rotas WHERE id = ?", arrayOf(rota.id))
+            .use {
+                assertTrue(it.moveToFirst())
+                it.getString(0) to it.getLong(1)
+            }
+        assertEquals("" to 5L, linha)
+        assertEquals(0, rotas.marcarExcluido(rota.id, quando = 6))
     }
 
     @Test

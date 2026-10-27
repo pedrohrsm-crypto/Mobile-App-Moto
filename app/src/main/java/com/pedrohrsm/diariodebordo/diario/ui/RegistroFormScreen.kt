@@ -71,6 +71,9 @@ fun RegistroFormRoute(onConcluido: () -> Unit, viewModel: RegistroFormViewModel 
                 escolherFoto.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
             },
             onRemoverFoto = viewModel::removerFoto,
+            onUsarLocal = viewModel::usarLocalAtual,
+            onLocalNegado = viewModel::localNegado,
+            onRemoverLocal = viewModel::removerLocal,
         ),
     )
 }
@@ -81,6 +84,9 @@ data class AcoesRegistroForm(
     val onExcluir: () -> Unit = {},
     val onAdicionarFoto: () -> Unit = {},
     val onRemoverFoto: (String) -> Unit = {},
+    val onUsarLocal: () -> Unit = {},
+    val onLocalNegado: () -> Unit = {},
+    val onRemoverLocal: () -> Unit = {},
 )
 
 @Composable
@@ -206,6 +212,7 @@ private fun RegistroFormulario(estado: RegistroFormEstado, padding: PaddingValue
                 rotulo = stringResource(R.string.registro_descricao),
                 linhas = 3,
             )
+            CampoLocal(estado, acoes)
             Fotos(estado, acoes)
             estado.erro?.let { Text(textoDoErro(it), color = MaterialTheme.colorScheme.error) }
             BotaoPrincipal(
@@ -295,6 +302,8 @@ private fun textoDoErro(erro: ErroRegistroForm): String = when (erro) {
     is ErroRegistroForm.FalhaAoCarregar ->
         stringResource(R.string.erro_ao_carregar) + (erro.detalhe?.let { "\n$it" } ?: "")
     is ErroRegistroForm.FalhaFoto -> stringResource(R.string.registro_falha_foto, erro.detalhe.orEmpty())
+    ErroRegistroForm.SemPermissaoLocal -> stringResource(R.string.local_sem_permissao)
+    ErroRegistroForm.LocalIndisponivel -> stringResource(R.string.local_indisponivel)
     is ErroRegistroForm.Falha -> stringResource(R.string.erro_ao_salvar, erro.detalhe.orEmpty())
 }
 

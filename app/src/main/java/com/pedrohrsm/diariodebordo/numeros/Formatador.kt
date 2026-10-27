@@ -13,13 +13,18 @@ import kotlin.math.abs
  * Formatador único de número e unidade do app. Nenhuma tela monta "km", "R$" ou "L" à mão:
  * tudo passa por aqui, para o mesmo valor aparecer igual em toda parte.
  * Unidades de armazenamento: km em Int, dinheiro em centavos, volume em mililitros,
- * instantes em milissegundos UTC.
+ * distância de rota em metros, duração em segundos, instantes em milissegundos UTC.
  */
 object Formatador {
+    /** Espaço não separável entre número e unidade. */
+    const val NBSP = '\u00A0'
+
     private val simbolos = DecimalFormatSymbols(Locale.forLanguageTag("pt-BR"))
     private val inteiro = DecimalFormat("#,##0", simbolos)
     private val duasCasas = DecimalFormat("#,##0.00", simbolos)
+    private val umaCasa = DecimalFormat("#,##0.0", simbolos)
     private val data = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+    private val dataHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
 
     fun km(km: Int): String = "${inteiro.format(km)} km"
 
@@ -30,13 +35,37 @@ object Formatador {
 
     fun litros(mililitros: Long): String = "${duasCasas.format(mililitros / 1000.0)} L"
 
+    /** Contagem simples com ponto de milhar: "1.284". */
+    fun quantidade(n: Long): String = inteiro.format(n)
+
+    /**
+     * Distância de rota: metros abaixo de 1 km, km com uma casa a partir dele. Número e unidade unidos por espaço
+     * não separável ([NBSP]): com fonte grande a unidade não desce sozinha para a linha de baixo.
+     */
+    fun distancia(metros: Long): String =
+        if (metros < 1000) "${inteiro.format(metros)}${NBSP}m" else "${umaCasa.format(metros / 1000.0)}${NBSP}km"
+
+    /** Duração de rota: "45 min" ou "1 h 05 min", com espaço não separável entre número e unidade. */
+    fun duracao(segundos: Long): String {
+        val h = segundos / 3600
+        val min = (segundos % 3600) / 60
+        val minutos = "$min${NBSP}min"
+        return if (h > 0) String.format(Locale.ROOT, "%d${NBSP}h %02d${NBSP}min", h, min) else minutos
+    }
+
     fun data(millis: Long, fuso: ZoneId): String = data.format(Instant.ofEpochMilli(millis).atZone(fuso))
+
+    fun dataHora(millis: Long, fuso: ZoneId): String = dataHora.format(Instant.ofEpochMilli(millis).atZone(fuso))
 
     /** Dia do calendário, sem fuso: para datas calculadas, como a próxima revisão do plano. */
     fun data(dia: LocalDate): String = data.format(dia)
 
     /** Fuso gravado no registro; se estiver vazio ou inválido, o do aparelho. */
     fun fuso(id: String): ZoneId = runCatching { ZoneId.of(id) }.getOrDefault(ZoneId.systemDefault())
+
+    /** Local do registro na tela (5 casas, cerca de 1 m). Só na interface: coordenada nunca vai para log. */
+    fun coordenada(latitude: Double, longitude: Double): String =
+        String.format(Locale.ROOT, "%.5f, %.5f", latitude, longitude)
 }
 
 /** Leitura do que a pessoa digitou, no formato brasileiro. Null quando o texto não é válido. */

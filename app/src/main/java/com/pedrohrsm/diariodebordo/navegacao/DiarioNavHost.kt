@@ -16,8 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavArgumentBuilder
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -30,6 +32,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.pedrohrsm.diariodebordo.R
+import com.pedrohrsm.diariodebordo.core.designsystem.theme.LocalEscalaDiario
 import com.pedrohrsm.diariodebordo.diario.ui.DiarioRoute
 import com.pedrohrsm.diariodebordo.diario.ui.RegistroFormRoute
 import com.pedrohrsm.diariodebordo.diario.ui.RegistroFormViewModel
@@ -43,15 +46,19 @@ import com.pedrohrsm.diariodebordo.plano.ui.AcoesPlano
 import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormRoute
 import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormViewModel
 import com.pedrohrsm.diariodebordo.plano.ui.PlanoRoute
+import com.pedrohrsm.diariodebordo.rota.ui.RotaDetalheRoute
+import com.pedrohrsm.diariodebordo.rota.ui.RotaDetalheViewModel
+import com.pedrohrsm.diariodebordo.rota.ui.RotasRoute
 
 /**
  * Lista única dos destinos da barra inferior: a barra e o grafo leem daqui, e o rótulo é o
- * mesmo título da tela (docs/PLANEJAMENTO.md, UX/UI). Rotas e números entram com as frentes deles.
+ * mesmo título da tela (docs/PLANEJAMENTO.md, UX/UI). Números entra com a frente dele.
  */
 enum class Destino(val rota: String, @StringRes val rotulo: Int, @DrawableRes val icone: Int) {
     GARAGEM(Rotas.GARAGEM, R.string.garagem_titulo, R.drawable.ic_garagem),
     DIARIO(Rotas.DIARIO, R.string.diario_titulo, R.drawable.ic_diario),
     PLANO(Rotas.PLANO, R.string.plano_titulo, R.drawable.ic_plano),
+    ROTAS(Rotas.ROTAS, R.string.rotas_titulo, R.drawable.ic_rotas),
 }
 
 /** Todas as rotas do app. Rotas com argumento têm a função que monta o caminho. */
@@ -65,6 +72,9 @@ object Rotas {
     const val REGISTRO_NOVO = "registro/novo?${RegistroFormViewModel.ARG_TIPO}={${RegistroFormViewModel.ARG_TIPO}}"
     const val REGISTRO = "registro/editar/{${RegistroFormViewModel.ARG_REGISTRO_ID}}"
 
+    const val ROTAS = "rotas"
+    const val ROTA = "rota/{${RotaDetalheViewModel.ARG_ROTA_ID}}"
+
     const val PLANO = "plano"
     const val ITEM_NOVO = "plano/item/novo"
     const val ITEM = "plano/item/{${ItemPlanoFormViewModel.ARG_ITEM_ID}}"
@@ -75,6 +85,7 @@ object Rotas {
     fun registroNovo(tipo: String? = null) =
         "registro/novo" + (tipo?.let { "?${RegistroFormViewModel.ARG_TIPO}=$it" } ?: "")
     fun registro(registroId: String) = "registro/editar/$registroId"
+    fun rota(rotaId: String) = "rota/$rotaId"
     fun item(itemId: String) = "plano/item/$itemId"
 
     /** Plano da moto aberto por um lembrete, com o item avisado em destaque. */
@@ -114,16 +125,7 @@ fun DiarioNavHost(
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (Destino.entries.any { it.rota == rotaAtual }) {
-                NavigationBar {
-                    Destino.entries.forEach { destino ->
-                        NavigationBarItem(
-                            selected = destino.rota == rotaAtual,
-                            onClick = { navController.irParaAba(destino) },
-                            icon = { Icon(painterResource(destino.icone), contentDescription = null) },
-                            label = { Text(stringResource(destino.rotulo)) },
-                        )
-                    }
-                }
+                BarraDestinos(rotaAtual, onEscolher = { navController.irParaAba(it) })
             }
         },
     ) { padding ->
@@ -135,9 +137,41 @@ fun DiarioNavHost(
             grafoGaragem(navController)
             grafoDiario(navController)
             grafoPlano(navController)
+            grafoRotas(navController)
         }
     }
 }
+
+/**
+ * Barra inferior com os destinos da lista única. Com 4 destinos em 360 dp, cada item tem 90 dp: com a fonte
+ * grande (200%, ou 140% no modo oficina) o rótulo quebrava no meio ("Garag/em"), e cortado ("Gara…") ainda
+ * não cabia. Com a fonte grande a barra fica só com os ícones, nomeados para o TalkBack; o título da tela
+ * aberta já diz o destino. Com a fonte normal, o rótulo fica numa linha só.
+ */
+@Composable
+fun BarraDestinos(rotaAtual: String?, onEscolher: (Destino) -> Unit) {
+    val fonteGrande = LocalDensity.current.fontScale * LocalEscalaDiario.current.fator >= FONTE_GRANDE
+    NavigationBar {
+        Destino.entries.forEach { destino ->
+            val nome = stringResource(destino.rotulo)
+            NavigationBarItem(
+                selected = destino.rota == rotaAtual,
+                onClick = { onEscolher(destino) },
+                icon = {
+                    Icon(painterResource(destino.icone), contentDescription = nome.takeIf { fonteGrande })
+                },
+                label = if (fonteGrande) {
+                    null
+                } else {
+                    { Text(nome, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) }
+                },
+            )
+        }
+    }
+}
+
+/** Fonte do sistema × escala do modo oficina a partir da qual o rótulo de todos os destinos não cabe. */
+private const val FONTE_GRANDE = 1.8f
 
 fun NavController.irParaAba(destino: Destino) {
     navigate(destino.rota) {
@@ -184,6 +218,18 @@ private fun NavGraphBuilder.grafoDiario(nav: NavController) {
     }
     composable(Rotas.REGISTRO) {
         RegistroFormRoute(onConcluido = { nav.popBackStack() })
+    }
+}
+
+private fun NavGraphBuilder.grafoRotas(nav: NavController) {
+    composable(Rotas.ROTAS) {
+        RotasRoute(
+            onAbrirRota = { nav.navigate(Rotas.rota(it)) },
+            onCadastrarMoto = { nav.navigate(Rotas.MOTO_NOVA) },
+        )
+    }
+    composable(Rotas.ROTA) {
+        RotaDetalheRoute(onExcluida = { nav.popBackStack() })
     }
 }
 
