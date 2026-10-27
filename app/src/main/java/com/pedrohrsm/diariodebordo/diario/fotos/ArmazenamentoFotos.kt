@@ -4,8 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.media.ExifInterface
-import android.net.Uri
+import androidx.core.net.toUri
+import androidx.exifinterface.media.ExifInterface
 import com.pedrohrsm.diariodebordo.diario.dominio.escalaFinal
 import com.pedrohrsm.diariodebordo.diario.dominio.fatorDeReducao
 import dagger.Binds
@@ -33,7 +33,7 @@ class ArmazenamentoFotos @Inject constructor(@ApplicationContext private val con
     fun arquivo(nome: String): File = File(pasta, nome)
 
     override suspend fun importar(uri: String): String = withContext(Dispatchers.IO) {
-        val origem = Uri.parse(uri)
+        val origem = uri.toUri()
         val resolver = context.contentResolver
         val limites = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         // Com inJustDecodeBounds o decodeStream devolve null de propósito e só preenche as medidas:

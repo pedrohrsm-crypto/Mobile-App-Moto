@@ -122,6 +122,8 @@ dependencies {
     implementation(libs.androidx.paging.compose)
 
     implementation(libs.androidx.work.runtime.ktx)
+    // Orientação da foto do diário lida pelo EXIF (a versão do AndroidX corrige leituras da do sistema).
+    implementation(libs.androidx.exifinterface)
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
