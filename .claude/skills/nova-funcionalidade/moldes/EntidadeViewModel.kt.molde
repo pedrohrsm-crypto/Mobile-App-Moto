@@ -1,0 +1,19 @@
+package com.pedrohrsm.diariodebordo.__PACOTE__.ui
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.pedrohrsm.diariodebordo.__PACOTE__.data.__ENTIDADE__Repositorio
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+
+@HiltViewModel
+class __ENTIDADE__ViewModel @Inject constructor(repositorio: __ENTIDADE__Repositorio) : ViewModel() {
+
+    val estado: StateFlow<__ENTIDADE__Estado> = repositorio.observarAtivos()
+        .map<_, __ENTIDADE__Estado> { __ENTIDADE__Estado.Pronto(it) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), __ENTIDADE__Estado.Carregando)
+}
