@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f0dcdc9a2012c13d7152fdf7a80b8a95",
+    "identityHash": "ef150b79f2dca96e2ba5ba01738518f9",
     "entities": [
       {
         "tableName": "motos",
@@ -155,11 +155,202 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_leituras_hodometro_motoId_km` ON `${TABLE_NAME}` (`motoId`, `km`)"
           }
         ]
+      },
+      {
+        "tableName": "registros",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `motoId` TEXT NOT NULL, `tipo` TEXT NOT NULL, `titulo` TEXT NOT NULL, `descricao` TEXT NOT NULL, `dataEm` INTEGER NOT NULL, `hodometroKm` INTEGER, `valorCentavos` INTEGER, `litrosMl` INTEGER, `tanqueCheio` INTEGER NOT NULL, `ocorrencia` TEXT, `criadoEm` INTEGER NOT NULL, `alteradoEm` INTEGER NOT NULL, `fusoHorario` TEXT NOT NULL, `excluidoEm` INTEGER, `pendenteSync` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "motoId",
+            "columnName": "motoId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titulo",
+            "columnName": "titulo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descricao",
+            "columnName": "descricao",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dataEm",
+            "columnName": "dataEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hodometroKm",
+            "columnName": "hodometroKm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "valorCentavos",
+            "columnName": "valorCentavos",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "litrosMl",
+            "columnName": "litrosMl",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "tanqueCheio",
+            "columnName": "tanqueCheio",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ocorrencia",
+            "columnName": "ocorrencia",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "criadoEm",
+            "columnName": "criadoEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alteradoEm",
+            "columnName": "alteradoEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fusoHorario",
+            "columnName": "fusoHorario",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "excluidoEm",
+            "columnName": "excluidoEm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pendenteSync",
+            "columnName": "pendenteSync",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_registros_motoId_dataEm",
+            "unique": false,
+            "columnNames": [
+              "motoId",
+              "dataEm"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_motoId_dataEm` ON `${TABLE_NAME}` (`motoId`, `dataEm`)"
+          }
+        ]
+      },
+      {
+        "tableName": "fotos_registro",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `registroId` TEXT NOT NULL, `arquivo` TEXT NOT NULL, `ordem` INTEGER NOT NULL, `criadoEm` INTEGER NOT NULL, `alteradoEm` INTEGER NOT NULL, `fusoHorario` TEXT NOT NULL, `excluidoEm` INTEGER, `pendenteSync` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "registroId",
+            "columnName": "registroId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "arquivo",
+            "columnName": "arquivo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ordem",
+            "columnName": "ordem",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "criadoEm",
+            "columnName": "criadoEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alteradoEm",
+            "columnName": "alteradoEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fusoHorario",
+            "columnName": "fusoHorario",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "excluidoEm",
+            "columnName": "excluidoEm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pendenteSync",
+            "columnName": "pendenteSync",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_fotos_registro_registroId",
+            "unique": false,
+            "columnNames": [
+              "registroId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_fotos_registro_registroId` ON `${TABLE_NAME}` (`registroId`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f0dcdc9a2012c13d7152fdf7a80b8a95')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ef150b79f2dca96e2ba5ba01738518f9')"
     ]
   }
 }
