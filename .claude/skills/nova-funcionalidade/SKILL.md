@@ -36,7 +36,7 @@ O script para sem gerar nada se o pacote ou a tabela já existirem, ou se faltar
 
 ## 3. Ligar nos arquivos compartilhados
 
-- `core/database/DiarioDatabase.kt`: a entidade em `entities` e `abstract fun <pacote>Dao()`. Enquanto nenhuma versão do app tiver sido publicada, tudo fica na versão 1 (veja o comentário do arquivo). Depois da primeira publicação: `version` + 1; tabela nova com `autoMigrations = [AutoMigration(from = N, to = N + 1)]`, mudança em tabela existente com `Migration` escrita à mão e teste de migração.
+- `core/database/DiarioDatabase.kt`: a entidade em `entities` e `abstract fun <pacote>Dao()`. Enquanto nenhuma versão do app tiver sido publicada, tudo fica na versão 1 (decisão #12: banco v1 aberto). Depois da primeira publicação: `version` + 1; tabela nova com `autoMigrations = [AutoMigration(from = N, to = N + 1)]`, mudança em tabela existente com `Migration` escrita à mão e teste de migração.
 - Backup (**a partir da #45**: enquanto `backup/` não existir na árvore, o gerador omite o `@Serializable` e o `verificar-padrao.sh` não cobra estes passos; quando existir, a entidade já sai com `@Serializable`):
   - `backup/dominio/CopiaDeSeguranca.kt`: `val <plural>: List<Entidade> = emptyList()`. O JSON ignora chaves desconhecidas, então lista nova com valor padrão não sobe o `FORMATO_ATUAL`.
   - `backup/data/BackupDao.kt`: `@Query("SELECT * FROM <tabela>") suspend fun <plural>()` e `@Upsert suspend fun gravar<Plural>(itens: List<Entidade>)`.
@@ -62,7 +62,7 @@ Regra de negócio (cálculo de consumo, vencimento etc.) vai numa função pura 
 
 ## 5. Conferir
 
-Rode cada um separado, sem `| tail`, e só siga com todos verdes:
+Rode cada um separado, sem `| tail`, e só siga com todos verdes. O `gerar.sh` já roda `ktlint -F` nos arquivos gerados e para se o ktlint não estiver no `PATH` (ou em `KTLINT_JAR`) ou se ele falhar; se tiver gerado sem isso, rode `ktlint -F` nos gerados primeiro:
 
 ```bash
 .claude/skills/nova-funcionalidade/verificar-padrao.sh <pacote>
