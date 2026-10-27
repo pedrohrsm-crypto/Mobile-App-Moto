@@ -55,4 +55,43 @@ novo_repo "$BASE"
 caso "corpo com aspas e cifrão não é executado" 0 $'class AlvoTest {\n    @Test\n    fun existente() {}\n\n    @Test\n    fun seguro() {}\n}' $'seguro `touch /tmp/pwned-pn` $(touch /tmp/pwned-pn) "'
 [ ! -e /tmp/pwned-pn ] && echo "✓ corpo não foi interpretado pelo shell" || { echo "✗ corpo foi interpretado pelo shell"; rm -f /tmp/pwned-pn; falhas=$((falhas + 1)); }
 
+novo_repo "$BASE"
+caso "teste reescrito no lugar exige citação" 1 $'class AlvoTest {\n    @Test\n    fun reescrito() {}\n}' "nada" "reescrito"
+
+novo_repo "$BASE"
+caso "@Test em comentário não conta" 0 $'class AlvoTest {\n    @Test\n    fun existente() {}\n\n    // @Test\n    fun comentado() {}\n\n    /*\n     * @Test\n     */\n    fun emBloco() {}\n}' ""
+
+novo_repo "$BASE"
+caso "nome só como parte de outra palavra não conta como citado" 1 $'class AlvoTest {\n    @Test\n    fun existente() {}\n\n    @Test\n    fun teto() {}\n}' "a tabela fala de tetos" "teto"
+
+# Base avançada: a main ganhou um teste alheio depois que o PR saiu. No CI o checkout é o merge ref; a base é HEAD^1.
+novo_repo "$BASE"
+git branch -M main; base_antiga="$base"
+git checkout -q -b feat
+printf '%s\n' $'class AlvoTest {\n    @Test\n    fun existente() {}\n\n    @Test\n    fun proprio() {}\n}' > "$T"; git add -A; git commit -qm feat
+git checkout -q main
+printf '%s\n' $'class OutroTest {\n    @Test\n    fun alheio() {}\n}' > "$(dirname "$T")/OutroTest.kt"; git add -A; git commit -qm alheio
+git merge -q --no-ff feat -m merge >/dev/null 2>&1
+saida="$(CORPO_PR='só o proprio' bash "$script" 2>&1)"; codigo=$?
+if [ "$codigo" -eq 0 ] && grep -qF "Base do diff: $(git rev-parse HEAD^1)" <<<"$saida"; then
+  echo "✓ base avançou com teste alheio não exige citação"
+else
+  echo "✗ base avançou com teste alheio não exige citação (saiu $codigo)"; echo "$saida" | sed 's/^/    /'; falhas=$((falhas + 1))
+fi
+saida="$(BASE_SHA="$base_antiga" CORPO_PR='só o proprio' bash "$script" 2>&1)"; codigo=$?
+if [ "$codigo" -eq 1 ] && grep -qF "alheio" <<<"$saida"; then
+  echo "✓ BASE_SHA antiga cobra o teste alheio (era o falso positivo)"
+else
+  echo "✗ BASE_SHA antiga cobra o teste alheio (saiu $codigo)"; echo "$saida" | sed 's/^/    /'; falhas=$((falhas + 1))
+fi
+
+novo_repo "$BASE"
+printf '%s\n' $'class AlvoTest {\n}' > "$T"; git add -A; git commit -qm cabeca
+saida="$(CORPO_PR='' bash "$script" 2>&1)"; codigo=$?
+if [ "$codigo" -eq 1 ] && grep -qF "BASE_SHA" <<<"$saida"; then
+  echo "✓ sem merge ref e sem BASE_SHA reprova"
+else
+  echo "✗ sem merge ref e sem BASE_SHA reprova (saiu $codigo)"; echo "$saida" | sed 's/^/    /'; falhas=$((falhas + 1))
+fi
+
 [ "$falhas" -eq 0 ] && echo "provas-negativas: todos os casos passaram." || { echo "$falhas caso(s) falharam."; exit 1; }

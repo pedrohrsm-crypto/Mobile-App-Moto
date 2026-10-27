@@ -29,7 +29,7 @@ tamanho="$(stat -c %s "$aab")"
 limite=$((teto + tolerancia))
 echo "AAB: $tamanho B · teto: $teto B · tolerância: $tolerancia B · limite: $limite B"
 if [ "$tamanho" -gt "$limite" ]; then
-  echo "✗ o AAB passou do limite (teto + tolerância) em $((tamanho - limite)) B. Suba o teto em ferramentas/teto-aab.txt com o motivo na mensagem do commit (o PM aceita) ou reduza o AAB."
+  echo "✗ o AAB passou do limite (teto + tolerância) em $((tamanho - limite)) B. Subir o teto é decisão do dono (issue decisao); reduza o AAB ou abra a decisão e edite ferramentas/teto-aab.txt no PR com o motivo na mensagem do commit."
   exit 1
 fi
 if [ "$tamanho" -lt $((teto - tolerancia)) ]; then

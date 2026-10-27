@@ -1,19 +1,27 @@
 #!/usr/bin/env bash
 # Provas negativas conferidas: todo @Test acrescentado no diff do PR contra a base precisa aparecer, pelo nome
 # da função, no corpo do PR. O corpo é entrada não confiável: chega só por variável de ambiente.
-# Uso: BASE_SHA=<sha da base> CORPO_PR="<corpo>" bash ferramentas/provas-negativas.sh
+# Base: no CI o checkout é o merge ref do PR contra a main atual, então a base é o primeiro pai do merge
+# (HEAD^1); a base.sha do evento pode ser antiga e cobraria testes alheios. Na bancada, BASE_SHA=<sha> força a base.
+# Uso: CORPO_PR="<corpo>" bash ferramentas/provas-negativas.sh   (ou BASE_SHA=<sha> CORPO_PR=... bash ...)
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
-base="${BASE_SHA:-}"
 corpo="${CORPO_PR:-}"
+base="${BASE_SHA:-}"
 if [ -z "$base" ]; then
-  echo "✗ BASE_SHA não informado"
-  exit 1
+  if git rev-parse --verify -q HEAD^2 >/dev/null; then
+    base="$(git rev-parse HEAD^1)"
+  else
+    echo "✗ HEAD não é um merge ref: informe BASE_SHA=<sha da base>"
+    exit 1
+  fi
 fi
+echo "Base do diff: $base"
 
 diff_testes="$(git diff -U3 --no-color "$base"...HEAD -- '*.kt')" || { echo "✗ git diff falhou contra $base"; exit 1; }
 
 # Nomes de função de teste (anotados com @Test ou @ParameterizedTest) em linhas acrescentadas ("+") ou removidas ("-").
+# Linhas do outro sinal são ignoradas: o "-fun antigo" de um teste renomeado no lugar não pode consumir o @Test de contexto.
 nomes() {
   local sinal=$1
   echo "$diff_testes" | awk -v sinal="$sinal" '
@@ -22,6 +30,8 @@ nomes() {
     /^(\+\+\+|---) / { next }
     {
       marca = substr($0, 1, 1); linha = substr($0, 2)
+      if (marca != " " && marca != sinal) next
+      if (linha ~ /^[ \t]*(\/\/|\/\*|\*)/) next
       if (linha ~ /@(Test|ParameterizedTest)([^A-Za-z0-9_]|$)/ && (marca == " " || marca == sinal)) { pend = 1 }
       if (pend && linha ~ /fun[ \t]+/) {
         if (marca == sinal) {
@@ -47,7 +57,7 @@ fi
 
 faltando=""
 while IFS= read -r nome; do
-  if ! grep -qF -- "$nome" <<<"$corpo"; then
+  if ! grep -qwF -- "$nome" <<<"$corpo"; then
     faltando+="    $nome"$'\n'
   fi
 done <<<"$novos"
