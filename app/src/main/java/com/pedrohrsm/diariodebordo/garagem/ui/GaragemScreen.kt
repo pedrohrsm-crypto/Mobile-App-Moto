@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -30,17 +31,24 @@ import com.pedrohrsm.diariodebordo.numeros.Formatador
 fun GaragemRoute(
     onAbrirMoto: (String) -> Unit,
     onNovaMoto: () -> Unit,
+    onAjustes: () -> Unit,
     viewModel: GaragemViewModel = hiltViewModel(),
 ) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
-    GaragemScreen(estado = estado, onAbrirMoto = onAbrirMoto, onNovaMoto = onNovaMoto)
+    GaragemScreen(estado = estado, onAbrirMoto = onAbrirMoto, onNovaMoto = onNovaMoto, onAjustes = onAjustes)
 }
 
 @Composable
-fun GaragemScreen(estado: GaragemEstado, onAbrirMoto: (String) -> Unit = {}, onNovaMoto: () -> Unit = {}) {
+fun GaragemScreen(
+    estado: GaragemEstado,
+    onAbrirMoto: (String) -> Unit = {},
+    onNovaMoto: () -> Unit = {},
+    onAjustes: () -> Unit = {},
+) {
     val escala = LocalEscalaDiario.current
     TelaDiario(
         titulo = stringResource(R.string.garagem_titulo),
+        acoes = { TextButton(onClick = onAjustes) { Text(stringResource(R.string.ajustes_titulo)) } },
         botaoFlutuante = {
             if (estado is GaragemEstado.Pronto && estado.podeAdicionar && estado.motos.isNotEmpty()) {
                 ExtendedFloatingActionButton(

@@ -3,6 +3,7 @@ package com.pedrohrsm.diariodebordo.garagem.data
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
 /** Categoria define o plano-base de manutenção (plano de produto, seção Produto). */
 enum class CategoriaMoto { CUSTOM, STREET, TRAIL, SCOOTER }
@@ -12,6 +13,7 @@ enum class CategoriaMoto { CUSTOM, STREET, TRAIL, SCOOTER }
  * seguem docs/offline-first.md e são preenchidos pelo [MotoRepositorio], nunca pela tela.
  * O km atual não fica aqui: é a maior leitura de [LeituraHodometro].
  */
+@Serializable
 @Entity(tableName = "motos")
 data class Moto(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
