@@ -15,6 +15,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -49,7 +50,7 @@ class RegistroFormViewModelTest {
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
     private val motoAtual = MotoAtual(motos)
     private val registros = FakeRegistroDao()
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio)
+    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, AgendadorFalso())
     private val repositorio =
         RegistroRepositorio(registros, FakeFotoRegistroDao(), hodometro, TransacaoFalsa(), relogio)
     private val fotos = GuardaFotosFalsa()
