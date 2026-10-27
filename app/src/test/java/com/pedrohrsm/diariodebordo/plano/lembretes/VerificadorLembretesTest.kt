@@ -13,6 +13,7 @@ import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -91,6 +92,14 @@ class VerificadorLembretesTest {
         hodometro.registrar(item.motoId, 20_600)
         assertEquals(1, verificador.verificar())
         assertEquals(listOf(Urgencia.VENCIDO, Urgencia.VENCIDO), notificador.avisos.map { it.urgencia })
+    }
+
+    @Test
+    fun itemExcluidoNoMeioDoEnvioNaoContaComoAvisoMarcado() = runTest {
+        val item = motoComOleo(kmAtual = 15_500)
+        notificador.aoNotificar = { runBlocking { plano.excluir(item.id) } }
+        assertEquals(0, verificador.verificar())
+        assertEquals(null, plano.buscar(item.id))
     }
 
     @Test

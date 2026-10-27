@@ -110,6 +110,8 @@
     <string name="item_plano_km">A cada quantos km (opcional)</string>
     <string name="item_plano_dias">A cada quantos dias (opcional)</string>
     <string name="item_plano_dias_invalido">Digite de 1 a 3650 dias.</string>
+    <string name="item_plano_excluir_titulo">Excluir este item?</string>
+    <string name="item_plano_excluir_texto">O item sai do plano e deixa de gerar lembretes.</string>
     <string name="item_plano_sem_intervalo">Informe km, dias ou os dois.</string>
     <string name="lembrete_vencido">Venceu: %1$s</string>
     <string name="lembrete_proximo">Vence logo: %1$s</string>

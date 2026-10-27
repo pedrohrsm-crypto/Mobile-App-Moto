@@ -4,12 +4,16 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,10 +45,13 @@ fun ItemPlanoFormScreen(
     onSalvar: () -> Unit = {},
     onExcluir: () -> Unit = {},
 ) {
+    var confirmarExclusao by remember { mutableStateOf(false) }
     TelaDiario(
         titulo = stringResource(if (estado.editando) R.string.item_plano_editar else R.string.item_plano_novo),
         acoes = {
-            if (estado.editando) TextButton(onClick = onExcluir) { Text(stringResource(R.string.excluir)) }
+            if (estado.editando) {
+                TextButton(onClick = { confirmarExclusao = true }) { Text(stringResource(R.string.excluir)) }
+            }
         },
     ) { padding ->
         if (estado.carregando) {
@@ -84,6 +91,22 @@ fun ItemPlanoFormScreen(
                 }
             }
         }
+    }
+    if (confirmarExclusao) {
+        AlertDialog(
+            onDismissRequest = { confirmarExclusao = false },
+            title = { Text(stringResource(R.string.item_plano_excluir_titulo)) },
+            text = { Text(stringResource(R.string.item_plano_excluir_texto)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmarExclusao = false
+                    onExcluir()
+                }) { Text(stringResource(R.string.excluir)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmarExclusao = false }) { Text(stringResource(R.string.cancelar)) }
+            },
+        )
     }
 }
 

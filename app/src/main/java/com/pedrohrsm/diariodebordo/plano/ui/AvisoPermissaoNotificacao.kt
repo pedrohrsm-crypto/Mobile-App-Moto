@@ -35,7 +35,8 @@ fun AvisoPermissaoNotificacao() {
     if (permitido) return
     ListItem(
         headlineContent = { Text(stringResource(R.string.lembrete_permissao)) },
-        trailingContent = {
+        // O botão fica abaixo do texto, e não ao lado: com fonte 200% o texto ainda usa a largura toda.
+        supportingContent = {
             TextButton(
                 onClick = { pedir.launch(Manifest.permission.POST_NOTIFICATIONS) },
                 modifier = Modifier.heightIn(min = LocalEscalaDiario.current.alvoMinimo),

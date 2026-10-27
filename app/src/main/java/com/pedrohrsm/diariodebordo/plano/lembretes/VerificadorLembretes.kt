@@ -26,8 +26,8 @@ class VerificadorLembretes @Inject constructor(
         var enviados = 0
         avisosPendentes(plano.abertos(), kms, nomes, relogio).forEach { aviso ->
             if (notificador.notificar(aviso)) {
-                plano.marcarAvisado(aviso.itemId, aviso.urgencia)
-                enviados++
+                // Falso: o item saiu do plano enquanto o aviso era enviado; não há o que marcar nem o que contar.
+                if (plano.marcarAvisado(aviso.itemId, aviso.urgencia)) enviados++
             }
         }
         return enviados

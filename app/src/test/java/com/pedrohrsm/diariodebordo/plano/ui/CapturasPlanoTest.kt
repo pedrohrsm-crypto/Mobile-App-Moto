@@ -51,6 +51,7 @@ import org.robolectric.annotation.GraphicsMode
 class CapturasPlanoTest(private val caso: Caso) {
     enum class Tela(val pasta: String, val teclado: Boolean = false) {
         PLANO("plano"),
+        PLANO_TOPO("plano-topo"),
         PLANO_SEM_MOTO("plano-sem-moto"),
         PLANO_ERRO("plano-erro"),
         ITEM_FORM("item-plano-form", teclado = true),
@@ -111,6 +112,8 @@ class CapturasPlanoTest(private val caso: Caso) {
     private fun Tela(tela: Tela) {
         when (tela) {
             Tela.PLANO -> PlanoScreen(montarPlano(estradeira, itens, kmAtual = 187_450, relogio), destaque = oleo.id)
+            // Sem destaque a lista fica no topo: aviso de permissão, pendências com "Resolvida" e o primeiro item.
+            Tela.PLANO_TOPO -> PlanoScreen(montarPlano(estradeira, itens, kmAtual = 187_450, relogio))
             Tela.PLANO_SEM_MOTO -> PlanoScreen(PlanoEstado.SemMoto)
             Tela.PLANO_ERRO -> PlanoScreen(PlanoEstado.Erro("database disk image is malformed"))
             Tela.ITEM_FORM -> ItemPlanoFormScreen(

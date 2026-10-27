@@ -1,11 +1,10 @@
 package com.pedrohrsm.diariodebordo.plano.lembretes
 
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
-import com.pedrohrsm.diariodebordo.plano.data.intervalo
 import com.pedrohrsm.diariodebordo.plano.data.pendencia
 import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
 import com.pedrohrsm.diariodebordo.plano.dominio.deveAvisar
-import com.pedrohrsm.diariodebordo.plano.dominio.situacaoDoItem
+import com.pedrohrsm.diariodebordo.plano.dominio.situacao
 import java.time.Clock
 
 data class Aviso(
@@ -28,17 +27,8 @@ fun avisosPendentes(
     relogio: Clock,
 ): List<Aviso> = itens.mapNotNull { item ->
     if (item.pendencia) return@mapNotNull null
-    val intervalo = item.intervalo ?: return@mapNotNull null
     val nomeMoto = nomesDasMotos[item.motoId] ?: return@mapNotNull null
-    val kmAtual = kmPorMoto[item.motoId] ?: item.ultimaVezKm ?: 0
-    val situacao = situacaoDoItem(
-        intervalo = intervalo,
-        ultimaVezKm = item.ultimaVezKm ?: kmAtual,
-        ultimaVezEm = item.ultimaVezEm ?: item.criadoEm,
-        kmAtual = kmAtual,
-        agora = relogio.instant(),
-        fuso = relogio.zone,
-    )
+    val situacao = item.situacao(kmPorMoto[item.motoId], relogio) ?: return@mapNotNull null
     if (!deveAvisar(situacao.urgencia, item.avisadoComo)) return@mapNotNull null
     Aviso(item.id, item.motoId, nomeMoto, item.nome, situacao.urgencia)
 }.sortedByDescending { it.urgencia }

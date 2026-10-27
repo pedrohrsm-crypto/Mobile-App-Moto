@@ -1,5 +1,8 @@
 package com.pedrohrsm.diariodebordo.plano.dominio
 
+import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
+import com.pedrohrsm.diariodebordo.plano.data.intervalo
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -45,6 +48,23 @@ fun situacaoDoItem(
         else -> Urgencia.EM_DIA
     }
     return SituacaoDoItem(situacao, proxima, urgencia)
+}
+
+/**
+ * A situação de um item periódico agora, ou null se ele não tem intervalo (pendência). Única conversão do item
+ * para [situacaoDoItem]: a tela e os lembretes usam esta. Sem leitura de hodômetro, conta do km da última vez.
+ */
+fun ItemDoPlano.situacao(kmAtual: Int?, relogio: Clock): SituacaoDoItem? {
+    val intervalo = intervalo ?: return null
+    val km = kmAtual ?: ultimaVezKm ?: 0
+    return situacaoDoItem(
+        intervalo = intervalo,
+        ultimaVezKm = ultimaVezKm ?: km,
+        ultimaVezEm = ultimaVezEm ?: criadoEm,
+        kmAtual = km,
+        agora = relogio.instant(),
+        fuso = relogio.zone,
+    )
 }
 
 /**

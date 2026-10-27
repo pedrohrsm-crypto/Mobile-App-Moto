@@ -49,7 +49,7 @@ class ItemPlanoFormViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            runCatching {
+            tentar {
                 val item = itemId?.let { plano.buscar(it) }
                 original = item
                 val motoId = item?.motoId ?: motoAtual.moto.first()?.id
@@ -87,7 +87,7 @@ class ItemPlanoFormViewModel @Inject constructor(
             intervaloDias = e.dias.takeIf { it.isNotBlank() }?.trim()?.toIntOrNull(),
         )
         viewModelScope.launch {
-            runCatching { plano.salvar(item, hodometro.kmAtual(motoId)) }
+            tentar { plano.salvar(item, hodometro.kmAtual(motoId)) }
                 .onSuccess { _estado.update { it.copy(salvando = false, concluido = true) } }
                 .onFailure { f -> _estado.update { it.copy(salvando = false, erro = f.message.orEmpty()) } }
         }
@@ -96,7 +96,7 @@ class ItemPlanoFormViewModel @Inject constructor(
     fun excluir() {
         val id = original?.id ?: return
         viewModelScope.launch {
-            runCatching { plano.excluir(id) }
+            tentar { plano.excluir(id) }
                 .onSuccess { _estado.update { it.copy(concluido = true) } }
                 .onFailure { f -> _estado.update { it.copy(erro = f.message.orEmpty()) } }
         }

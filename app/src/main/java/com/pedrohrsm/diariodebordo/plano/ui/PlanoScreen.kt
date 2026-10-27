@@ -1,5 +1,6 @@
 package com.pedrohrsm.diariodebordo.plano.ui
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,7 +14,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -159,14 +159,14 @@ private fun ItemPeriodico(itemComSituacao: ItemComSituacao, acoes: AcoesPlano, d
         Urgencia.PROXIMO -> stringResource(R.string.plano_proximo) to MaterialTheme.colorScheme.primary
         Urgencia.EM_DIA -> stringResource(R.string.plano_em_dia) to MaterialTheme.colorScheme.onSurfaceVariant
     }
-    val alvo = LocalEscalaDiario.current.alvoMinimo
+    val escala = LocalEscalaDiario.current
+    val alvo = escala.alvoMinimo
     ListItem(
-        modifier = Modifier.clickable { acoes.onEditarItem(item.id) }.heightIn(min = alvo),
-        colors = if (destacado) {
-            ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-        } else {
-            ListItemDefaults.colors()
-        },
+        // Destaque pela borda: o fundo continua o do tema, onde os rótulos têm contraste (ContrasteTemaTest).
+        modifier = Modifier
+            .then(if (destacado) Modifier.border(escala.espaco(2.dp), MaterialTheme.colorScheme.outline) else Modifier)
+            .clickable { acoes.onEditarItem(item.id) }
+            .heightIn(min = alvo),
         overlineContent = { Text(textoUrgencia, color = cor) },
         headlineContent = { Text(item.nome) },
         supportingContent = {

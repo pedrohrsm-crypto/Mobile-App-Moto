@@ -7,10 +7,9 @@ import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
 import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
-import com.pedrohrsm.diariodebordo.plano.data.intervalo
 import com.pedrohrsm.diariodebordo.plano.data.pendencia
 import com.pedrohrsm.diariodebordo.plano.dominio.SituacaoDoItem
-import com.pedrohrsm.diariodebordo.plano.dominio.situacaoDoItem
+import com.pedrohrsm.diariodebordo.plano.dominio.situacao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import javax.inject.Inject
@@ -46,16 +45,7 @@ sealed interface PlanoEstado {
 /** Monta a lista do plano com a situação de cada item, na ordem de urgência. */
 fun montarPlano(moto: Moto, itens: List<ItemDoPlano>, kmAtual: Int?, relogio: Clock): PlanoEstado.Pronto {
     val periodicos = itens.filter { !it.pendencia }.mapNotNull { item ->
-        val intervalo = item.intervalo ?: return@mapNotNull null
-        val situacao = situacaoDoItem(
-            intervalo = intervalo,
-            ultimaVezKm = item.ultimaVezKm ?: kmAtual ?: 0,
-            ultimaVezEm = item.ultimaVezEm ?: item.criadoEm,
-            kmAtual = kmAtual ?: item.ultimaVezKm ?: 0,
-            agora = relogio.instant(),
-            fuso = relogio.zone,
-        )
-        ItemComSituacao(item, situacao)
+        item.situacao(kmAtual, relogio)?.let { ItemComSituacao(item, it) }
     }.sortedWith(
         compareByDescending<ItemComSituacao> { it.situacao.urgencia }
             .thenBy { it.situacao.situacao.kmRestantes ?: Int.MAX_VALUE }
@@ -101,14 +91,14 @@ class PlanoViewModel @Inject constructor(
 
     fun resolver(id: String) {
         viewModelScope.launch {
-            runCatching { plano.resolverPendencia(id) }.onFailure { _falha.value = it.message.orEmpty() }
+            tentar { plano.resolverPendencia(id) }.onFailure { _falha.value = it.message.orEmpty() }
         }
     }
 
     /** A pessoa fez o item agora: a conta recomeça do km atual da moto. */
     fun marcarFeito(item: ItemDoPlano) {
         viewModelScope.launch {
-            runCatching { plano.marcarFeito(item.id, hodometro.kmAtual(item.motoId)) }
+            tentar { plano.marcarFeito(item.id, hodometro.kmAtual(item.motoId)) }
                 .onFailure { _falha.value = it.message.orEmpty() }
         }
     }

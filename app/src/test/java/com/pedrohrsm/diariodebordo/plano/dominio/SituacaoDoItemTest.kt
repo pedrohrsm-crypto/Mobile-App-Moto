@@ -2,10 +2,14 @@ package com.pedrohrsm.diariodebordo.plano.dominio
 
 import com.pedrohrsm.diariodebordo.diario.data.TipoOcorrencia
 import com.pedrohrsm.diariodebordo.garagem.data.CategoriaMoto
+import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
+import com.pedrohrsm.diariodebordo.plano.data.OrigemItem
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -40,6 +44,22 @@ class SituacaoDoItemTest {
     @Test
     fun kmDoItemMaiorQueOAtualNaoQuebraAConta() {
         assertEquals(5_000, situacao(Intervalo(5_000, null), kmAtual = 9_000).situacao.kmRestantes)
+    }
+
+    @Test
+    fun situacaoDoItemUsaOKmAtualEDeixaAPendenciaDeFora() {
+        val relogio = Clock.fixed(agora, fuso)
+        val item = ItemDoPlano(
+            motoId = "m",
+            nome = "Óleo",
+            intervaloKm = 5_000,
+            ultimaVezKm = 10_000,
+            ultimaVezEm = feitoEm.toEpochMilli(),
+        )
+        assertEquals(500, item.situacao(kmAtual = 14_500, relogio)?.situacao?.kmRestantes)
+        // Sem leitura de hodômetro, a conta parte do km da última vez.
+        assertEquals(5_000, item.situacao(kmAtual = null, relogio)?.situacao?.kmRestantes)
+        assertNull(item.copy(intervaloKm = null, origem = OrigemItem.OCORRENCIA).situacao(14_500, relogio))
     }
 
     @Test
