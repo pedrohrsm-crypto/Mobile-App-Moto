@@ -11,6 +11,9 @@ interface MotoDao {
     @Query("SELECT * FROM motos WHERE excluidoEm IS NULL ORDER BY apelido COLLATE NOCASE")
     fun observarAtivos(): Flow<List<Moto>>
 
+    @Query("SELECT * FROM motos WHERE id = :id AND excluidoEm IS NULL")
+    fun observar(id: String): Flow<Moto?>
+
     @Insert
     suspend fun inserir(item: Moto)
 

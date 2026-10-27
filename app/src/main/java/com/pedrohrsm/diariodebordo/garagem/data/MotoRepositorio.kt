@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 class MotoRepositorio @Inject constructor(private val dao: MotoDao, private val relogio: Clock) {
     fun observarAtivos(): Flow<List<Moto>> = dao.observarAtivos()
 
+    fun observar(id: String): Flow<Moto?> = dao.observar(id)
+
     suspend fun criar(item: Moto): Moto {
         val agora = relogio.millis()
         val novo = item.copy(
