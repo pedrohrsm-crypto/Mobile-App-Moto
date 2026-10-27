@@ -54,6 +54,12 @@ class AvisosTest {
         assertEquals(emptyList<Aviso>(), avisos(itens, km = 13_100))
     }
 
+    @Test
+    fun pendenciaNuncaAvisaNemSeAlguemLheDerUmIntervalo() {
+        val pendencia = item("Conferir manetes", km = 3_000, dias = null).copy(origem = OrigemItem.OCORRENCIA)
+        assertEquals(emptyList<Aviso>(), avisos(listOf(pendencia), km = 13_100))
+    }
+
     /** Erro #26: o item avisado como PRÓXIMO nunca recebia o aviso de VENCIDO. */
     @Test
     fun proximoAvisadoVencidoAvisaDeNovo() {

@@ -115,9 +115,11 @@ class PlanoViewModelTest {
         val moto = motoStreetComKm(15_100)
         val vm = abrir()
         val oleo = (vm.estado.value as PlanoEstado.Pronto).itens.single { it.item.chave == CHAVE_TROCA_DE_OLEO }
+        // O km sobe depois que o plano abriu: 'Fiz agora' conta do km de agora, não do que o item guardava.
+        hodometro.registrar(moto.id, 15_600)
         vm.marcarFeito(oleo.item)
         val depois = (vm.estado.value as PlanoEstado.Pronto).itens.single { it.item.chave == CHAVE_TROCA_DE_OLEO }
-        assertEquals(15_100, depois.item.ultimaVezKm)
+        assertEquals(15_600, depois.item.ultimaVezKm)
         assertEquals(moto.id, depois.item.motoId)
         assertNotNull(depois.item.feitoEm)
         assertNull(vm.falha.value)
