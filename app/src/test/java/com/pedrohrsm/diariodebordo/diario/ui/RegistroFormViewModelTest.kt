@@ -15,6 +15,10 @@ import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
+import com.pedrohrsm.diariodebordo.localizacao.FonteLocalizacaoFalsa
+import com.pedrohrsm.diariodebordo.localizacao.LocalIndisponivelException
+import com.pedrohrsm.diariodebordo.localizacao.Ponto
+import com.pedrohrsm.diariodebordo.localizacao.SemPermissaoDeLocalizacaoException
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -53,6 +57,7 @@ class RegistroFormViewModelTest {
     private val repositorio =
         RegistroRepositorio(registros, FakeFotoRegistroDao(), hodometro, TransacaoFalsa(), relogio)
     private val fotos = GuardaFotosFalsa()
+    private val gps = FonteLocalizacaoFalsa()
 
     @Before
     fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -61,7 +66,7 @@ class RegistroFormViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun novo(args: Map<String, Any?> = emptyMap()) =
-        RegistroFormViewModel(SavedStateHandle(args), repositorio, fotos, motoAtual, relogio)
+        RegistroFormViewModel(SavedStateHandle(args), repositorio, fotos, motoAtual, gps, relogio)
 
     @Test
     fun registroNovoUsaAMotoAtualEOTipoPedido() = runTest {
@@ -141,6 +146,7 @@ class RegistroFormViewModelTest {
             repositorio,
             fotos,
             MotoAtual(MotoRepositorio(quebrado, relogio)),
+            gps,
             relogio,
         )
         vm.alterar { it.copy(titulo = "Manutenção") }
@@ -155,5 +161,71 @@ class RegistroFormViewModelTest {
         vm.alterar { it.copy(titulo = "Abastecimento", km = "15.200") }
         vm.salvar()
         assertEquals(15_200, hodometro.kmAtual(moto.id))
+    }
+
+    /** 1.6: o local entra no registro salvo, e editar o registro mostra o mesmo local. */
+    @Test
+    fun localAtualEntraNoRegistroSalvo() = runTest {
+        motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        gps.resposta = Ponto(-23.5505, -46.6333, instante = 0)
+        val vm = novo()
+        vm.alterar { it.copy(titulo = "Parada no mirante") }
+        vm.usarLocalAtual()
+        vm.salvar()
+        val salvo = registros.linhas.value.single()
+        assertEquals(-23.5505, salvo.latitude!!, 0.0)
+        assertEquals(-46.6333, salvo.longitude!!, 0.0)
+
+        val editando = novo(mapOf(RegistroFormViewModel.ARG_REGISTRO_ID to salvo.id))
+        assertEquals(-23.5505, editando.estado.value.latitude!!, 0.0)
+    }
+
+    /** 1.6: negar a permissão avisa e não impede salvar; o registro fica sem local. */
+    @Test
+    fun negarAPermissaoNaoQuebraORegistro() = runTest {
+        motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        val vm = novo()
+        vm.alterar { it.copy(titulo = "Nota") }
+        vm.localNegado()
+        assertEquals(ErroRegistroForm.SemPermissaoLocal, vm.estado.value.erro)
+        vm.salvar()
+        assertTrue(vm.estado.value.concluido)
+        val salvo = registros.linhas.value.single()
+        assertEquals(null, salvo.latitude)
+        assertEquals(null, salvo.longitude)
+    }
+
+    /** A permissão pode ser retirada entre o toque e a leitura: vira o mesmo aviso, sem travar o formulário. */
+    @Test
+    fun permissaoRetiradaNoMeioViraAviso() = runTest {
+        motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        gps.falha = SemPermissaoDeLocalizacaoException()
+        val vm = novo()
+        vm.usarLocalAtual()
+        assertEquals(ErroRegistroForm.SemPermissaoLocal, vm.estado.value.erro)
+        assertEquals(false, vm.estado.value.buscandoLocal)
+    }
+
+    @Test
+    fun gpsSemRespostaAvisaESegueSemLocal() = runTest {
+        motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        gps.falha = LocalIndisponivelException()
+        val vm = novo()
+        vm.usarLocalAtual()
+        assertEquals(ErroRegistroForm.LocalIndisponivel, vm.estado.value.erro)
+        assertEquals(null, vm.estado.value.latitude)
+        assertEquals(false, vm.estado.value.buscandoLocal)
+    }
+
+    @Test
+    fun removerLocalSalvaSemEle() = runTest {
+        motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        gps.resposta = Ponto(-23.5505, -46.6333, instante = 0)
+        val vm = novo()
+        vm.alterar { it.copy(titulo = "Nota") }
+        vm.usarLocalAtual()
+        vm.removerLocal()
+        vm.salvar()
+        assertEquals(null, registros.linhas.value.single().latitude)
     }
 }

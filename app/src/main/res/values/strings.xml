@@ -82,4 +82,37 @@
     <string name="registro_nao_encontrado">Este registro não existe mais.</string>
     <string name="registro_excluir_titulo">Excluir este registro?</string>
     <string name="registro_excluir_texto">O registro e as fotos dele saem do diário.</string>
+    <!-- Local do registro (1.6) -->
+    <string name="local_titulo">Local (opcional)</string>
+    <string name="local_usar_atual">Usar local atual</string>
+    <string name="local_buscando">Buscando o GPS…</string>
+    <string name="local_sem_permissao">Sem permissão de localização. O registro pode ser salvo sem o local.</string>
+    <string name="local_indisponivel">O GPS não respondeu. Tente num lugar aberto ou salve sem o local.</string>
+
+    <!-- Rotas (1.7) -->
+    <string name="rotas_titulo">Rotas</string>
+    <string name="rotas_titulo_moto">Rotas · %1$s</string>
+    <string name="rotas_explicacao">Grave o trajeto do rolê. Funciona sem internet e com a tela desligada; a notificação fica visível enquanto grava.</string>
+    <string name="rotas_vazio">Nenhuma rota salva ainda.</string>
+    <string name="rota_titulo">Rota</string>
+    <string name="rota_gravar">Gravar rota</string>
+    <string name="rota_parar">Parar e salvar</string>
+    <string name="rota_gravando">Gravando a rota do rolê</string>
+    <plurals name="rota_gravando_desde">
+        <item quantity="one">Gravando desde %1$s · %2$d ponto</item>
+        <item quantity="other">Gravando desde %1$s · %2$d pontos</item>
+    </plurals>
+    <plurals name="rota_interrompida">
+        <item quantity="one">A gravação parou com %1$d ponto. Salvar o que foi gravado?</item>
+        <item quantity="other">A gravação parou com %1$d pontos. Salvar o que foi gravado?</item>
+    </plurals>
+    <string name="rota_salvar">Salvar rota</string>
+    <string name="rota_descartar">Descartar</string>
+    <string name="rota_sem_permissao">Sem permissão de localização: a rota não foi gravada. O resto do app funciona sem ela.</string>
+    <string name="rota_falha_gps">O GPS parou. %1$s</string>
+    <string name="rota_canal_nome">Gravação de rota</string>
+    <string name="rota_nao_encontrada">Rota não encontrada.</string>
+    <string name="rota_tracado_descricao">Traçado da rota</string>
+    <string name="rota_sem_mapa">Só o traçado, sem mapa de fundo: nada é baixado da internet.</string>
+    <string name="rota_excluir_titulo">Excluir esta rota?</string>
 </resources>

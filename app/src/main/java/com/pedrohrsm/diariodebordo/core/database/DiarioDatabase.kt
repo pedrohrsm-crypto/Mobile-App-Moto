@@ -10,6 +10,10 @@ import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
+import com.pedrohrsm.diariodebordo.rota.data.PontoDeRota
+import com.pedrohrsm.diariodebordo.rota.data.PontoDeRotaDao
+import com.pedrohrsm.diariodebordo.rota.data.Rota
+import com.pedrohrsm.diariodebordo.rota.data.RotaDao
 
 /**
  * Fonte da verdade do app (offline-first). Versão 1 até a primeira publicação (decisão #12): mudança de
@@ -17,7 +21,14 @@ import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
  * publicação: [version] + 1, Migration testada e o schema novo commitado.
  */
 @Database(
-    entities = [Moto::class, LeituraHodometro::class, Registro::class, FotoRegistro::class],
+    entities = [
+        Moto::class,
+        LeituraHodometro::class,
+        Registro::class,
+        FotoRegistro::class,
+        Rota::class,
+        PontoDeRota::class,
+    ],
     version = 1,
     exportSchema = true,
 )
@@ -26,6 +37,8 @@ abstract class DiarioDatabase : RoomDatabase() {
     abstract fun leituraHodometroDao(): LeituraHodometroDao
     abstract fun registroDao(): RegistroDao
     abstract fun fotoRegistroDao(): FotoRegistroDao
+    abstract fun rotaDao(): RotaDao
+    abstract fun pontoDeRotaDao(): PontoDeRotaDao
 
     companion object {
         const val NOME = "diario.db"

@@ -35,14 +35,18 @@ import com.pedrohrsm.diariodebordo.garagem.ui.GaragemRoute
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoDetalheRoute
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoDetalheViewModel
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoFormRoute
+import com.pedrohrsm.diariodebordo.rota.ui.RotaDetalheRoute
+import com.pedrohrsm.diariodebordo.rota.ui.RotaDetalheViewModel
+import com.pedrohrsm.diariodebordo.rota.ui.RotasRoute
 
 /**
  * Lista única dos destinos da barra inferior: a barra e o grafo leem daqui, e o rótulo é o
- * mesmo título da tela (docs/PLANEJAMENTO.md, UX/UI). Plano, rotas e números entram com as frentes deles.
+ * mesmo título da tela (docs/PLANEJAMENTO.md, UX/UI). Plano e números entram com as frentes deles.
  */
 enum class Destino(val rota: String, @StringRes val rotulo: Int, @DrawableRes val icone: Int) {
     GARAGEM(Rotas.GARAGEM, R.string.garagem_titulo, R.drawable.ic_garagem),
     DIARIO(Rotas.DIARIO, R.string.diario_titulo, R.drawable.ic_diario),
+    ROTAS(Rotas.ROTAS, R.string.rotas_titulo, R.drawable.ic_rotas),
 }
 
 /** Todas as rotas do app. Rotas com argumento têm a função que monta o caminho. */
@@ -56,11 +60,15 @@ object Rotas {
     const val REGISTRO_NOVO = "registro/novo?${RegistroFormViewModel.ARG_TIPO}={${RegistroFormViewModel.ARG_TIPO}}"
     const val REGISTRO = "registro/editar/{${RegistroFormViewModel.ARG_REGISTRO_ID}}"
 
+    const val ROTAS = "rotas"
+    const val ROTA = "rota/{${RotaDetalheViewModel.ARG_ROTA_ID}}"
+
     fun moto(motoId: String) = "moto/$motoId"
     fun motoEditar(motoId: String) = "moto/$motoId/editar"
     fun registroNovo(tipo: String? = null) =
         "registro/novo" + (tipo?.let { "?${RegistroFormViewModel.ARG_TIPO}=$it" } ?: "")
     fun registro(registroId: String) = "registro/editar/$registroId"
+    fun rota(rotaId: String) = "rota/$rotaId"
 }
 
 @Composable
@@ -92,6 +100,7 @@ fun DiarioNavHost(navController: NavHostController = rememberNavController()) {
         ) {
             grafoGaragem(navController)
             grafoDiario(navController)
+            grafoRotas(navController)
         }
     }
 }
@@ -141,6 +150,18 @@ private fun NavGraphBuilder.grafoDiario(nav: NavController) {
     }
     composable(Rotas.REGISTRO) {
         RegistroFormRoute(onConcluido = { nav.popBackStack() })
+    }
+}
+
+private fun NavGraphBuilder.grafoRotas(nav: NavController) {
+    composable(Rotas.ROTAS) {
+        RotasRoute(
+            onAbrirRota = { nav.navigate(Rotas.rota(it)) },
+            onCadastrarMoto = { nav.navigate(Rotas.MOTO_NOVA) },
+        )
+    }
+    composable(Rotas.ROTA) {
+        RotaDetalheRoute(onExcluida = { nav.popBackStack() })
     }
 }
 

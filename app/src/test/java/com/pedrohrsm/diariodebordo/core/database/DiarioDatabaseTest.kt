@@ -6,6 +6,8 @@ import com.pedrohrsm.diariodebordo.diario.data.Registro
 import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
+import com.pedrohrsm.diariodebordo.rota.data.PontoDeRota
+import com.pedrohrsm.diariodebordo.rota.data.Rota
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -49,7 +51,9 @@ class DiarioDatabaseTest {
         val tabelas = nomes("SELECT name FROM sqlite_master WHERE type = 'table'")
         assertTrue(
             tabelas.toString(),
-            tabelas.containsAll(listOf("motos", "leituras_hodometro", "registros", "fotos_registro")),
+            tabelas.containsAll(
+                listOf("motos", "leituras_hodometro", "registros", "fotos_registro", "rotas", "pontos_rota"),
+            ),
         )
     }
 
@@ -57,8 +61,13 @@ class DiarioDatabaseTest {
     @Test
     fun indicesDasConsultasPrincipais() {
         assertEquals(setOf("index_leituras_hodometro_motoId_km"), nomes(indices("leituras_hodometro")))
-        assertEquals(setOf("index_registros_motoId_dataEm"), nomes(indices("registros")))
+        assertEquals(
+            setOf("index_registros_motoId_dataEm", "index_registros_rotaId"),
+            nomes(indices("registros")),
+        )
         assertEquals(setOf("index_fotos_registro_registroId"), nomes(indices("fotos_registro")))
+        assertEquals(setOf("index_rotas_motoId_iniciadaEm"), nomes(indices("rotas")))
+        assertEquals(setOf("index_pontos_rota_rotaId_instante"), nomes(indices("pontos_rota")))
     }
 
     private fun indices(tabela: String) =
@@ -102,5 +111,24 @@ class DiarioDatabaseTest {
     private suspend fun primeiraPagina(fonte: PagingSource<Int, Registro>): List<String> {
         val carga = fonte.load(PagingSource.LoadParams.Refresh(key = null, loadSize = 10, placeholdersEnabled = false))
         return (carga as PagingSource.LoadResult.Page).data.map { it.titulo }
+    }
+
+    /** Decisão #17 no banco de verdade: apagar os pontos brutos de uma rota não toca nos de outra. */
+    @Test
+    fun pontosBrutosSaemSoDaRotaPedida() = runTest {
+        val rotas = banco.rotaDao()
+        val pontos = banco.pontoDeRotaDao()
+        val a = Rota(motoId = "m", iniciadaEm = 1)
+        val b = Rota(motoId = "m", iniciadaEm = 2)
+        rotas.inserir(a)
+        rotas.inserir(b)
+        pontos.inserir(PontoDeRota(rotaId = a.id, latitude = -23.5, longitude = -46.6, instante = 10))
+        pontos.inserir(PontoDeRota(rotaId = a.id, latitude = -23.6, longitude = -46.7, instante = 20))
+        pontos.inserir(PontoDeRota(rotaId = b.id, latitude = -22.9, longitude = -43.2, instante = 30))
+
+        assertEquals(2, pontos.apagarDaRota(a.id))
+        assertTrue(pontos.daRota(a.id).isEmpty())
+        assertEquals(1, pontos.daRota(b.id).size)
+        assertEquals(b, rotas.emGravacao())
     }
 }

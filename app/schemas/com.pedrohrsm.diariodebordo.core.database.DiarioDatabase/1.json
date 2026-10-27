@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "ef150b79f2dca96e2ba5ba01738518f9",
+    "identityHash": "7a64772c34d4088b3d6887b67c5d86e5",
     "entities": [
       {
         "tableName": "motos",
@@ -158,7 +158,7 @@
       },
       {
         "tableName": "registros",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `motoId` TEXT NOT NULL, `tipo` TEXT NOT NULL, `titulo` TEXT NOT NULL, `descricao` TEXT NOT NULL, `dataEm` INTEGER NOT NULL, `hodometroKm` INTEGER, `valorCentavos` INTEGER, `litrosMl` INTEGER, `tanqueCheio` INTEGER NOT NULL, `ocorrencia` TEXT, `criadoEm` INTEGER NOT NULL, `alteradoEm` INTEGER NOT NULL, `fusoHorario` TEXT NOT NULL, `excluidoEm` INTEGER, `pendenteSync` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `motoId` TEXT NOT NULL, `tipo` TEXT NOT NULL, `titulo` TEXT NOT NULL, `descricao` TEXT NOT NULL, `dataEm` INTEGER NOT NULL, `hodometroKm` INTEGER, `valorCentavos` INTEGER, `litrosMl` INTEGER, `tanqueCheio` INTEGER NOT NULL, `ocorrencia` TEXT, `rotaId` TEXT, `latitude` REAL, `longitude` REAL, `criadoEm` INTEGER NOT NULL, `alteradoEm` INTEGER NOT NULL, `fusoHorario` TEXT NOT NULL, `excluidoEm` INTEGER, `pendenteSync` INTEGER NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -223,6 +223,21 @@
             "affinity": "TEXT"
           },
           {
+            "fieldPath": "rotaId",
+            "columnName": "rotaId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL"
+          },
+          {
             "fieldPath": "criadoEm",
             "columnName": "criadoEm",
             "affinity": "INTEGER",
@@ -268,6 +283,15 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_motoId_dataEm` ON `${TABLE_NAME}` (`motoId`, `dataEm`)"
+          },
+          {
+            "name": "index_registros_rotaId",
+            "unique": false,
+            "columnNames": [
+              "rotaId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_registros_rotaId` ON `${TABLE_NAME}` (`rotaId`)"
           }
         ]
       },
@@ -346,11 +370,199 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_fotos_registro_registroId` ON `${TABLE_NAME}` (`registroId`)"
           }
         ]
+      },
+      {
+        "tableName": "rotas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `motoId` TEXT NOT NULL, `iniciadaEm` INTEGER NOT NULL, `terminadaEm` INTEGER, `distanciaM` INTEGER NOT NULL, `duracaoS` INTEGER NOT NULL, `polilinha` TEXT NOT NULL, `emGravacao` INTEGER NOT NULL, `criadoEm` INTEGER NOT NULL, `alteradoEm` INTEGER NOT NULL, `fusoHorario` TEXT NOT NULL, `excluidoEm` INTEGER, `pendenteSync` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "motoId",
+            "columnName": "motoId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "iniciadaEm",
+            "columnName": "iniciadaEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "terminadaEm",
+            "columnName": "terminadaEm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "distanciaM",
+            "columnName": "distanciaM",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "duracaoS",
+            "columnName": "duracaoS",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "polilinha",
+            "columnName": "polilinha",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "emGravacao",
+            "columnName": "emGravacao",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "criadoEm",
+            "columnName": "criadoEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alteradoEm",
+            "columnName": "alteradoEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fusoHorario",
+            "columnName": "fusoHorario",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "excluidoEm",
+            "columnName": "excluidoEm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pendenteSync",
+            "columnName": "pendenteSync",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_rotas_motoId_iniciadaEm",
+            "unique": false,
+            "columnNames": [
+              "motoId",
+              "iniciadaEm"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_rotas_motoId_iniciadaEm` ON `${TABLE_NAME}` (`motoId`, `iniciadaEm`)"
+          }
+        ]
+      },
+      {
+        "tableName": "pontos_rota",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `rotaId` TEXT NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `instante` INTEGER NOT NULL, `precisaoM` REAL, `criadoEm` INTEGER NOT NULL, `alteradoEm` INTEGER NOT NULL, `fusoHorario` TEXT NOT NULL, `excluidoEm` INTEGER, `pendenteSync` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rotaId",
+            "columnName": "rotaId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "instante",
+            "columnName": "instante",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "precisaoM",
+            "columnName": "precisaoM",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "criadoEm",
+            "columnName": "criadoEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "alteradoEm",
+            "columnName": "alteradoEm",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fusoHorario",
+            "columnName": "fusoHorario",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "excluidoEm",
+            "columnName": "excluidoEm",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "pendenteSync",
+            "columnName": "pendenteSync",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_pontos_rota_rotaId_instante",
+            "unique": false,
+            "columnNames": [
+              "rotaId",
+              "instante"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_pontos_rota_rotaId_instante` ON `${TABLE_NAME}` (`rotaId`, `instante`)"
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ef150b79f2dca96e2ba5ba01738518f9')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7a64772c34d4088b3d6887b67c5d86e5')"
     ]
   }
 }

@@ -34,6 +34,34 @@ class FormatadorTest {
     }
 
     @Test
+    fun distanciaDeRotaEmMetrosAte1KmDepoisEmKm() {
+        assertEquals("0 m", Formatador.distancia(0))
+        assertEquals("999 m", Formatador.distancia(999))
+        assertEquals("1,0 km", Formatador.distancia(1_000))
+        assertEquals("42,3 km", Formatador.distancia(42_300))
+        assertEquals("1.234,6 km", Formatador.distancia(1_234_567))
+    }
+
+    @Test
+    fun duracaoDeRotaEmHorasEMinutos() {
+        assertEquals("0 min", Formatador.duracao(59))
+        assertEquals("45 min", Formatador.duracao(45 * 60))
+        assertEquals("1 h 05 min", Formatador.duracao(3_900))
+        assertEquals("10 h 00 min", Formatador.duracao(36_000))
+    }
+
+    @Test
+    fun dataEHoraNoFusoDaRota() {
+        val meiaNoiteUtc = 1_790_812_800_000 // 2026-10-01T00:00:00Z
+        assertEquals("30/09/2026 21:00", Formatador.dataHora(meiaNoiteUtc, ZoneId.of("America/Sao_Paulo")))
+    }
+
+    @Test
+    fun coordenadaComCincoCasasEPontoDecimal() {
+        assertEquals("-23.55052, -46.63331", Formatador.coordenada(-23.550518, -46.633308))
+    }
+
+    @Test
     fun fusoInvalidoCaiNoDoAparelho() {
         assertEquals(ZoneId.systemDefault(), Formatador.fuso(""))
         assertEquals(ZoneId.of("America/Manaus"), Formatador.fuso("America/Manaus"))
