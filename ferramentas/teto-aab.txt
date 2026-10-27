@@ -1,0 +1,4 @@
+# Teto do AAB de release, em bytes (uma linha com o número). Lido por ferramentas/teto-aab.sh no CI.
+# Medido na main a70ba2d (bundleRelease). Subir o teto exige editar este arquivo no PR com o motivo na
+# mensagem do commit; quem aceita é o PM. Quando o script avisar que o AAB caiu, baixe o teto.
+4587880
