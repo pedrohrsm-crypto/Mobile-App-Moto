@@ -1,5 +1,6 @@
 package com.pedrohrsm.diariodebordo.numeros
 
+import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -31,6 +32,12 @@ class FormatadorTest {
         val meiaNoiteUtc = 1_790_812_800_000 // 2026-10-01T00:00:00Z
         assertEquals("01/10/2026", Formatador.data(meiaNoiteUtc, ZoneId.of("UTC")))
         assertEquals("30/09/2026", Formatador.data(meiaNoiteUtc, ZoneId.of("America/Sao_Paulo")))
+    }
+
+    @Test
+    fun diaDoCalendarioNaoDependeDeFuso() {
+        assertEquals("28/10/2026", Formatador.data(LocalDate.of(2026, 10, 28)))
+        assertEquals("01/01/2027", Formatador.data(LocalDate.of(2027, 1, 1)))
     }
 
     @Test

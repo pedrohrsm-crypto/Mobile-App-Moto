@@ -8,6 +8,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -30,7 +31,7 @@ class MotoDetalheViewModelTest {
 
     private val relogio = Clock.fixed(Instant.parse("2026-10-01T12:00:00Z"), ZoneId.of("America/Sao_Paulo"))
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio)
+    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, AgendadorFalso())
     private val motoAtual = MotoAtual(motos)
 
     @Before

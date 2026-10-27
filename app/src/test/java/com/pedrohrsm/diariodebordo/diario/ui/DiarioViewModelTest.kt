@@ -14,6 +14,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
+import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -40,7 +41,7 @@ class DiarioViewModelTest {
     private val repositorio = RegistroRepositorio(
         dao,
         FakeFotoRegistroDao(),
-        HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio),
+        HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, AgendadorFalso()),
         TransacaoFalsa(),
         relogio,
     )
