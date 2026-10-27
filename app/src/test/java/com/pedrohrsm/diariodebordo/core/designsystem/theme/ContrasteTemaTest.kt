@@ -76,15 +76,20 @@ class ContrasteTemaTest {
         }
     }
 
+    private fun assertAcusa(tokens: TokensDiario, par: String) {
+        val abaixo = falhas(tokens)
+        assertTrue(abaixo.toString(), abaixo.any { it.startsWith(par) })
+    }
+
     @Test
     fun valoresAntigosDoFigmaReprovamComONomeDoPar() {
         // Os 3 valores de antes de 27-Out-2026 (risco #40): a conta tem de acusá-los, senão o teste não protege nada.
         val estradaAntigoBorda = TemaDiario.ESTRADA.tokens() + (PapelCor.TEXTO_TERCIARIO to Color(0xFF8A9499))
         val estradaAntigoRealce = TemaDiario.ESTRADA.tokens() + (PapelCor.REALCE to Color(0xFFC4552D))
         val cromoAntigoErro = TemaDiario.CROMO.tokens() + (PapelCor.CRITICO to Color(0xFFE03A3A))
-        assertTrue(falhas(estradaAntigoBorda).any { it.startsWith("outline/background") })
-        assertTrue(falhas(estradaAntigoRealce).any { it.startsWith("onSecondary/secondary") })
-        assertTrue(falhas(cromoAntigoErro).any { it.startsWith("error/background") })
+        assertAcusa(estradaAntigoBorda, "outline/background")
+        assertAcusa(estradaAntigoRealce, "onSecondary/secondary")
+        assertAcusa(cromoAntigoErro, "error/background")
     }
 
     @Test
