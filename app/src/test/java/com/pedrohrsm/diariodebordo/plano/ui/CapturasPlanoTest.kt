@@ -42,7 +42,9 @@ import org.robolectric.annotation.GraphicsMode
 /**
  * Portão visual do plano (PLANEJAMENTO §1): as telas do plano de manutenção em 360 dp, nos 3 temas, com e sem
  * modo oficina, fonte em 140% e 200%, e teclado aberto no formulário. Os estados seguem os de usuário do plano:
- * plano com vencido, próximo e em dia, pendências de ocorrência, sem moto e com erro ao carregar.
+ * `plano` rola até o item destacado pela notificação (vencido, próximo e em dia); `plano-topo` mostra o topo, com o
+ * aviso de permissão e as pendências de ocorrência (em fonte 200% o "Resolvida" cai abaixo da dobra); sem moto e
+ * com erro ao carregar.
  * Gravar: `./gradlew recordRoborazziDebug`; conferir: `./gradlew verifyRoborazziDebug`.
  */
 @RunWith(ParameterizedRobolectricTestRunner::class)
