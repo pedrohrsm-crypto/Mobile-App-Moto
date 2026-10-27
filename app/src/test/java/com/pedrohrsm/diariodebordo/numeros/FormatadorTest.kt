@@ -4,6 +4,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FormatadorTest {
@@ -32,6 +33,51 @@ class FormatadorTest {
         val meiaNoiteUtc = 1_790_812_800_000 // 2026-10-01T00:00:00Z
         assertEquals("01/10/2026", Formatador.data(meiaNoiteUtc, ZoneId.of("UTC")))
         assertEquals("30/09/2026", Formatador.data(meiaNoiteUtc, ZoneId.of("America/Sao_Paulo")))
+    }
+
+    @Test
+    fun distanciaDeRotaEmMetrosAte1KmDepoisEmKm() {
+        assertEquals("0 m", Formatador.distancia(0).semNbsp())
+        assertEquals("999 m", Formatador.distancia(999).semNbsp())
+        assertEquals("1,0 km", Formatador.distancia(1_000).semNbsp())
+        assertEquals("42,3 km", Formatador.distancia(42_300).semNbsp())
+        assertEquals("1.234,6 km", Formatador.distancia(1_234_567).semNbsp())
+    }
+
+    @Test
+    fun duracaoDeRotaEmHorasEMinutos() {
+        assertEquals("0 min", Formatador.duracao(59).semNbsp())
+        assertEquals("45 min", Formatador.duracao(45 * 60).semNbsp())
+        assertEquals("1 h 05 min", Formatador.duracao(3_900).semNbsp())
+        assertEquals("10 h 00 min", Formatador.duracao(36_000).semNbsp())
+    }
+
+    /** Revisão do PR #51: com fonte em 200% o "min" descia sozinho para a linha de baixo. */
+    @Test
+    fun unidadeDaRotaNaoSeSeparaDoNumero() {
+        listOf(Formatador.distancia(640), Formatador.distancia(87_400), Formatador.duracao(7_260)).forEach {
+            assertTrue(it, Regex("""\d[ ]+(m|km|h|min)\b""").find(it) == null)
+            assertTrue(it, it.contains(Formatador.NBSP))
+        }
+    }
+
+    @Test
+    fun quantidadeComPontoDeMilhar() {
+        assertEquals("1.284", Formatador.quantidade(1_284))
+        assertEquals("312", Formatador.quantidade(312))
+    }
+
+    private fun String.semNbsp() = replace(Formatador.NBSP, ' ')
+
+    @Test
+    fun dataEHoraNoFusoDaRota() {
+        val meiaNoiteUtc = 1_790_812_800_000 // 2026-10-01T00:00:00Z
+        assertEquals("30/09/2026 21:00", Formatador.dataHora(meiaNoiteUtc, ZoneId.of("America/Sao_Paulo")))
+    }
+
+    @Test
+    fun coordenadaComCincoCasasEPontoDecimal() {
+        assertEquals("-23.55052, -46.63331", Formatador.coordenada(-23.550518, -46.633308))
     }
 
     @Test

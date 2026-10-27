@@ -12,6 +12,9 @@ import com.pedrohrsm.diariodebordo.diario.dominio.cabemAsFotos
 import com.pedrohrsm.diariodebordo.diario.dominio.validarRegistro
 import com.pedrohrsm.diariodebordo.diario.fotos.GuardaFotos
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
+import com.pedrohrsm.diariodebordo.localizacao.FonteLocalizacao
+import com.pedrohrsm.diariodebordo.localizacao.LocalIndisponivelException
+import com.pedrohrsm.diariodebordo.localizacao.SemPermissaoDeLocalizacaoException
 import com.pedrohrsm.diariodebordo.numeros.Leitor
 import com.pedrohrsm.diariodebordo.numeros.TextoDeNumero
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,6 +41,8 @@ sealed interface ErroRegistroForm {
         override val deCarga = true
     }
     data class FalhaFoto(val detalhe: String?) : ErroRegistroForm
+    data object SemPermissaoLocal : ErroRegistroForm
+    data object LocalIndisponivel : ErroRegistroForm
     data class Falha(val detalhe: String?) : ErroRegistroForm
 }
 
@@ -54,8 +59,12 @@ data class RegistroFormEstado(
     val litros: String = "",
     val tanqueCheio: Boolean = false,
     val ocorrencia: TipoOcorrencia? = null,
+    val rotaId: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val fotos: List<String> = emptyList(),
     val importandoFoto: Boolean = false,
+    val buscandoLocal: Boolean = false,
     val invalidos: Set<CampoRegistro> = emptySet(),
     val erro: ErroRegistroForm? = null,
     val salvando: Boolean = false,
@@ -70,6 +79,7 @@ class RegistroFormViewModel @Inject constructor(
     private val repositorio: RegistroRepositorio,
     private val guardaFotos: GuardaFotos,
     private val motoAtual: MotoAtual,
+    private val localizacao: FonteLocalizacao,
     private val relogio: Clock,
 ) : ViewModel() {
 
@@ -138,6 +148,34 @@ class RegistroFormViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Chamado depois que a tela conferiu a permissão (pedida só no toque). Funciona em modo avião: o GPS não
+     * usa rede. Nenhuma falha impede salvar: o local é opcional.
+     */
+    fun usarLocalAtual() {
+        if (_estado.value.buscandoLocal) return
+        _estado.update { it.copy(buscandoLocal = true, erro = it.erroQueFica()) }
+        viewModelScope.launch {
+            runCatching { localizacao.atual() }
+                .onSuccess { p ->
+                    _estado.update { it.copy(buscandoLocal = false, latitude = p.latitude, longitude = p.longitude) }
+                }
+                .onFailure { e ->
+                    val erro = when (e) {
+                        is SemPermissaoDeLocalizacaoException -> ErroRegistroForm.SemPermissaoLocal
+                        is LocalIndisponivelException -> ErroRegistroForm.LocalIndisponivel
+                        else -> ErroRegistroForm.Falha(e.message)
+                    }
+                    _estado.update { it.copy(buscandoLocal = false, erro = erro) }
+                }
+        }
+    }
+
+    /** Permissão negada: o registro segue sem local. */
+    fun localNegado() = _estado.update { it.copy(erro = ErroRegistroForm.SemPermissaoLocal) }
+
+    fun removerLocal() = _estado.update { it.copy(latitude = null, longitude = null) }
+
     fun removerFoto(arquivo: String) {
         _estado.update { it.copy(fotos = it.fotos - arquivo) }
         // Foto que ainda não foi salva sai do armazenamento na hora; a já salva só depois de salvar.
@@ -205,6 +243,9 @@ class RegistroFormViewModel @Inject constructor(
             litrosMl = e.litros.takeIf { it.isNotBlank() && abastecimento }?.let(Leitor::litros),
             tanqueCheio = abastecimento && e.tanqueCheio,
             ocorrencia = e.ocorrencia.takeIf { e.tipo == TipoRegistro.OCORRENCIA },
+            rotaId = e.rotaId,
+            latitude = e.latitude,
+            longitude = e.longitude,
         )
     }
 
@@ -221,6 +262,9 @@ class RegistroFormViewModel @Inject constructor(
         litros = r.litrosMl?.let { TextoDeNumero.litros(it) }.orEmpty(),
         tanqueCheio = r.tanqueCheio,
         ocorrencia = r.ocorrencia,
+        rotaId = r.rotaId,
+        latitude = r.latitude,
+        longitude = r.longitude,
         fotos = fotos,
     )
 

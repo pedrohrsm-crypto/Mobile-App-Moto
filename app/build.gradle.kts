@@ -127,6 +127,10 @@ dependencies {
     // Orientação da foto do diário lida pelo EXIF (a versão do AndroidX corrige leituras da do sistema).
     implementation(libs.androidx.exifinterface)
 
+    // Localização (decisão de 26/09/2026): Fused Location quando há Google Play Services; sem ele, LocationManager.
+    implementation(libs.play.services.location)
+    implementation(libs.kotlinx.coroutines.play.services)
+
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)

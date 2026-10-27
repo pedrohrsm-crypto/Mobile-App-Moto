@@ -46,6 +46,7 @@ class ContrasteTemaTest {
         texto("primary/surface", { primary }, { surface }),
         borda("outline/background", { outline }, { background }),
         borda("outline/surface", { outline }, { surface }),
+        borda("primary/background", { primary }, { background }), // traço da rota (TracadoRota), PR #51
     )
 
     private fun luminanciaRelativa(cor: Color): Double {

@@ -38,6 +38,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Gravação da rota do rolê (1.7): serviço em primeiro plano do tipo location, iniciado só pelo app
+             (não exportado). Sem ACCESS_BACKGROUND_LOCATION: a notificação fixa mantém a captura. -->
+        <service
+            android:name=".rota.servico.GravacaoRotaService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
         <!-- O WorkManager é iniciado sob demanda pelo DiarioApp, com a fábrica do Hilt. -->
         <provider
             android:name="androidx.startup.InitializationProvider"
