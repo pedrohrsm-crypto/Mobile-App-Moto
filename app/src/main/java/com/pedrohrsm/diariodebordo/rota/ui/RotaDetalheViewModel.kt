@@ -3,8 +3,10 @@ package com.pedrohrsm.diariodebordo.rota.ui
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pedrohrsm.diariodebordo.localizacao.Ponto
 import com.pedrohrsm.diariodebordo.rota.data.Rota
 import com.pedrohrsm.diariodebordo.rota.data.RotaRepositorio
+import com.pedrohrsm.diariodebordo.rota.dominio.Polilinha
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +21,9 @@ import kotlinx.coroutines.launch
 sealed interface RotaDetalheEstado {
     data object Carregando : RotaDetalheEstado
     data object NaoEncontrada : RotaDetalheEstado
-    data class Pronto(val rota: Rota) : RotaDetalheEstado
+
+    /** [pontos]: o traçado salvo, já decodificado. */
+    data class Pronto(val rota: Rota, val pontos: List<Ponto>) : RotaDetalheEstado
     data class Erro(val detalhe: String?) : RotaDetalheEstado
 }
 
@@ -32,7 +36,16 @@ class RotaDetalheViewModel @Inject constructor(
     private val rotaId: String = checkNotNull(savedStateHandle[ARG_ROTA_ID])
 
     val estado: StateFlow<RotaDetalheEstado> = rotas.observar(rotaId)
-        .map { if (it == null) RotaDetalheEstado.NaoEncontrada else RotaDetalheEstado.Pronto(it) }
+        // Polilinha corrompida lança aqui e cai no catch: vira Erro, não um traçado vazio.
+        .map {
+            if (it ==
+                null
+            ) {
+                RotaDetalheEstado.NaoEncontrada
+            } else {
+                RotaDetalheEstado.Pronto(it, Polilinha.decodificar(it.polilinha))
+            }
+        }
         .catch { emit(RotaDetalheEstado.Erro(it.message)) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), RotaDetalheEstado.Carregando)
 

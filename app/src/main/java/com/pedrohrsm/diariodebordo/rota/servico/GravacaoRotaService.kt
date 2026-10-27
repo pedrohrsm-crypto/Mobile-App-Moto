@@ -64,10 +64,8 @@ class GravacaoRotaService : Service() {
     }
 
     private fun iniciar(motoId: String?) {
-        if (!PermissoesLocalizacao.temAlguma(this)) {
-            falhar(FalhaRota.SemPermissao)
-            return
-        }
+        // startForeground vem antes de qualquer saída: o serviço nasce de startForegroundService, e parar sem ele
+        // derruba o app ("did not then call startForeground"). Sem permissão, o Android 14+ recusa aqui mesmo.
         try {
             ServiceCompat.startForeground(
                 this,
@@ -81,6 +79,10 @@ class GravacaoRotaService : Service() {
             falhar(FalhaRota.Gps(e.message))
             return
         } catch (e: SecurityException) {
+            falhar(FalhaRota.SemPermissao)
+            return
+        }
+        if (!PermissoesLocalizacao.temAlguma(this)) {
             falhar(FalhaRota.SemPermissao)
             return
         }
@@ -109,7 +111,7 @@ class GravacaoRotaService : Service() {
         val anterior = coleta
         escopo.launch {
             anterior?.cancelAndJoinSafe()
-            runCatching { rotas.emGravacao()?.let { rotas.finalizar(it.id) } }
+            runCatching { rotas.emGravacao()?.let { rotas.finalizar(it.id, getString(R.string.rota_titulo_role)) } }
                 .onFailure { _falha.value = FalhaRota.AoSalvar(it.message) }
             pararServico()
         }

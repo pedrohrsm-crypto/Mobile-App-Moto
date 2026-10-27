@@ -26,7 +26,7 @@ reprovar "cor literal fora de core/designsystem/theme" "$(grep -rnE 'Color\(0x|C
 reprovar "texto fixo em Text(\"...\")" "$(grep -rnE '\bText\("' app/src/main/java --include=*.kt)"
 
 # 4. Nada de log no código do app: coordenada, placa ou texto livre não podem vazar por logcat (risco #23).
-reprovar "log no código do app (risco #23)" "$(grep -rnE 'android\.util\.Log\b|\bLog\.(v|d|i|w|e|wtf)\(|\bprintln\(|\.printStackTrace\(' \
+reprovar "log no código do app (risco #23)" "$(grep -rnE 'android\.util\.Log\b|\bLog\.(v|d|i|w|e|wtf|println)\(|\bTimber\.|\bprintln\(|\bprint\(|\.printStackTrace\(' \
   app/src/main/java --include=*.kt)"
 
 if [ "$problemas" -gt 0 ]; then

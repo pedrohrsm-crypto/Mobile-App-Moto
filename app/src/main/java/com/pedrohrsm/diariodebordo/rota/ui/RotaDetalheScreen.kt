@@ -81,7 +81,7 @@ fun RotaDetalheTela(estado: RotaDetalheEstado, onExcluir: () -> Unit = {}) {
                             Formatador.duracao(estado.rota.duracaoS),
                         style = MaterialTheme.typography.headlineSmall,
                     )
-                    TracadoRota(estado.rota.polilinha, stringResource(R.string.rota_tracado_descricao))
+                    TracadoRota(estado.pontos, stringResource(R.string.rota_tracado_descricao))
                     Text(stringResource(R.string.rota_sem_mapa), style = MaterialTheme.typography.bodySmall)
                 }
             }

@@ -33,6 +33,7 @@ sealed interface RotasEstado {
 /** Por que a gravação não andou. O texto mostrado vem de strings.xml; o detalhe é só a mensagem técnica. */
 sealed interface FalhaRota {
     data object SemPermissao : FalhaRota
+    data object SemNotificacao : FalhaRota
     data class Gps(val detalhe: String?) : FalhaRota
     data class AoSalvar(val detalhe: String?) : FalhaRota
 }
@@ -73,13 +74,18 @@ class RotasViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     /** Gravação interrompida (o sistema encerrou o app): salva com os pontos que chegaram. */
-    fun salvarInterrompida(rotaId: String) = executar { rotas.finalizar(rotaId) }
+    fun salvarInterrompida(rotaId: String, tituloDoRole: String) = executar { rotas.finalizar(rotaId, tituloDoRole) }
 
     fun descartar(rotaId: String) = executar { rotas.descartar(rotaId) }
 
     /** A pessoa negou a localização: a gravação não começa, e o resto do app segue igual. */
     fun localNegado() {
         _falha.value = FalhaRota.SemPermissao
+    }
+
+    /** Android 13+: sem a notificação, o aviso fixo e o "Parar e salvar" somem; a gravação não começa. */
+    fun notificacaoNegada() {
+        _falha.value = FalhaRota.SemNotificacao
     }
 
     fun limparFalha() {

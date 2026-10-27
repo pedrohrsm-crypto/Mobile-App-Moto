@@ -99,16 +99,19 @@
     <string name="rota_parar">Parar e salvar</string>
     <string name="rota_gravando">Gravando a rota do rolê</string>
     <plurals name="rota_gravando_desde">
-        <item quantity="one">Gravando desde %1$s · %2$d ponto</item>
-        <item quantity="other">Gravando desde %1$s · %2$d pontos</item>
+        <item quantity="one">Gravando desde %1$s · %2$s ponto</item>
+        <item quantity="other">Gravando desde %1$s · %2$s pontos</item>
     </plurals>
     <plurals name="rota_interrompida">
-        <item quantity="one">A gravação parou com %1$d ponto. Salvar o que foi gravado?</item>
-        <item quantity="other">A gravação parou com %1$d pontos. Salvar o que foi gravado?</item>
+        <item quantity="one">A gravação parou com %1$s ponto. Salvar o que foi gravado?</item>
+        <item quantity="other">A gravação parou com %1$s pontos. Salvar o que foi gravado?</item>
     </plurals>
     <string name="rota_salvar">Salvar rota</string>
+    <!-- Título inicial do registro que a rota salva cria no diário; a pessoa pode editar. -->
+    <string name="rota_titulo_role">Rolê</string>
     <string name="rota_descartar">Descartar</string>
     <string name="rota_sem_permissao">Sem permissão de localização: a rota não foi gravada. O resto do app funciona sem ela.</string>
+    <string name="rota_sem_notificacao">Sem permissão de notificação: a rota não foi gravada. No Android 13 ou mais, a notificação fixa mostra que o GPS está em uso e tem o botão Parar e salvar.</string>
     <string name="rota_falha_gps">O GPS parou. %1$s</string>
     <string name="rota_canal_nome">Gravação de rota</string>
     <string name="rota_nao_encontrada">Rota não encontrada.</string>

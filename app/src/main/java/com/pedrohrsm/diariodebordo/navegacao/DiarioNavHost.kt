@@ -16,8 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavArgumentBuilder
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -30,6 +32,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.pedrohrsm.diariodebordo.R
+import com.pedrohrsm.diariodebordo.core.designsystem.theme.LocalEscalaDiario
 import com.pedrohrsm.diariodebordo.diario.ui.DiarioRoute
 import com.pedrohrsm.diariodebordo.diario.ui.RegistroFormRoute
 import com.pedrohrsm.diariodebordo.diario.ui.RegistroFormViewModel
@@ -122,16 +125,7 @@ fun DiarioNavHost(
         contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (Destino.entries.any { it.rota == rotaAtual }) {
-                NavigationBar {
-                    Destino.entries.forEach { destino ->
-                        NavigationBarItem(
-                            selected = destino.rota == rotaAtual,
-                            onClick = { navController.irParaAba(destino) },
-                            icon = { Icon(painterResource(destino.icone), contentDescription = null) },
-                            label = { Text(stringResource(destino.rotulo)) },
-                        )
-                    }
-                }
+                BarraDestinos(rotaAtual, onEscolher = { navController.irParaAba(it) })
             }
         },
     ) { padding ->
@@ -147,6 +141,37 @@ fun DiarioNavHost(
         }
     }
 }
+
+/**
+ * Barra inferior com os destinos da lista única. Com 4 destinos em 360 dp, cada item tem 90 dp: com a fonte
+ * grande (200%, ou 140% no modo oficina) o rótulo quebrava no meio ("Garag/em"), e cortado ("Gara…") ainda
+ * não cabia. Com a fonte grande a barra fica só com os ícones, nomeados para o TalkBack; o título da tela
+ * aberta já diz o destino. Com a fonte normal, o rótulo fica numa linha só.
+ */
+@Composable
+fun BarraDestinos(rotaAtual: String?, onEscolher: (Destino) -> Unit) {
+    val fonteGrande = LocalDensity.current.fontScale * LocalEscalaDiario.current.fator >= FONTE_GRANDE
+    NavigationBar {
+        Destino.entries.forEach { destino ->
+            val nome = stringResource(destino.rotulo)
+            NavigationBarItem(
+                selected = destino.rota == rotaAtual,
+                onClick = { onEscolher(destino) },
+                icon = {
+                    Icon(painterResource(destino.icone), contentDescription = nome.takeIf { fonteGrande })
+                },
+                label = if (fonteGrande) {
+                    null
+                } else {
+                    { Text(nome, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis) }
+                },
+            )
+        }
+    }
+}
+
+/** Fonte do sistema × escala do modo oficina a partir da qual o rótulo de todos os destinos não cabe. */
+private const val FONTE_GRANDE = 1.8f
 
 fun NavController.irParaAba(destino: Destino) {
     navigate(destino.rota) {

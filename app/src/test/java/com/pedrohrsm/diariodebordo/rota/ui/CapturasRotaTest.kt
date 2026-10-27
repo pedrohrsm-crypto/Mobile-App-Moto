@@ -44,6 +44,7 @@ import org.robolectric.annotation.GraphicsMode
 class CapturasRotaTest(private val caso: Caso) {
     enum class Tela(val pasta: String) {
         LOCAL_REGISTRO("local-registro"),
+        ROTAS_OCIOSA("rotas-ociosa"),
         ROTAS_GRAVANDO("rotas-gravando"),
         ROTAS_INTERROMPIDA("rotas-interrompida"),
         ROTA_DETALHE("rota-detalhe"),
@@ -83,13 +84,16 @@ class CapturasRotaTest(private val caso: Caso) {
                     CampoLocal(RegistroFormEstado(), AcoesRegistroForm())
                 }
             }
+            Tela.ROTAS_OCIOSA -> RotasScreen(RotasEstado.Pronto(estradeira, gravacao = null, rotas = emptyList()))
             Tela.ROTAS_GRAVANDO -> RotasScreen(
                 RotasEstado.Pronto(estradeira, Gravacao(emGravacao, pontos = 1_284, capturando = true), salvas),
             )
             Tela.ROTAS_INTERROMPIDA -> RotasScreen(
                 RotasEstado.Pronto(estradeira, Gravacao(emGravacao, pontos = 312, capturando = false), salvas),
             )
-            Tela.ROTA_DETALHE -> RotaDetalheTela(RotaDetalheEstado.Pronto(salvas.first()))
+            Tela.ROTA_DETALHE -> RotaDetalheTela(
+                RotaDetalheEstado.Pronto(salvas.first(), Polilinha.decodificar(tracado)),
+            )
         }
     }
 

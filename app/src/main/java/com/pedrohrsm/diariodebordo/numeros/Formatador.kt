@@ -16,6 +16,9 @@ import kotlin.math.abs
  * distância de rota em metros, duração em segundos, instantes em milissegundos UTC.
  */
 object Formatador {
+    /** Espaço não separável entre número e unidade. */
+    const val NBSP = '\u00A0'
+
     private val simbolos = DecimalFormatSymbols(Locale.forLanguageTag("pt-BR"))
     private val inteiro = DecimalFormat("#,##0", simbolos)
     private val duasCasas = DecimalFormat("#,##0.00", simbolos)
@@ -32,15 +35,22 @@ object Formatador {
 
     fun litros(mililitros: Long): String = "${duasCasas.format(mililitros / 1000.0)} L"
 
-    /** Distância de rota: metros abaixo de 1 km, km com uma casa a partir dele. */
-    fun distancia(metros: Long): String =
-        if (metros < 1000) "${inteiro.format(metros)} m" else "${umaCasa.format(metros / 1000.0)} km"
+    /** Contagem simples com ponto de milhar: "1.284". */
+    fun quantidade(n: Long): String = inteiro.format(n)
 
-    /** Duração de rota: "45 min" ou "1 h 05 min". */
+    /**
+     * Distância de rota: metros abaixo de 1 km, km com uma casa a partir dele. Número e unidade unidos por espaço
+     * não separável ([NBSP]): com fonte grande a unidade não desce sozinha para a linha de baixo.
+     */
+    fun distancia(metros: Long): String =
+        if (metros < 1000) "${inteiro.format(metros)}${NBSP}m" else "${umaCasa.format(metros / 1000.0)}${NBSP}km"
+
+    /** Duração de rota: "45 min" ou "1 h 05 min", com espaço não separável entre número e unidade. */
     fun duracao(segundos: Long): String {
         val h = segundos / 3600
         val min = (segundos % 3600) / 60
-        return if (h > 0) String.format(Locale.ROOT, "%d h %02d min", h, min) else "$min min"
+        val minutos = "$min${NBSP}min"
+        return if (h > 0) String.format(Locale.ROOT, "%d${NBSP}h %02d${NBSP}min", h, min) else minutos
     }
 
     fun data(millis: Long, fuso: ZoneId): String = data.format(Instant.ofEpochMilli(millis).atZone(fuso))

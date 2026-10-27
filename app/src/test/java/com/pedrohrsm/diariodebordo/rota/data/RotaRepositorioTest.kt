@@ -56,7 +56,7 @@ class RotaRepositorioTest {
         repositorio.adicionarPonto(rota.id, ponto(300, -23.51, precisao = 200f))
         repositorio.adicionarPonto(rota.id, ponto(600, -23.52))
 
-        val salva = repositorio.finalizar(rota.id)
+        val salva = repositorio.finalizar(rota.id, "Rolê")
 
         assertTrue(pontoDao.linhas.value.isEmpty())
         assertFalse(salva.emGravacao)
@@ -74,7 +74,7 @@ class RotaRepositorioTest {
     @Test
     fun finalizarSemPontosSalvaRotaVazia() = runTest {
         val rota = repositorio.iniciar("moto")
-        val salva = repositorio.finalizar(rota.id)
+        val salva = repositorio.finalizar(rota.id, "Rolê")
         assertEquals(0L, salva.distanciaM)
         assertEquals("", salva.polilinha)
     }
@@ -82,8 +82,8 @@ class RotaRepositorioTest {
     @Test(expected = IllegalStateException::class)
     fun finalizarDuasVezesFalha() = runTest {
         val rota = repositorio.iniciar("moto")
-        repositorio.finalizar(rota.id)
-        repositorio.finalizar(rota.id)
+        repositorio.finalizar(rota.id, "Rolê")
+        repositorio.finalizar(rota.id, "Rolê")
     }
 
     @Test
@@ -99,5 +99,27 @@ class RotaRepositorioTest {
     @Test(expected = IllegalStateException::class)
     fun excluirRotaInexistenteFalha() = runTest {
         repositorio.excluir("nao-existe")
+    }
+
+    /** Decisão #17: se o DELETE apagar menos pontos brutos do que existiam, salvar falha e nada fica salvo pela metade. */
+    @Test
+    fun finalizarFalhaSeSobrarPontoBruto() = runTest {
+        val rota = repositorio.iniciar("moto")
+        repositorio.adicionarPonto(rota.id, ponto(0, -23.50))
+        repositorio.adicionarPonto(rota.id, ponto(60, -23.51))
+        pontoDao.deixarParaTras = 1
+        val falha = runCatching { repositorio.finalizar(rota.id, "Rolê") }.exceptionOrNull()
+        assertTrue(falha.toString(), falha is IllegalStateException)
+        assertTrue(registroDao.linhas.value.isEmpty())
+    }
+
+    @Test
+    fun descartarFalhaSeSobrarPontoBruto() = runTest {
+        val rota = repositorio.iniciar("moto")
+        repositorio.adicionarPonto(rota.id, ponto(0, -23.50))
+        repositorio.adicionarPonto(rota.id, ponto(60, -23.51))
+        pontoDao.deixarParaTras = 1
+        val falha = runCatching { repositorio.descartar(rota.id) }.exceptionOrNull()
+        assertTrue(falha.toString(), falha is IllegalStateException)
     }
 }

@@ -1,6 +1,6 @@
 package com.pedrohrsm.diariodebordo.rota.ui
 
-import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,6 +26,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.pedrohrsm.diariodebordo.R
@@ -38,7 +39,6 @@ import com.pedrohrsm.diariodebordo.core.ui.EstadoErro
 import com.pedrohrsm.diariodebordo.core.ui.EstadoSemMoto
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.ui.BotaoSecundario
-import com.pedrohrsm.diariodebordo.localizacao.PermissoesLocalizacao
 import com.pedrohrsm.diariodebordo.numeros.Formatador
 import com.pedrohrsm.diariodebordo.rota.data.Rota
 import com.pedrohrsm.diariodebordo.rota.servico.GravacaoRotaService
@@ -62,12 +62,17 @@ fun RotasRoute(
     val falha by viewModel.falha.collectAsStateWithLifecycle()
     val contexto = LocalContext.current
     val motoId = (estado as? RotasEstado.Pronto)?.moto?.id
+    val tituloDoRole = stringResource(R.string.rota_titulo_role)
+    val concedida = { permissao: String ->
+        ContextCompat.checkSelfPermission(contexto, permissao) == PackageManager.PERMISSION_GRANTED
+    }
     // Permissões pedidas só no toque em "Gravar rota": localização e, no Android 13+, a notificação fixa.
     val pedir = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { resposta ->
-        val local = PermissoesLocalizacao.PEDIDO.any { resposta[it] == true }
-        when {
-            local && motoId != null -> GravacaoRotaService.iniciar(contexto, motoId)
-            !local -> viewModel.localNegado()
+        val agora = { permissao: String -> resposta[permissao] ?: concedida(permissao) }
+        when (PermissoesGravacao.decidir(agora, Build.VERSION.SDK_INT)) {
+            DecisaoGravacao.GRAVAR -> motoId?.let { GravacaoRotaService.iniciar(contexto, it) }
+            DecisaoGravacao.SEM_LOCALIZACAO -> viewModel.localNegado()
+            DecisaoGravacao.SEM_NOTIFICACAO -> viewModel.notificacaoNegada()
         }
     }
     RotasScreen(
@@ -75,19 +80,15 @@ fun RotasRoute(
         acoes = AcoesRotas(
             onGravar = {
                 if (motoId == null) return@AcoesRotas
-                if (PermissoesLocalizacao.temAlguma(contexto)) {
+                val faltam = PermissoesGravacao.queFaltam(concedida, Build.VERSION.SDK_INT)
+                if (faltam.isEmpty()) {
                     GravacaoRotaService.iniciar(contexto, motoId)
                 } else {
-                    val notificacao = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        listOf(Manifest.permission.POST_NOTIFICATIONS)
-                    } else {
-                        emptyList()
-                    }
-                    pedir.launch((PermissoesLocalizacao.PEDIDO.toList() + notificacao).toTypedArray())
+                    pedir.launch(faltam.toTypedArray())
                 }
             },
             onParar = { GravacaoRotaService.parar(contexto) },
-            onSalvarInterrompida = viewModel::salvarInterrompida,
+            onSalvarInterrompida = { viewModel.salvarInterrompida(it, tituloDoRole) },
             onDescartar = viewModel::descartar,
             onAbrirRota = onAbrirRota,
             onCadastrarMoto = onCadastrarMoto,
@@ -105,6 +106,7 @@ fun RotasRoute(
 @Composable
 private fun textoDaFalha(falha: FalhaRota): String = when (falha) {
     FalhaRota.SemPermissao -> stringResource(R.string.rota_sem_permissao)
+    FalhaRota.SemNotificacao -> stringResource(R.string.rota_sem_notificacao)
     is FalhaRota.Gps -> stringResource(R.string.rota_falha_gps, falha.detalhe.orEmpty())
     is FalhaRota.AoSalvar -> stringResource(R.string.erro_ao_salvar, falha.detalhe.orEmpty())
 }
@@ -149,7 +151,7 @@ private fun PainelGravacao(gravacao: Gravacao?, acoes: AcoesRotas) {
                         R.plurals.rota_gravando_desde,
                         gravacao.pontos,
                         Formatador.dataHora(gravacao.rota.iniciadaEm, Formatador.fuso(gravacao.rota.fusoHorario)),
-                        gravacao.pontos,
+                        Formatador.quantidade(gravacao.pontos.toLong()),
                     ),
                     style = MaterialTheme.typography.titleMedium,
                 )
@@ -157,7 +159,11 @@ private fun PainelGravacao(gravacao: Gravacao?, acoes: AcoesRotas) {
             }
             else -> {
                 Text(
-                    pluralStringResource(R.plurals.rota_interrompida, gravacao.pontos, gravacao.pontos),
+                    pluralStringResource(
+                        R.plurals.rota_interrompida,
+                        gravacao.pontos,
+                        Formatador.quantidade(gravacao.pontos.toLong()),
+                    ),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 BotaoPrincipal(stringResource(R.string.rota_salvar), { acoes.onSalvarInterrompida(gravacao.rota.id) })

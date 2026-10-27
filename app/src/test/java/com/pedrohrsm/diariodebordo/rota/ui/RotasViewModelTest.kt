@@ -106,7 +106,7 @@ class RotasViewModelTest {
         val gravacao = (vm.estado.value as RotasEstado.Pronto).gravacao
         assertEquals(Gravacao(rota, pontos = 2, capturando = false), gravacao)
 
-        vm.salvarInterrompida(rota.id)
+        vm.salvarInterrompida(rota.id, "Rolê")
         val pronto = vm.estado.value as RotasEstado.Pronto
         assertEquals(null, pronto.gravacao)
         assertEquals(listOf(rota.id), pronto.rotas.map { it.id })
@@ -135,6 +135,16 @@ class RotasViewModelTest {
         assertTrue(vm.estado.value is RotasEstado.Pronto)
         vm.limparFalha()
         assertEquals(null, vm.falha.value)
+    }
+
+    @Test
+    fun negarANotificacaoAvisaENaoCriaRota() = runTest {
+        motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        val vm = novo()
+        observar(vm)
+        vm.notificacaoNegada()
+        assertEquals(FalhaRota.SemNotificacao, vm.falha.value)
+        assertTrue(rotaDao.linhas.value.isEmpty())
     }
 
     @Test

@@ -64,9 +64,10 @@ class RotaRepositorio @Inject constructor(
 
     /**
      * Encerra a gravação: calcula distância e duração no aparelho, guarda só o traçado simplificado,
-     * apaga os pontos brutos e cria o registro do rolê no diário, tudo numa transação.
+     * apaga os pontos brutos (decisão #17, conferindo as linhas) e cria o registro do rolê no diário com
+     * [tituloDoRole] (texto de strings.xml, passado por quem chama), tudo numa transação.
      */
-    suspend fun finalizar(rotaId: String): Rota = transacao.executar {
+    suspend fun finalizar(rotaId: String, tituloDoRole: String): Rota = transacao.executar {
         val rota = checkNotNull(rotas.buscar(rotaId)) { "Rota $rotaId não existe" }
         check(rota.emGravacao) { "Rota $rotaId já foi salva" }
         val brutos = pontos.daRota(rotaId).map { Ponto(it.latitude, it.longitude, it.instante, it.precisaoM) }
@@ -82,12 +83,13 @@ class RotaRepositorio @Inject constructor(
             alteradoEm = agora,
         )
         check(rotas.atualizar(salva) == 1) { "Rota $rotaId não foi salva" }
-        pontos.apagarDaRota(rotaId)
+        val apagados = pontos.apagarDaRota(rotaId)
+        check(apagados == brutos.size) { "Rota $rotaId: ${brutos.size} pontos brutos, $apagados apagados" }
         registros.salvar(
             Registro(
                 motoId = rota.motoId,
                 tipo = TipoRegistro.ROLE,
-                titulo = TITULO_ROLE,
+                titulo = tituloDoRole,
                 dataEm = rota.iniciadaEm,
                 rotaId = rotaId,
             ),
@@ -96,18 +98,16 @@ class RotaRepositorio @Inject constructor(
         salva
     }
 
-    /** Joga fora uma gravação sem salvar. */
+    /** Joga fora uma gravação sem salvar: os pontos brutos saem todos, conferidos pela contagem lida antes. */
     suspend fun descartar(rotaId: String) = transacao.executar {
-        pontos.apagarDaRota(rotaId)
+        val antes = pontos.quantidade(rotaId)
+        val apagados = pontos.apagarDaRota(rotaId)
+        check(apagados == antes) { "Rota $rotaId: $antes pontos brutos, $apagados apagados" }
         check(rotas.marcarExcluido(rotaId, relogio.millis()) == 1) { "Rota $rotaId não foi descartada" }
     }
 
+    /** Exclusão lógica; o traçado sai junto (risco #23): a rota excluída não guarda mais o trajeto. */
     suspend fun excluir(rotaId: String) {
         check(rotas.marcarExcluido(rotaId, relogio.millis()) == 1) { "Rota $rotaId não foi excluída" }
-    }
-
-    companion object {
-        /** Título inicial do registro criado pela rota; a pessoa pode editar no diário. */
-        const val TITULO_ROLE = "Rolê"
     }
 }

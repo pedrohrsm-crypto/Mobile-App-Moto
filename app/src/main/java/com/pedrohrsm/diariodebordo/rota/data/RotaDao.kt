@@ -32,7 +32,11 @@ interface RotaDao {
     @Update
     suspend fun atualizar(item: Rota): Int
 
-    @Query("UPDATE rotas SET excluidoEm = :quando, alteradoEm = :quando WHERE id = :id AND excluidoEm IS NULL")
+    /** Exclusão lógica que também apaga o traçado (risco #23): a linha fica, o trajeto não. */
+    @Query(
+        "UPDATE rotas SET excluidoEm = :quando, alteradoEm = :quando, polilinha = '' " +
+            "WHERE id = :id AND excluidoEm IS NULL",
+    )
     suspend fun marcarExcluido(id: String, quando: Long): Int
 }
 
@@ -43,6 +47,9 @@ interface PontoDeRotaDao {
 
     @Query("SELECT COUNT(*) FROM pontos_rota WHERE rotaId = :rotaId")
     fun observarQuantidade(rotaId: String): Flow<Int>
+
+    @Query("SELECT COUNT(*) FROM pontos_rota WHERE rotaId = :rotaId")
+    suspend fun quantidade(rotaId: String): Int
 
     @Insert
     suspend fun inserir(item: PontoDeRota)

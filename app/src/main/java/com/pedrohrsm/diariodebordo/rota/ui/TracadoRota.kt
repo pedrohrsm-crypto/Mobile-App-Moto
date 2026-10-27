@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
@@ -16,18 +15,19 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.pedrohrsm.diariodebordo.rota.dominio.Polilinha
+import com.pedrohrsm.diariodebordo.localizacao.Ponto
 import com.pedrohrsm.diariodebordo.rota.dominio.projetar
 
 /**
  * Traçado da rota sobre fundo neutro, sem mapa (plano de ação, 1.7): funciona sem internet.
- * Início marcado com um círculo cheio e fim com um vazado.
+ * Início marcado com um círculo cheio e fim com um vazado. Recebe os pontos já decodificados: uma polilinha
+ * corrompida vira erro no [RotaDetalheViewModel], nunca um quadro vazio. Traço em `primary` e moldura em
+ * `outline`, os dois com 3:1 sobre o fundo (ContrasteTemaTest).
  */
 @Composable
-fun TracadoRota(polilinha: String, descricao: String, modifier: Modifier = Modifier) {
-    val pontos = remember(polilinha) { runCatching { Polilinha.decodificar(polilinha) }.getOrDefault(emptyList()) }
+fun TracadoRota(pontos: List<Ponto>, descricao: String, modifier: Modifier = Modifier) {
     val cor = MaterialTheme.colorScheme.primary
-    val borda = MaterialTheme.colorScheme.outlineVariant
+    val borda = MaterialTheme.colorScheme.outline
     Canvas(
         modifier
             .fillMaxWidth()

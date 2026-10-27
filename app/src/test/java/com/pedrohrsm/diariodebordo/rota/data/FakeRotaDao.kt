@@ -43,13 +43,19 @@ class FakeRotaDao : RotaDao {
 
     override suspend fun marcarExcluido(id: String, quando: Long): Int {
         val alvo = linhas.value.find { it.id == id && it.excluidoEm == null } ?: return 0
-        linhas.value = linhas.value.map { if (it === alvo) it.copy(excluidoEm = quando, alteradoEm = quando) else it }
+        // Igual à consulta do Room: a exclusão lógica também apaga o traçado (risco #23).
+        linhas.value = linhas.value.map {
+            if (it === alvo) it.copy(excluidoEm = quando, alteradoEm = quando, polilinha = "") else it
+        }
         return 1
     }
 }
 
 class FakePontoDeRotaDao : PontoDeRotaDao {
     val linhas = MutableStateFlow<List<PontoDeRota>>(emptyList())
+
+    /** Simula um DELETE que apaga menos do que devia: o apagar deixa este tanto de linhas para trás. */
+    var deixarParaTras = 0
 
     override suspend fun daRota(rotaId: String): List<PontoDeRota> =
         linhas.value.filter { it.rotaId == rotaId }.sortedBy { it.instante }
@@ -58,13 +64,17 @@ class FakePontoDeRotaDao : PontoDeRotaDao {
         todas.count { it.rotaId == rotaId }
     }
 
+    override suspend fun quantidade(rotaId: String): Int = linhas.value.count { it.rotaId == rotaId }
+
     override suspend fun inserir(item: PontoDeRota) {
         linhas.value = linhas.value + item
     }
 
     override suspend fun apagarDaRota(rotaId: String): Int {
         val antes = linhas.value.size
-        linhas.value = linhas.value.filter { it.rotaId != rotaId }
+        val daRota = linhas.value.filter { it.rotaId == rotaId }
+        val ficam = daRota.take(deixarParaTras).toSet()
+        linhas.value = linhas.value.filter { it.rotaId != rotaId || it in ficam }
         return antes - linhas.value.size
     }
 }

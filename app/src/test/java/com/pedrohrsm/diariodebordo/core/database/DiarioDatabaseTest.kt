@@ -148,6 +148,23 @@ class DiarioDatabaseTest {
         assertEquals(b, rotas.emGravacao())
     }
 
+    /** Risco #23 na consulta de verdade: excluir a rota apaga o traçado e mantém a linha excluída. */
+    @Test
+    fun excluirRotaApagaOTracado() = runTest {
+        val rotas = banco.rotaDao()
+        val rota = Rota(motoId = "m", iniciadaEm = 1, polilinha = "_p~iF~ps|U", emGravacao = false)
+        rotas.inserir(rota)
+        assertEquals(1, rotas.marcarExcluido(rota.id, quando = 5))
+        val linha = banco.openHelper.writableDatabase
+            .query("SELECT polilinha, excluidoEm FROM rotas WHERE id = ?", arrayOf(rota.id))
+            .use {
+                assertTrue(it.moveToFirst())
+                it.getString(0) to it.getLong(1)
+            }
+        assertEquals("" to 5L, linha)
+        assertEquals(0, rotas.marcarExcluido(rota.id, quando = 6))
+    }
+
     @Test
     fun planoDaMotoMostraSoOsAbertosEGuardaAUrgenciaAvisada() = runTest {
         val dao = banco.itemDoPlanoDao()
