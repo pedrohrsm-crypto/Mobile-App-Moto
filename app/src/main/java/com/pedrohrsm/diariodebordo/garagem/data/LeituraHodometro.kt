@@ -4,11 +4,13 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
 /**
  * Cada atualização do hodômetro vira uma linha: o km atual da moto é a maior leitura ativa.
  * Campos de controle conforme docs/offline-first.md, preenchidos pelo [HodometroRepositorio].
  */
+@Serializable
 @Entity(
     tableName = "leituras_hodometro",
     indices = [Index(value = ["motoId", "km"])],

@@ -35,6 +35,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.pedrohrsm.diariodebordo.R
+import com.pedrohrsm.diariodebordo.ajustes.AjustesRoute
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.LocalEscalaDiario
 import com.pedrohrsm.diariodebordo.diario.ui.DiarioRoute
 import com.pedrohrsm.diariodebordo.diario.ui.RegistroFormRoute
@@ -46,6 +47,7 @@ import com.pedrohrsm.diariodebordo.garagem.ui.MotoDetalheViewModel
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoFormRoute
 import com.pedrohrsm.diariodebordo.plano.lembretes.NotificadorLembretes
 import com.pedrohrsm.diariodebordo.plano.ui.AcoesPlano
+import com.pedrohrsm.diariodebordo.plano.ui.AtalhoTrocaDeOleoRoute
 import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormRoute
 import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormViewModel
 import com.pedrohrsm.diariodebordo.plano.ui.PlanoRoute
@@ -70,6 +72,7 @@ object Rotas {
     const val MOTO_NOVA = "motos/nova"
     const val MOTO = "moto/{${MotoDetalheViewModel.ARG_MOTO_ID}}"
     const val MOTO_EDITAR = "moto/{${MotoDetalheViewModel.ARG_MOTO_ID}}/editar"
+    const val AJUSTES = "ajustes"
 
     const val DIARIO = "diario"
     const val REGISTRO_NOVO = "registro/novo?${RegistroFormViewModel.ARG_TIPO}={${RegistroFormViewModel.ARG_TIPO}}"
@@ -207,8 +210,10 @@ private fun NavGraphBuilder.grafoGaragem(nav: NavController) {
         GaragemRoute(
             onAbrirMoto = { nav.navigate(Rotas.moto(it)) },
             onNovaMoto = { nav.navigate(Rotas.MOTO_NOVA) },
+            onAjustes = { nav.navigate(Rotas.AJUSTES) },
         )
     }
+    composable(Rotas.AJUSTES) { AjustesRoute() }
     composable(Rotas.MOTO_NOVA) {
         MotoFormRoute(onSalvo = { id -> nav.navigate(Rotas.moto(id)) { popUpTo(Rotas.GARAGEM) } })
     }
@@ -221,6 +226,7 @@ private fun NavGraphBuilder.grafoGaragem(nav: NavController) {
             acoes = AcoesMoto(
                 onEditar = { nav.navigate(Rotas.motoEditar(motoId)) },
                 onDiario = { nav.irParaAba(Destino.DIARIO) },
+                atalhos = { AtalhoTrocaDeOleoRoute() },
             ),
         )
     }

@@ -154,4 +154,36 @@
     <string name="lembrete_texto">%1$s · toque para ver o plano</string>
     <string name="lembrete_permissao">Ative as notificações para receber os lembretes de manutenção.</string>
     <string name="lembrete_ativar">Ativar</string>
+    <!-- Ajustes (1.8) e premium (1.10) -->
+    <string name="ajustes_titulo">Ajustes</string>
+    <string name="premium_titulo">Premium</string>
+    <string name="premium_motos_ilimitadas">Motos sem limite</string>
+    <string name="premium_backup_nuvem">Backup automático na nuvem</string>
+    <string name="premium_relatorio_pdf">Relatório em PDF</string>
+    <string name="premium_estatisticas">Estatísticas de gastos e consumo</string>
+    <!-- Atalho da troca de óleo no modo oficina (1.8) -->
+    <string name="oleo_atalho">Registrar troca de óleo</string>
+    <string name="oleo_atalho_confirmar">Registrar a troca de óleo agora, com o km atual da moto? Ela entra no diário e o plano recomeça a conta.</string>
+    <string name="oleo_atalho_sim">Registrar</string>
+    <string name="oleo_atalho_registrado">Troca de óleo registrada.</string>
+    <!-- Backup: exportar e importar (1.9) -->
+    <string name="backup_titulo">Backup</string>
+    <string name="backup_explicacao">Um arquivo .zip com as motos, o diário, o plano e as fotos; as rotas só vão se você marcar. Guarde no Drive, no computador ou mande para você mesmo: é o que traz tudo de volta se você perder o celular.</string>
+    <string name="backup_exportar">Exportar backup</string>
+    <string name="backup_importar">Importar backup</string>
+    <string name="backup_importar_explicacao">Importar junta o arquivo com o que já está no aparelho: nada é apagado e, se um item estiver nos dois, fica a versão alterada por último.</string>
+    <string name="backup_aviso_titulo">O arquivo tem dados pessoais</string>
+    <string name="backup_aviso_texto">Leva o diário, as fotos e os locais dos registros: guarde num lugar só seu. Uma cópia entra no backup do Android, na sua conta Google.</string>
+    <string name="backup_incluir_rotas">Incluir as rotas (mostram onde você anda e mora)</string>
+    <string name="backup_escolher_local">Escolher onde salvar</string>
+    <string name="backup_trabalhando">Trabalhando no backup…</string>
+    <string name="backup_exportado">Backup salvo. Motos: %1$d · Registros: %2$d · Fotos: %3$d · Rotas: %4$d</string>
+    <string name="backup_fotos_faltando">Fotos não encontradas no aparelho, que ficaram de fora: %1$d</string>
+    <string name="backup_importado">Importação concluída. Itens novos: %1$d · Atualizados: %2$d · Fotos: %3$d</string>
+    <string name="backup_escolha_titulo">Qual moto fica?</string>
+    <string name="backup_escolha_texto">O plano grátis guarda 1 moto. Toque na que fica: a outra sai da garagem, e, se ela estiver só no arquivo, nada dela é importado.</string>
+    <string name="backup_arquivo_invalido">Este arquivo não é um backup do Diário de Bordo ou está corrompido. Nada foi alterado.</string>
+    <string name="backup_versao_nova">Este backup foi feito numa versão mais nova do app. Atualize o app e tente de novo. Nada foi alterado.</string>
+    <string name="backup_sem_espaco">Não há espaço no aparelho para as fotos deste backup. Libere espaço e tente de novo. Nada foi alterado.</string>
+    <string name="backup_falha">Não foi possível concluir. Nada foi alterado. %1$s</string>
 </resources>

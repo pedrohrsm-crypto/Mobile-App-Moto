@@ -4,8 +4,10 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
 /** Foto de um registro. O arquivo fica no armazenamento interno do app, em fotos/[arquivo]. */
+@Serializable
 @Entity(tableName = "fotos_registro", indices = [Index("registroId")])
 data class FotoRegistro(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),

@@ -48,6 +48,12 @@ class ContrasteTemaTest {
         borda("outline/background", { outline }, { background }),
         borda("outline/surface", { outline }, { surface }),
         borda("primary/background", { primary }, { background }), // traço da rota (TracadoRota), PR #51
+        // Diálogos (AlertDialog), sobre surfaceContainerHigh: título (onSurface), texto e borda do Checkbox
+        // desmarcado (onSurfaceVariant, mínimo 4,87:1) e botões (primary; no Oficina, 4,53:1). Aviso de dados
+        // pessoais e escolha da moto do backup, confirmação da troca de óleo (#45).
+        texto("onSurface/surfaceContainerHigh", { onSurface }, { surfaceContainerHigh }),
+        texto("primary/surfaceContainerHigh", { primary }, { surfaceContainerHigh }),
+        texto("onSurfaceVariant/surfaceContainerHigh", { onSurfaceVariant }, { surfaceContainerHigh }),
     )
 
     private fun contraste(a: Color, b: Color): Double = ContrasteWcag.contraste(a, b)

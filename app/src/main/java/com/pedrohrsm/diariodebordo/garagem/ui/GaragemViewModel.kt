@@ -2,6 +2,7 @@ package com.pedrohrsm.diariodebordo.garagem.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pedrohrsm.diariodebordo.core.premium.Premium
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.garagem.dominio.podeCadastrarMoto
@@ -14,15 +15,18 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
-class GaragemViewModel @Inject constructor(repositorio: MotoRepositorio, hodometro: HodometroRepositorio) :
-    ViewModel() {
+class GaragemViewModel @Inject constructor(
+    repositorio: MotoRepositorio,
+    hodometro: HodometroRepositorio,
+    premium: Premium,
+) : ViewModel() {
 
     val estado: StateFlow<GaragemEstado> =
         combine(repositorio.observarAtivos(), hodometro.observarKmAtuais()) { motos, kms ->
             GaragemEstado.Pronto(
                 motos = motos,
                 kmPorMoto = kms.associate { it.motoId to it.km },
-                podeAdicionar = podeCadastrarMoto(motos.size),
+                podeAdicionar = podeCadastrarMoto(motos.size, premium.limiteDeMotos),
             ) as GaragemEstado
         }
             .catch { emit(GaragemEstado.Erro(it.message)) }

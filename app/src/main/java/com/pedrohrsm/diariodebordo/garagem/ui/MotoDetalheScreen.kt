@@ -36,8 +36,15 @@ import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.numeros.Formatador
 
-/** Atalhos da moto (hub): cada funcionalidade liga o seu aqui. */
-data class AcoesMoto(val onEditar: () -> Unit = {}, val onDiario: () -> Unit = {})
+/**
+ * Atalhos da moto (hub): cada funcionalidade liga o seu aqui. [atalhos] é desenhado no cabeçalho, abaixo
+ * dos botões (o plano põe ali o atalho da troca de óleo do modo oficina).
+ */
+data class AcoesMoto(
+    val onEditar: () -> Unit = {},
+    val onDiario: () -> Unit = {},
+    val atalhos: @Composable () -> Unit = {},
+)
 
 @Composable
 fun MotoDetalheRoute(acoes: AcoesMoto, viewModel: MotoDetalheViewModel = hiltViewModel()) {
@@ -107,6 +114,7 @@ private fun Cabecalho(estado: MotoDetalheEstado.Pronto, acoes: AcoesMoto, onAtua
         )
         BotaoPrincipal(stringResource(R.string.hodometro_atualizar), onAtualizarHodometro)
         BotaoSecundario(stringResource(R.string.diario_titulo), acoes.onDiario)
+        acoes.atalhos()
     }
 }
 

@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
 enum class TipoRegistro { MANUTENCAO, ABASTECIMENTO, OCORRENCIA, ROLE, NOTA }
 
@@ -17,6 +18,7 @@ enum class TipoOcorrencia { QUEDA, BARULHO, VAZAMENTO, OUTRA }
  * O índice (motoId, dataEm) atende a lista paginada do diário; o de [rotaId], a relação com a rota (PLANEJAMENTO §4).
  * O local ([latitude], [longitude]) é opcional e só existe se a pessoa tocou em "usar local atual" (1.6).
  */
+@Serializable
 @Entity(
     tableName = "registros",
     indices = [Index(value = ["motoId", "dataEm"]), Index("rotaId")],

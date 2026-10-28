@@ -6,6 +6,7 @@ import androidx.room.PrimaryKey
 import com.pedrohrsm.diariodebordo.plano.dominio.Intervalo
 import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
 import java.util.UUID
+import kotlinx.serialization.Serializable
 
 enum class OrigemItem { PLANO_BASE, USUARIO, OCORRENCIA }
 
@@ -14,6 +15,7 @@ enum class OrigemItem { PLANO_BASE, USUARIO, OCORRENCIA }
  * uma ocorrência (sem intervalo; some quando resolvida). Campos de controle conforme
  * docs/offline-first.md, preenchidos pelo [PlanoRepositorio].
  */
+@Serializable
 @Entity(
     tableName = "itens_plano",
     indices = [Index("motoId"), Index("registroOrigemId")],

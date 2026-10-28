@@ -1,6 +1,7 @@
 package com.pedrohrsm.diariodebordo.garagem.ui
 
 import com.pedrohrsm.diariodebordo.core.database.TransacaoFalsa
+import com.pedrohrsm.diariodebordo.core.premium.Premium
 import com.pedrohrsm.diariodebordo.garagem.data.FakeLeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.FakeMotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
@@ -40,7 +41,7 @@ class GaragemViewModelTest {
 
     @Test
     fun comecaCarregandoEMostraAsMotosDoRepositorio() = runTest {
-        val viewModel = GaragemViewModel(repositorio, hodometro)
+        val viewModel = GaragemViewModel(repositorio, hodometro, Premium(habilitado = false))
         assertEquals(GaragemEstado.Carregando, viewModel.estado.value)
 
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.estado.collect {} }
@@ -59,7 +60,7 @@ class GaragemViewModelTest {
         val quebrado = object : MotoDao by FakeMotoDao() {
             override fun observarAtivos(): Flow<List<Moto>> = flow { throw IllegalStateException("disco cheio") }
         }
-        val viewModel = GaragemViewModel(MotoRepositorio(quebrado, relogio), hodometro)
+        val viewModel = GaragemViewModel(MotoRepositorio(quebrado, relogio), hodometro, Premium(habilitado = false))
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.estado.collect {} }
         assertEquals(GaragemEstado.Erro("disco cheio"), viewModel.estado.value)
     }
