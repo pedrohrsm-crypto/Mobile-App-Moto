@@ -2,8 +2,8 @@ package com.pedrohrsm.diariodebordo.core.designsystem.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
-import kotlin.math.pow
 import com.pedrohrsm.diariodebordo.navegacao.corRotuloSelecionadoBarra
+import kotlin.math.pow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
