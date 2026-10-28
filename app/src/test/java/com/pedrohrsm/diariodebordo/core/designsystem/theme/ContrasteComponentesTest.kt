@@ -51,6 +51,16 @@ private typealias Papel = (ColorScheme) -> Color
  *  - cor solta (container do diálogo, borda do chip...) esperada em [SOLTAS_ESPERADAS] sem par;
  *  - componente do Material usado no app, importado ou qualificado, sem nenhum par.
  * Estados desabilitados ficam de fora: a WCAG os isenta.
+ *
+ * Fronteira conhecida (decidida com o PM em 28-Out-2026): a guarda de "cor só pela função do app" é estática, feita
+ * por regex sobre o texto das fontes. Aceita só `colors = coresBarraDestinos()`, `colors = coresSwitchDiario()` e
+ * `border = bordaChipDiario(...)`, seguidos de `,` ou `)`, e reprova `color =`, `tint =` e `.copy(` dentro das
+ * chamadas de `NavigationBarItem`, `Switch` e `FilterChip`. O que ainda escapa a uma guarda por regex (cor trazida por
+ * variável, por outra função, por um wrapper do componente ou montada fora da chamada) não é pego aqui; a segunda rede
+ * são as capturas (`CapturasBarraTest`, `CapturasChipTest` e as telas de `fase1/`), conferidas por
+ * `verifyRoborazziDebug`. Fora também: `Text(color = ...)` e `Icon(tint = ...)` fora desses três componentes, como o
+ * `PlanoScreen.kt:170` (`Text(color = cor)` no `overlineContent` do `ListItem`), cobertos pelos pares do
+ * [ContrasteTemaTest] (`error/surface`, `primary/surface`) e pelo `ListItem` lido dos Defaults.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [36])
@@ -149,8 +159,13 @@ class ContrasteComponentesTest {
         val campos = camposDeCor(coletado)
         val descobertos = campos.filter { it !in usadas && ISENCOES.none { isencao -> isencao.vale(it) } }
         assertTrue("campo de cor em uso sem par nem isenção nomeada: $descobertos", descobertos.isEmpty())
-        val soltasSemPar = SOLTAS_ESPERADAS.filter { "solta:$it" !in usadas }
-        assertTrue("cor sem par: $soltasSemPar", soltasSemPar.isEmpty())
+        val soltasUsadas = usadas.filter { it.startsWith("solta:") }.map { it.removePrefix("solta:") }.toSet()
+        assertEquals("cores soltas com par diferem das esperadas", SOLTAS_ESPERADAS.toSet(), soltasUsadas)
+        val frenteSemOrigem = coletado.pares.filter { it.frente.origem == null }.map { it.nome }
+        assertTrue(
+            "par cuja frente não veio de um componente (sem origem): $frenteSemOrigem",
+            frenteSemOrigem.isEmpty(),
+        )
         val isentosComPar = campos.filter { it in usadas && ISENCOES.any { isencao -> isencao.vale(it) } }
         assertTrue("isento que já tem par (tire a isenção): $isentosComPar", isentosComPar.isEmpty())
     }
@@ -231,23 +246,44 @@ class ContrasteComponentesTest {
     @Test
     fun coresDeComponenteSoEntramPelasFuncoesQueOTesteLe() {
         // O teste mede os Defaults e as funções do app. Uma cor passada na chamada por outro caminho, ou a chamada
-        // sem a função, deixaria o teste verde sobre uma cor que não é a da tela.
+        // sem a função, deixaria o teste verde sobre uma cor que não é a da tela. Texto inteiro do arquivo, não linha.
         val fontes = fontesDoApp()
         val passaCor = Regex("""\b(colors|containerColor|contentColor|border)\s*=""")
         val estranhas = fontes.flatMap { arquivo ->
-            arquivo.readLines().withIndex().filter { (_, linha) ->
-                passaCor.containsMatchIn(linha) && FUNCOES_DO_APP.none { it in linha }
-            }.map { "${arquivo.name}:${it.index + 1}: ${it.value.trim()}" }
+            val texto = arquivo.readText()
+            passaCor.findAll(texto).map { texto.substring(it.range.first) }
+                .filter { resto -> FORMAS_EXATAS.none { it.matchAt(resto, 0) != null } }
+                .map { "${arquivo.name}: ${it.lineSequence().take(3).joinToString(" ").trim()}" }
         }
-        assertTrue("cor passada a componente fora das funções medidas: $estranhas", estranhas.isEmpty())
-        CHAMADAS_COM_FUNCAO.forEach { (chamada, trecho) ->
-            val sem = fontes.flatMap { arquivo ->
-                val texto = arquivo.readText()
-                Regex("""\b$chamada\(""").findAll(texto).map { texto.substring(it.range.first).take(JANELA_CHAMADA) }
-            }.filterNot { trecho in it }
-            assertTrue("$chamada chamado sem '$trecho': $sem", sem.isEmpty())
+        assertTrue("cor passada a componente fora das formas exatas medidas: $estranhas", estranhas.isEmpty())
+        val proibidas = Regex("""\b(color|tint)\s*=|\.copy\(""")
+        CHAMADAS_COM_FUNCAO.forEach { (chamada, forma) ->
+            val chamadas = fontes.flatMap { arquivo -> chamadasCompletas(arquivo.readText(), chamada) }
+            assertTrue("nenhuma chamada de $chamada achada (nome mudou?)", chamadas.isNotEmpty())
+            val semForma = chamadas.filterNot { forma.containsMatchIn(it) }
+            assertTrue("$chamada chamado sem a forma exata '${forma.pattern}': $semForma", semForma.isEmpty())
+            val porFora = chamadas.filter { proibidas.containsMatchIn(it) }
+            assertTrue("$chamada com color =, tint = ou .copy( dentro da chamada: $porFora", porFora.isEmpty())
         }
     }
+
+    /** Cada chamada `Nome(...)` inteira, com os parênteses balanceados (os slots do componente ficam dentro). */
+    private fun chamadasCompletas(texto: String, nome: String): List<String> =
+        Regex("""\b$nome\(""").findAll(texto).map { achado ->
+            var nivel = 0
+            var fim = -1
+            for (i in achado.range.last until texto.length) {
+                when (texto[i]) {
+                    '(' -> nivel++
+                    ')' -> if (--nivel == 0) {
+                        fim = i
+                        break
+                    }
+                }
+            }
+            check(fim > 0) { "$nome( sem parêntese de fechamento" }
+            texto.substring(achado.range.first, fim + 1)
+        }.toList()
 
     @Test
     fun todoComponenteDoMaterialUsadoNoAppTemParEfetivo() {
@@ -509,19 +545,25 @@ class ContrasteComponentesTest {
 
     private companion object {
         const val MOTIVO_MINIMO = 20
-        const val JANELA_CHAMADA = 700
 
         /** Medido entre as bordas do chip: de 1,30 (Cromo, modo oficina) a 3,18:1; o limiar fica abaixo do menor. */
         const val CONTRASTE_ENTRE_BORDAS_DO_CHIP = 1.2
 
-        /** As funções do app que escolhem cores de componente; o teste as lê. */
-        val FUNCOES_DO_APP = listOf("coresBarraDestinos()", "coresSwitchDiario()", "bordaChipDiario(")
+        /**
+         * As únicas formas aceitas de passar cor a um componente: a função do app, seguida de `,` ou `)`. Com `.copy(`
+         * ou qualquer outra coisa depois, a cor deixa de ser a que o teste lê.
+         */
+        val FORMAS_EXATAS = listOf(
+            Regex("""\bcolors\s*=\s*coresBarraDestinos\(\)\s*[,)]"""),
+            Regex("""\bcolors\s*=\s*coresSwitchDiario\(\)\s*[,)]"""),
+            Regex("""\bborder\s*=\s*bordaChipDiario\([^()]*\)\s*[,)]"""),
+        )
 
-        /** Chamada do Material → trecho que ela deve conter, passando a função do app que o teste lê. */
+        /** Chamada do Material → forma exata que ela deve conter. */
         val CHAMADAS_COM_FUNCAO = mapOf(
-            "NavigationBarItem" to "colors = coresBarraDestinos()",
-            "Switch" to "colors = coresSwitchDiario()",
-            "FilterChip" to "border = bordaChipDiario(",
+            "NavigationBarItem" to FORMAS_EXATAS[0],
+            "Switch" to FORMAS_EXATAS[1],
+            "FilterChip" to FORMAS_EXATAS[2],
         )
 
         /** Cores que não são campo de `*Colors` (getter solto ou borda) e que precisam de par. */
