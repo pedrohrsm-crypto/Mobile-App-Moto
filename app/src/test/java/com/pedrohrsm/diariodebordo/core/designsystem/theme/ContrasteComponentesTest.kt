@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import com.pedrohrsm.diariodebordo.core.designsystem.componentes.coresSwitchDiario
+import com.pedrohrsm.diariodebordo.core.ui.bordaChipDiario
 import com.pedrohrsm.diariodebordo.navegacao.coresBarraDestinos
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -72,10 +73,12 @@ class ContrasteComponentesTest {
     private var configuracao by mutableStateOf(Configuracao(TemaDiario.OFICINA, false))
     private var coletados: List<ParEfetivo> = emptyList()
     private var esquemaAtual: ColorScheme? = null
+    private var bordasChip: Pair<BorderStroke, BorderStroke>? = null
 
     @Composable
     private fun Coleta() {
         esquemaAtual = MaterialTheme.colorScheme
+        bordasChip = bordaChipDiario(selecionado = false) to bordaChipDiario(selecionado = true)
         coletados = coletarPares()
     }
 
@@ -162,6 +165,22 @@ class ContrasteComponentesTest {
     }
 
     @Test
+    fun chipSelecionadoSeDistingueDoNaoSelecionadoEmCadaTema() {
+        // No modo oficina o rótulo é igual nos dois estados e o preenchimento dá de 1,10 a 1,40:1: o sinal é a borda,
+        // mais grossa e de outra cor no selecionado.
+        iniciar()
+        TemaDiario.entries.forEach { tema ->
+            listOf(false, true).forEach { modoOficina ->
+                compor(Configuracao(tema, modoOficina))
+                val (solto, marcado) = checkNotNull(bordasChip)
+                val onde = "$tema (oficina=$modoOficina)"
+                assertTrue("$onde borda do selecionado não é mais grossa", marcado.width > solto.width)
+                assertNotEquals("$onde bordas da mesma cor", solto.corUnica(), marcado.corUnica())
+            }
+        }
+    }
+
+    @Test
     fun parPadraoDeOutroComponentePlantadoAbaixoDoMinimoReprova() {
         // Canário de classe (#55): TEXTO_SECUNDARIO rebaixado quebra, sem lista nenhuma, o rótulo não selecionado da
         // barra, o texto do diálogo, o ListItem e o campo de texto. Ninguém escreveu esses pares: saem dos Defaults.
@@ -195,19 +214,19 @@ class ContrasteComponentesTest {
         // O teste mede os Defaults e as duas funções do app. Uma cor passada na chamada por outro caminho, ou a chamada
         // sem a função, deixaria o teste verde sobre uma cor que não é a da tela.
         val fontes = File("src/main/java").walkTopDown().filter { it.extension == "kt" }.toList()
-        val passaCor = Regex("""\b(colors|containerColor|contentColor)\s*=""")
+        val passaCor = Regex("""\b(colors|containerColor|contentColor|border)\s*=""")
         val estranhas = fontes.flatMap { arquivo ->
             arquivo.readLines().withIndex().filter { (_, linha) ->
                 passaCor.containsMatchIn(linha) && FUNCOES_DO_APP.none { it in linha }
             }.map { "${arquivo.name}:${it.index + 1}: ${it.value.trim()}" }
         }
         assertTrue("cor passada a componente fora das funções medidas: $estranhas", estranhas.isEmpty())
-        CHAMADAS_COM_FUNCAO.forEach { (chamada, funcao) ->
+        CHAMADAS_COM_FUNCAO.forEach { (chamada, trecho) ->
             val sem = fontes.flatMap { arquivo ->
                 val texto = arquivo.readText()
                 Regex("""\b$chamada\(""").findAll(texto).map { texto.substring(it.range.first).take(JANELA_CHAMADA) }
-            }.filterNot { "colors = $funcao" in it }
-            assertTrue("$chamada chamado sem 'colors = $funcao': $sem", sem.isEmpty())
+            }.filterNot { trecho in it }
+            assertTrue("$chamada chamado sem '$trecho': $sem", sem.isEmpty())
         }
     }
 
@@ -294,7 +313,8 @@ class ContrasteComponentesTest {
 
         // FilterChip: contêiner não selecionado transparente (sobre o fundo). Os campos de cor são privados na versão instalada.
         val chip = FilterChipDefaults.filterChipColors()
-        val bordaChip = FilterChipDefaults.filterChipBorder(enabled = true, selected = false).corUnica()
+        val bordaChip = bordaChipDiario(selecionado = false).corUnica()
+        val bordaChipMarcado = bordaChipDiario(selecionado = true).corUnica()
         grupo("FilterChip") {
             texto("rótulo não selecionado/fundo", chip.cor("labelColor"), fundo, osv, bg)
             texto(
@@ -304,7 +324,8 @@ class ContrasteComponentesTest {
                 ColorScheme::onSecondaryContainer,
                 ColorScheme::secondaryContainer,
             )
-            forma("borda não selecionado/fundo", bordaChip, fundo, ColorScheme::outlineVariant, bg)
+            forma("borda não selecionado/fundo", bordaChip, fundo, ColorScheme::outline, bg)
+            forma("borda selecionado/fundo", bordaChipMarcado, fundo, pri, bg)
         }
 
         val topo = TopAppBarDefaults.topAppBarColors()
@@ -409,12 +430,13 @@ class ContrasteComponentesTest {
         const val JANELA_CHAMADA = 700
 
         /** As funções do app que escolhem cores de componente; o teste as lê. */
-        val FUNCOES_DO_APP = listOf("coresBarraDestinos()", "coresSwitchDiario()")
+        val FUNCOES_DO_APP = listOf("coresBarraDestinos()", "coresSwitchDiario()", "bordaChipDiario(")
 
-        /** Chamada do Material → função do app que ela deve receber em `colors =`. */
+        /** Chamada do Material → trecho que ela deve conter, passando a função do app que o teste lê. */
         val CHAMADAS_COM_FUNCAO = mapOf(
-            "NavigationBarItem" to "coresBarraDestinos()",
-            "Switch" to "coresSwitchDiario()",
+            "NavigationBarItem" to "colors = coresBarraDestinos()",
+            "Switch" to "colors = coresSwitchDiario()",
+            "FilterChip" to "border = bordaChipDiario(",
         )
 
         /** Nome do material 3 importado no app → nome do componente nos pares. */
@@ -424,6 +446,7 @@ class ContrasteComponentesTest {
             "NavigationBarItemColors" to "NavigationBarItem",
             "SwitchColors" to "Switch",
             "SwitchDefaults" to "Switch",
+            "FilterChipDefaults" to "FilterChip",
             "DatePickerDialog" to "DatePicker",
             "rememberDatePickerState" to "DatePicker",
         )
@@ -446,9 +469,6 @@ class ContrasteComponentesTest {
         val EXCECOES = mapOf(
             "OutlinedButton: borda/fundo" to
                 "borda decorativa (outlineVariant, 1,35 a 1,61:1): o botão é identificado pelo rótulo, que passa de 4,5:1",
-            "FilterChip: borda não selecionado/fundo" to
-                "SINAL FRACO a corrigir em Campos.kt, fora da fronteira da frente #56: o chip selecionado só muda o " +
-                "preenchimento (1,10 a 1,40:1) e perde a borda; pedir ao PM a borda em outline (3,17 a 3,83:1)",
         )
     }
 }
