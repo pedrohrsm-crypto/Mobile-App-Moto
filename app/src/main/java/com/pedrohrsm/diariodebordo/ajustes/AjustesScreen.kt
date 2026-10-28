@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,13 +47,10 @@ fun AjustesScreen(
                 .padding(escala.espaco(16.dp)),
             verticalArrangement = Arrangement.spacedBy(escala.espaco(16.dp)),
         ) {
+            // As seções se separam pelo espaçamento: o divisor do Material (outlineVariant) fica abaixo de 3:1.
             SeletorTema(ajuste = ajuste, aoAjustar = onAjustar)
-            HorizontalDivider()
             backup()
-            if (recursosPremium.isNotEmpty()) {
-                HorizontalDivider()
-                SecaoPremium(recursosPremium)
-            }
+            if (recursosPremium.isNotEmpty()) SecaoPremium(recursosPremium)
         }
     }
 }

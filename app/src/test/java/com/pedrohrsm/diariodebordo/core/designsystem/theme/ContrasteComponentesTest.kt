@@ -530,6 +530,14 @@ class ContrasteComponentesTest {
 
         val arco = solta("Progress/arco", ProgressIndicatorDefaults.circularColor)
         grupo("CircularProgressIndicator") { forma("arco/fundo", arco, fundo, pri, bg) }
+
+        // "Trabalhando no backup…" (SecaoBackup, #45): a barra contra o trilho e contra o fundo da tela.
+        val barraProgresso = solta("Progress/barra", ProgressIndicatorDefaults.linearColor)
+        val trilho = solta("Progress/trilho", ProgressIndicatorDefaults.linearTrackColor)
+        grupo("LinearProgressIndicator") {
+            forma("barra/trilho", barraProgresso, trilho, pri, ColorScheme::secondaryContainer)
+            forma("barra/fundo", barraProgresso, fundo, pri, bg)
+        }
         return Coletado(pares, colors)
     }
 
@@ -578,6 +586,8 @@ class ContrasteComponentesTest {
             "FilterChip/borda não selecionado",
             "FilterChip/borda selecionado",
             "Progress/arco",
+            "Progress/barra",
+            "Progress/trilho",
         )
 
         /** Nome do material 3 importado no app → nome do componente nos pares. */
