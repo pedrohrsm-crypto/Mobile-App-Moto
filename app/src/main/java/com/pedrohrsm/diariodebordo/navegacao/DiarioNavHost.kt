@@ -177,14 +177,18 @@ fun BarraDestinos(rotaAtual: String?, onEscolher: (Destino) -> Unit) {
 /**
  * Cores da barra. O padrão do Material tem dois defeitos de contraste: o rótulo selecionado (`secondary` sobre
  * `surfaceContainer`) dava 3,75:1 no Estrada (erro #55), e o indicador (`secondaryContainer`) fica de 1,02 a 1,34:1 sobre
- * a barra. Com a fonte grande a barra só tem ícones, e o selecionado (`onSecondaryContainer` = texto) era igual ao
- * não selecionado (`onSurfaceVariant` = texto no modo oficina): nada mostrava o destino aberto. Ícone e rótulo
- * selecionados usam `primary`, que se distingue do não selecionado e passa de 4,5:1. O `ContrasteComponentesTest` lê esta função.
+ * a barra; com a fonte grande a barra só tem ícones e o selecionado era igual ao não selecionado no modo oficina,
+ * então nada mostrava o destino aberto. Indicador em `primary` (de 5,54 a 11,21:1 sobre a barra), ícone selecionado em
+ * `onPrimary` sobre ele e rótulo selecionado em `primary`. O `ContrasteComponentesTest` lê esta função.
  */
 @Composable
 internal fun coresBarraDestinos(): NavigationBarItemColors {
     val cores = MaterialTheme.colorScheme
-    return NavigationBarItemDefaults.colors(selectedIconColor = cores.primary, selectedTextColor = cores.primary)
+    return NavigationBarItemDefaults.colors(
+        selectedIconColor = cores.onPrimary,
+        selectedTextColor = cores.primary,
+        indicatorColor = cores.primary,
+    )
 }
 
 /** Fonte do sistema × escala do modo oficina a partir da qual o rótulo de todos os destinos não cabe. */
