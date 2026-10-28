@@ -53,6 +53,44 @@ class PacoteZipTest {
         }
     }.toByteArray()
 
+    /**
+     * Zip com nome repetido. A segunda ocorrência sai com um nome provisório do mesmo tamanho (última letra trocada)
+     * e o nome é trocado nos bytes depois, no cabeçalho local e no diretório central.
+     */
+    private fun zipComRepetida(vararg itens: Pair<String, ByteArray>): ByteArray {
+        val vistos = mutableSetOf<String>()
+        val trocas = mutableListOf<Pair<String, String>>()
+        val provisorios = itens.map { (nome, bytes) ->
+            if (vistos.add(nome)) {
+                nome to bytes
+            } else {
+                val provisorio = nome.dropLast(1) + "Q"
+                trocas += provisorio to nome
+                provisorio to bytes
+            }
+        }
+        var bytes = zip(*provisorios.toTypedArray())
+        trocas.forEach { (de, para) -> bytes = trocar(bytes, de.toByteArray(), para.toByteArray()) }
+        return bytes
+    }
+
+    private fun trocar(bytes: ByteArray, de: ByteArray, para: ByteArray): ByteArray {
+        val saida = bytes.copyOf()
+        var i = 0
+        var trocas = 0
+        while (i <= saida.size - de.size) {
+            if (de.indices.all { saida[i + it] == de[it] }) {
+                para.copyInto(saida, i)
+                trocas++
+                i += de.size
+            } else {
+                i++
+            }
+        }
+        check(trocas == 2) { "o nome devia aparecer no cabeçalho local e no diretório central ($trocas)" }
+        return saida
+    }
+
     private fun exportado(foto: ByteArray?): ByteArray = ByteArrayOutputStream().also { saida ->
         PacoteZip.escrever(saida, copia) { if (it == "a.jpg") foto?.inputStream() else null }
     }.toByteArray()
@@ -162,6 +200,31 @@ class PacoteZipTest {
             assertEquals("Item maior que o permitido", e.message)
         }
         assertEquals(emptyList<String>(), gravadas)
+    }
+
+    @Test
+    fun fotoNaoUsadaMaiorQueOTetoTambemEhRecusada() {
+        // A cópia usa só a.jpg; z.jpg não seria gravada, mas é lida com o mesmo teto (zip bomb escondida).
+        val pacote = zip(PacoteZip.DADOS to dadosDe(exportado(null)), "fotos/z.jpg" to ByteArray(2048))
+        try {
+            PacoteZip.ler(pacote.inputStream(), LimitesDoPacote(fotoBytes = 1024)) { _, _ -> }
+            fail("deveria recusar a foto grande demais, mesmo sem uso")
+        } catch (e: ArquivoInvalidoException) {
+            assertEquals("Item maior que o permitido", e.message)
+        }
+    }
+
+    @Test
+    fun entradaRepetidaRecusaOArquivoInteiro() {
+        val dados = dadosDe(exportado(JPEG))
+        // O ZipOutputStream do Java não escreve nome repetido: a segunda entrada é montada à mão no fluxo.
+        val pacote = zipComRepetida(PacoteZip.DADOS to dados, "fotos/a.jpg" to JPEG, "fotos/a.jpg" to JPEG)
+        try {
+            PacoteZip.ler(pacote.inputStream()) { _, _ -> }
+            fail("deveria recusar a entrada repetida")
+        } catch (e: ArquivoInvalidoException) {
+            assertEquals("Entrada repetida no arquivo", e.message)
+        }
     }
 
     @Test

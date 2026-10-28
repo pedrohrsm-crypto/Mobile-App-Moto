@@ -81,9 +81,11 @@ object PacoteZip {
         val usadas = copia.fotos.map { it.arquivo }.toSet()
         var entradas = 1
         var totalFotos = 0L
+        val vistas = mutableSetOf(DADOS)
         while (true) {
             val item = zip.nextEntry ?: break
             if (++entradas > limites.entradas) throw ArquivoInvalidoException("Arquivo com itens demais")
+            if (!vistas.add(item.name)) throw ArquivoInvalidoException("Entrada repetida no arquivo")
             if (item.isDirectory || !item.name.startsWith(PASTA_FOTOS)) {
                 throw ArquivoInvalidoException("Entrada fora do formato do backup")
             }
