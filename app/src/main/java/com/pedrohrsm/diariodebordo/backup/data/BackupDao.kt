@@ -35,6 +35,10 @@ interface BackupDao {
     @Query("SELECT * FROM rotas WHERE emGravacao = 0")
     suspend fun rotas(): List<Rota>
 
+    /** Todas, inclusive a em gravação: a mesclagem compara com elas para nunca sobrescrever a que grava agora. */
+    @Query("SELECT * FROM rotas")
+    suspend fun todasAsRotas(): List<Rota>
+
     @Upsert
     suspend fun gravarMotos(itens: List<Moto>)
 

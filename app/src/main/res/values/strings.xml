@@ -168,13 +168,13 @@
     <string name="oleo_atalho_registrado">Troca de óleo registrada.</string>
     <!-- Backup: exportar e importar (1.9) -->
     <string name="backup_titulo">Backup</string>
-    <string name="backup_explicacao">Um arquivo .zip com as motos, o diário, o plano, as fotos e as rotas. Guarde no Drive, no computador ou mande para você mesmo: é o que traz tudo de volta se você perder o celular.</string>
+    <string name="backup_explicacao">Um arquivo .zip com as motos, o diário, o plano e as fotos; as rotas só vão se você marcar. Guarde no Drive, no computador ou mande para você mesmo: é o que traz tudo de volta se você perder o celular.</string>
     <string name="backup_exportar">Exportar backup</string>
     <string name="backup_importar">Importar backup</string>
     <string name="backup_importar_explicacao">Importar junta o arquivo com o que já está no aparelho: nada é apagado e, se um item estiver nos dois, fica a versão alterada por último.</string>
     <string name="backup_aviso_titulo">O arquivo tem dados pessoais</string>
-    <string name="backup_aviso_texto">Leva o diário, as fotos e os locais dos registros; as rotas mostram onde você anda e mora. Quem tiver o arquivo lê tudo: guarde num lugar só seu. Uma cópia entra no backup automático do Android, na sua conta Google.</string>
-    <string name="backup_incluir_rotas">Incluir as rotas gravadas</string>
+    <string name="backup_aviso_texto">Leva o diário, as fotos e os locais dos registros: guarde num lugar só seu. Uma cópia entra no backup do Android, na sua conta Google.</string>
+    <string name="backup_incluir_rotas">Incluir as rotas (mostram onde você anda e mora)</string>
     <string name="backup_escolher_local">Escolher onde salvar</string>
     <string name="backup_trabalhando">Trabalhando no backup…</string>
     <string name="backup_exportado">Backup salvo. Motos: %1$d · Registros: %2$d · Fotos: %3$d · Rotas: %4$d</string>

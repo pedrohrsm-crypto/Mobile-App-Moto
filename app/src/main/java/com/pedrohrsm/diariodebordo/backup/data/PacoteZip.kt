@@ -16,17 +16,21 @@ import java.util.zip.ZipOutputStream
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
-/** Tetos de uma leitura. O total de fotos é o que a importação pode gravar em disco, de uma vez. */
+/**
+ * Tetos de uma leitura. O total de fotos é o que a importação pode gravar em disco, de uma vez. Os dados ficam
+ * inteiros na memória antes do JSON: 10 MB cabem num aparelho modesto sem `OutOfMemoryError`, que não é Exception.
+ */
 data class LimitesDoPacote(
-    val dadosBytes: Long = 50L * 1024 * 1024,
+    val dadosBytes: Long = 10L * 1024 * 1024,
     val fotoBytes: Long = 20L * 1024 * 1024,
     val entradas: Int = 20_000,
     val totalDeFotosBytes: Long = 1024L * 1024 * 1024,
 )
 
 /**
- * Formato do arquivo: um .zip com diario.json primeiro e as fotos em fotos/. Lê com limites de tamanho e só
- * aceita nomes simples de foto, porque o arquivo pode ter vindo de qualquer lugar (WhatsApp, Drive).
+ * Formato do arquivo: um .zip com diario.json primeiro e as fotos em fotos/. O formato é estrito: qualquer outra
+ * entrada (pasta, caminho com `../` ou começando em `/`, nome de foto com caminho) recusa o arquivo inteiro. Toda
+ * entrada é lida com teto, porque o arquivo pode ter vindo de qualquer lugar (WhatsApp, Drive).
  */
 object PacoteZip {
     const val DADOS = "diario.json"
@@ -80,18 +84,20 @@ object PacoteZip {
         while (true) {
             val item = zip.nextEntry ?: break
             if (++entradas > limites.entradas) throw ArquivoInvalidoException("Arquivo com itens demais")
+            if (item.isDirectory || !item.name.startsWith(PASTA_FOTOS)) {
+                throw ArquivoInvalidoException("Entrada fora do formato do backup")
+            }
             val nome = item.name.removePrefix(PASTA_FOTOS)
-            if (!item.isDirectory && item.name.startsWith(PASTA_FOTOS)) {
-                if (!nomeDeFotoValido(nome)) throw ArquivoInvalidoException("Nome de foto recusado")
-                // Entradas fora de fotos/, ou fotos que a cópia não usa, são ignoradas: nada disso é gravado.
-                if (nome in usadas) {
-                    val foto = jpegSemMetadados(lerLimitado(zip, limites.fotoBytes))
-                    totalFotos += foto.size
-                    if (totalFotos > limites.totalDeFotosBytes) {
-                        throw EspacoInsuficienteException(limites.totalDeFotosBytes)
-                    }
-                    guardarFoto(nome, foto)
+            if (!nomeDeFotoValido(nome)) throw ArquivoInvalidoException("Nome de foto recusado")
+            // A foto é lida com teto mesmo quando a cópia não a usa; só a usada é gravada.
+            val bytes = lerLimitado(zip, limites.fotoBytes)
+            if (nome in usadas) {
+                val foto = jpegSemMetadados(bytes)
+                totalFotos += foto.size
+                if (totalFotos > limites.totalDeFotosBytes) {
+                    throw EspacoInsuficienteException(limites.totalDeFotosBytes)
                 }
+                guardarFoto(nome, foto)
             }
             zip.closeEntry()
         }

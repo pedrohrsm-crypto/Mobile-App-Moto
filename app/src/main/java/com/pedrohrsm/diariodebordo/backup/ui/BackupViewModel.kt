@@ -57,7 +57,8 @@ class BackupViewModel @Inject constructor(
     /** Nome sugerido no seletor do sistema, com a data para não sobrescrever backups antigos. */
     fun nomeSugerido(): String = "diario-de-bordo-${LocalDate.now(relogio)}.zip"
 
-    fun pedirExportacao() = _estado.update { it.copy(confirmandoExportacao = true, resultado = null) }
+    /** Cada vez que o aviso abre, as rotas voltam desmarcadas: a escolha de antes não vale para esta exportação. */
+    fun pedirExportacao() = _estado.update { it.copy(confirmandoExportacao = true, comRotas = false, resultado = null) }
 
     fun alternarRotas(comRotas: Boolean) = _estado.update { it.copy(comRotas = comRotas) }
 

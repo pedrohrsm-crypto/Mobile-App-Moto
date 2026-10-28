@@ -115,6 +115,16 @@ class BackupViewModelTest {
     }
 
     @Test
+    fun reabrirOAvisoVoltaComAsRotasDesmarcadas() {
+        val vm = BackupViewModel(repositorio, canal, relogio)
+        vm.pedirExportacao()
+        vm.alternarRotas(true)
+        vm.cancelarExportacao()
+        vm.pedirExportacao()
+        assertFalse("a escolha de antes não vale para a próxima exportação", vm.estado.value.comRotas)
+    }
+
+    @Test
     fun arquivoQueNaoEhBackupViraAvisoSemGravar() {
         documentos["content://foto.zip"] = "não é zip".toByteArray()
         val vm = BackupViewModel(repositorio, canal, relogio)

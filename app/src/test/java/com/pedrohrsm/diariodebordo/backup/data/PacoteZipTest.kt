@@ -144,11 +144,39 @@ class PacoteZipTest {
         val pacote = zip(
             PacoteZip.DADOS to dadosDe(semFotos.toByteArray()),
             "fotos/intrusa.jpg" to JPEG,
-            "outra/pasta.txt" to byteArrayOf(1),
         )
         val gravadas = mutableListOf<String>()
         PacoteZip.ler(pacote.inputStream()) { nome, _ -> gravadas += nome }
         assertEquals(emptyList<String>(), gravadas)
+    }
+
+    @Test
+    fun fotoMaiorQueOTetoEhRecusadaSemGravar() {
+        val gravadas = mutableListOf<String>()
+        val grande = JPEG + ByteArray(2 * 1024) // a foto que a cópia usa, passando do teto por foto
+        val pacote = zip(PacoteZip.DADOS to dadosDe(exportado(null)), "fotos/a.jpg" to grande)
+        try {
+            PacoteZip.ler(pacote.inputStream(), LimitesDoPacote(fotoBytes = 1024)) { nome, _ -> gravadas += nome }
+            fail("deveria recusar a foto grande demais")
+        } catch (e: ArquivoInvalidoException) {
+            assertEquals("Item maior que o permitido", e.message)
+        }
+        assertEquals(emptyList<String>(), gravadas)
+    }
+
+    @Test
+    fun entradaForaDoFormatoRecusaOArquivoInteiro() {
+        val dados = dadosDe(exportado(JPEG))
+        listOf("../evil", "/evil", "outra/pasta.txt", "fotos/", "diario.json.bak").forEach { intrusa ->
+            val gravadas = mutableListOf<String>()
+            val pacote = zip(PacoteZip.DADOS to dados, "fotos/a.jpg" to JPEG, intrusa to byteArrayOf(1))
+            try {
+                PacoteZip.ler(pacote.inputStream()) { nome, _ -> gravadas += nome }
+                fail("deveria recusar a entrada $intrusa")
+            } catch (e: ArquivoInvalidoException) {
+                assertEquals(intrusa, "Entrada fora do formato do backup", e.message)
+            }
+        }
     }
 
     /** O diario.json de um pacote. */

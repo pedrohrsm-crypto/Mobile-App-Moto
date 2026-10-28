@@ -141,8 +141,12 @@ class BackupRepositorio @Inject constructor(
             mesclar(dao.fotos(), copia.fotos, { it.id }, { it.alteradoEm }).also { dao.gravarFotos(it.gravar) },
             mesclar(dao.itensDoPlano(), copia.itensDoPlano, { it.id }, { it.alteradoEm })
                 .also { dao.gravarItensDoPlano(it.gravar) },
-            // Rota excluída no aparelho perdeu o traçado (risco #23): o arquivo não a traz de volta.
-            mesclar(dao.rotas(), copia.rotas, { it.id }, { it.alteradoEm }, protegido = { it.excluidoEm != null })
+            // Rota excluída no aparelho perdeu o traçado (risco #23): o arquivo não a traz de volta. A que grava
+            // agora também não é tocada.
+            mesclar(dao.todasAsRotas(), copia.rotas, { it.id }, { it.alteradoEm }, protegido = {
+                it.excluidoEm != null ||
+                    it.emGravacao
+            })
                 .also { dao.gravarRotas(it.gravar) },
         )
         return ResumoImportacao(

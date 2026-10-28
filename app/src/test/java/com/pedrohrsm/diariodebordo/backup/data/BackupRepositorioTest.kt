@@ -244,6 +244,22 @@ class BackupRepositorioTest {
     }
 
     @Test
+    fun rotaEmGravacaoNoAparelhoNaoEhSobrescritaPelaImportacao() = runTest {
+        val (arquivo, _) = Aparelho().cheio().exportar()
+        val aparelho = Aparelho().apply {
+            backup.gravarMotos(listOf(moto))
+            banco.rotaDao().inserir(Rota(id = "rota", motoId = "m", iniciadaEm = 99, emGravacao = true))
+        }
+        aparelho.repositorio.importar(arquivo.inputStream())
+        val depois = banco(aparelho).single { it.id == "rota" }
+        assertTrue("a gravação continua", depois.emGravacao)
+        assertEquals(99L, depois.iniciadaEm)
+        assertEquals("", depois.polilinha)
+    }
+
+    private suspend fun banco(aparelho: Aparelho): List<Rota> = aparelho.backup.todasAsRotas()
+
+    @Test
     fun falhaNoMeioNaoDeixaFotoOrfaNemMudaOBanco() = runTest {
         val (arquivo, _) = Aparelho().cheio().exportar()
         val novo = Aparelho(dao = { real ->
