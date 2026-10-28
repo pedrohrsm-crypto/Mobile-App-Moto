@@ -12,6 +12,8 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -75,10 +77,18 @@ fun SeletorTema(ajuste: AjusteTema, aoAjustar: (AjusteTema) -> Unit, modifier: M
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            Switch(checked = ajuste.modoOficina, onCheckedChange = null)
+            Switch(checked = ajuste.modoOficina, onCheckedChange = null, colors = coresSwitchDiario())
         }
     }
 }
+
+/**
+ * Cores do Switch. O polegar desligado do Material é `outline` sobre `surfaceContainerHighest`: de 2,85 a 2,91:1 (mínimo 3
+ * para componente de interface). `onSurfaceVariant` passa nos 3 temas. O `ContrasteComponentesTest` lê esta função.
+ */
+@Composable
+internal fun coresSwitchDiario(): SwitchColors =
+    SwitchDefaults.colors(uncheckedThumbColor = MaterialTheme.colorScheme.onSurfaceVariant)
 
 private fun TemaDiario.rotulo(): Int = when (this) {
     TemaDiario.OFICINA -> R.string.tema_oficina

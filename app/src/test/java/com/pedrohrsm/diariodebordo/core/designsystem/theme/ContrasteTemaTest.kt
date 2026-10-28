@@ -2,14 +2,15 @@ package com.pedrohrsm.diariodebordo.core.designsystem.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
-import kotlin.math.pow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
  * Contraste WCAG 2.x por par do `ColorScheme` (risco #40): texto >= 4,5:1 e borda >= 3:1, nos 3 temas, com e sem
- * modo oficina. Um token novo abaixo do piso reprova aqui, com o nome do par na mensagem.
+ * modo oficina. Um token novo abaixo do piso reprova aqui, com o nome do par na mensagem. Esta lista é à mão (texto e bordas que o app
+ * desenha com papéis do ColorScheme); as cores que os componentes do Material usam por padrão ficam no
+ * [ContrasteComponentesTest], que as lê dos `*Defaults` (erro #55).
  */
 class ContrasteTemaTest {
     private class Par(
@@ -55,17 +56,7 @@ class ContrasteTemaTest {
         texto("onSurfaceVariant/surfaceContainerHigh", { onSurfaceVariant }, { surfaceContainerHigh }),
     )
 
-    private fun luminanciaRelativa(cor: Color): Double {
-        fun canal(valor: Float): Double = valor.toDouble().let {
-            if (it <= 0.03928) it / 12.92 else ((it + 0.055) / 1.055).pow(2.4)
-        }
-        return 0.2126 * canal(cor.red) + 0.7152 * canal(cor.green) + 0.0722 * canal(cor.blue)
-    }
-
-    private fun contraste(a: Color, b: Color): Double {
-        val (claro, escuro) = listOf(luminanciaRelativa(a), luminanciaRelativa(b)).sortedDescending()
-        return (claro + 0.05) / (escuro + 0.05)
-    }
+    private fun contraste(a: Color, b: Color): Double = ContrasteWcag.contraste(a, b)
 
     private fun falhas(tokens: TokensDiario): List<String> {
         val esquema = tokens.paraColorScheme()
@@ -109,7 +100,7 @@ class ContrasteTemaTest {
     }
 
     private companion object {
-        const val MINIMO_TEXTO = 4.5
-        const val MINIMO_BORDA = 3.0
+        const val MINIMO_TEXTO = ContrasteWcag.MINIMO_TEXTO
+        const val MINIMO_BORDA = ContrasteWcag.MINIMO_COMPONENTE
     }
 }
