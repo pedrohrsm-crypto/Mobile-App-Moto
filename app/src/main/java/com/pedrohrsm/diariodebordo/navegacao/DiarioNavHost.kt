@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemColors
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -157,6 +160,7 @@ fun BarraDestinos(rotaAtual: String?, onEscolher: (Destino) -> Unit) {
             NavigationBarItem(
                 selected = destino.rota == rotaAtual,
                 onClick = { onEscolher(destino) },
+                colors = coresBarraDestinos(),
                 icon = {
                     Icon(painterResource(destino.icone), contentDescription = nome.takeIf { fonteGrande })
                 },
@@ -168,6 +172,23 @@ fun BarraDestinos(rotaAtual: String?, onEscolher: (Destino) -> Unit) {
             )
         }
     }
+}
+
+/**
+ * Cores da barra. O padrão do Material tem dois defeitos de contraste: o rótulo selecionado (`secondary` sobre
+ * `surfaceContainer`) dava 3,75:1 no Estrada (erro #55), e o indicador (`secondaryContainer`) fica de 1,02 a 1,34:1 sobre
+ * a barra; com a fonte grande a barra só tem ícones e o selecionado era igual ao não selecionado no modo oficina,
+ * então nada mostrava o destino aberto. Indicador em `primary` (de 5,54 a 11,21:1 sobre a barra), ícone selecionado em
+ * `onPrimary` sobre ele e rótulo selecionado em `primary`. O `ContrasteComponentesTest` lê esta função.
+ */
+@Composable
+internal fun coresBarraDestinos(): NavigationBarItemColors {
+    val cores = MaterialTheme.colorScheme
+    return NavigationBarItemDefaults.colors(
+        selectedIconColor = cores.onPrimary,
+        selectedTextColor = cores.primary,
+        indicatorColor = cores.primary,
+    )
 }
 
 /** Fonte do sistema × escala do modo oficina a partir da qual o rótulo de todos os destinos não cabe. */
