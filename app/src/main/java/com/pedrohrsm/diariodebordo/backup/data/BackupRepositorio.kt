@@ -10,6 +10,7 @@ import com.pedrohrsm.diariodebordo.core.premium.Premium
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorLembretes
+import com.pedrohrsm.diariodebordo.rota.data.Rota
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -143,10 +144,7 @@ class BackupRepositorio @Inject constructor(
                 .also { dao.gravarItensDoPlano(it.gravar) },
             // Rota excluída no aparelho perdeu o traçado (risco #23): o arquivo não a traz de volta. A que grava
             // agora também não é tocada.
-            mesclar(dao.todasAsRotas(), copia.rotas, { it.id }, { it.alteradoEm }, protegido = {
-                it.excluidoEm != null ||
-                    it.emGravacao
-            })
+            mesclar(dao.todasAsRotas(), copia.rotas, { it.id }, { it.alteradoEm }, protegido = ::rotaProtegida)
                 .also { dao.gravarRotas(it.gravar) },
         )
         return ResumoImportacao(
@@ -155,6 +153,8 @@ class BackupRepositorio @Inject constructor(
             fotos = 0,
         )
     }
+
+    private fun rotaProtegida(rota: Rota): Boolean = rota.excluidoEm != null || rota.emGravacao
 
     private companion object {
         /** O aparelho fica com pelo menos isto livre depois de gravar as fotos de uma importação. */
