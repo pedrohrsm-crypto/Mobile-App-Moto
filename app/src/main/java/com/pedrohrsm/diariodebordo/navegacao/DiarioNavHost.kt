@@ -7,11 +7,11 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -19,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -155,16 +154,13 @@ fun DiarioNavHost(
 @Composable
 fun BarraDestinos(rotaAtual: String?, onEscolher: (Destino) -> Unit) {
     val fonteGrande = LocalDensity.current.fontScale * LocalEscalaDiario.current.fator >= FONTE_GRANDE
-    val cores = NavigationBarItemDefaults.colors(
-        selectedTextColor = corRotuloSelecionadoBarra(MaterialTheme.colorScheme),
-    )
     NavigationBar {
         Destino.entries.forEach { destino ->
             val nome = stringResource(destino.rotulo)
             NavigationBarItem(
                 selected = destino.rota == rotaAtual,
                 onClick = { onEscolher(destino) },
-                colors = cores,
+                colors = coresBarraDestinos(),
                 icon = {
                     Icon(painterResource(destino.icone), contentDescription = nome.takeIf { fonteGrande })
                 },
@@ -179,10 +175,17 @@ fun BarraDestinos(rotaAtual: String?, onEscolher: (Destino) -> Unit) {
 }
 
 /**
- * Rótulo do destino selecionado. O padrão do Material (`secondary`) sobre `surfaceContainer` dava 3,75:1 no
- * Estrada (erro #55); `primary` dá de 5,54 a 11,21:1 nos 3 temas e é conferido pelo `ContrasteTemaTest`.
+ * Cores da barra. O padrão do Material tem dois defeitos de contraste: o rótulo selecionado (`secondary` sobre
+ * `surfaceContainer`) dava 3,75:1 no Estrada (erro #55), e o indicador (`secondaryContainer`) fica de 1,02 a 1,34:1 sobre
+ * a barra. Com a fonte grande a barra só tem ícones, e o selecionado (`onSecondaryContainer` = texto) era igual ao
+ * não selecionado (`onSurfaceVariant` = texto no modo oficina): nada mostrava o destino aberto. Ícone e rótulo
+ * selecionados usam `primary`, que se distingue do não selecionado e passa de 4,5:1. O `ContrasteComponentesTest` lê esta função.
  */
-internal fun corRotuloSelecionadoBarra(cores: ColorScheme): Color = cores.primary
+@Composable
+internal fun coresBarraDestinos(): NavigationBarItemColors {
+    val cores = MaterialTheme.colorScheme
+    return NavigationBarItemDefaults.colors(selectedIconColor = cores.primary, selectedTextColor = cores.primary)
+}
 
 /** Fonte do sistema × escala do modo oficina a partir da qual o rótulo de todos os destinos não cabe. */
 private const val FONTE_GRANDE = 1.8f
