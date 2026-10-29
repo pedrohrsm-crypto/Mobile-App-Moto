@@ -38,7 +38,7 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
 
       # Instala (ou reaproveita) o Android SDK e a plataforma do compileSdk.
       - uses: android-actions/setup-android@v3
