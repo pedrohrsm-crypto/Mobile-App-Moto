@@ -13,6 +13,7 @@
 *.jks
 *.p12
 *.pfx
+*.bks
 /buildSrc/build
 /buildSrc/.gradle
 /buildSrc/.kotlin

@@ -120,21 +120,67 @@ jobs:
             exit 1
           fi
 
-      # APK de release assinado (#63): só no push na main. Em PR (inclusive Dependabot e fork) estes passos não rodam,
-      # o release segue sem assinatura e o AAB do teto acima nunca é assinado (as variáveis só existem nestes passos).
+      - name: Relatórios
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorios
+          path: |
+            app/build/reports/
+            app/build/test-results/
+            app/build/outputs/roborazzi/
+            buildSrc/build/reports/
+            app/schemas/
+          if-no-files-found: ignore
+
+  # APK de release assinado (#63): job próprio, só no push na main e depois dos portões. Os segredos MOTO_* são do
+  # environment "release" (restrito à main), não do repositório: segredo de repositório chega a qualquer branch do
+  # repositório, inclusive num PR. Em PR (inclusive Dependabot e fork) este job nem começa.
+  apk-release:
+    name: APK de release assinado
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TZ: UTC
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Só leitura: nada deste job, que roda com a chave, vai para o cache compartilhado.
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+          cache-read-only: true
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: "platforms;android-37.0 build-tools;36.0.0"
+
       # Segredo só por env, nunca interpolado no run; nenhum valor é impresso, só os nomes do que falta.
       - name: Segredos da assinatura
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           faltando=()
           for nome in MOTO_KEYSTORE_BASE64 MOTO_KEYSTORE_PASSWORD MOTO_KEY_ALIAS MOTO_KEY_PASSWORD; do
             [ -n "${!nome}" ] || faltando+=("$nome")
           done
           if [ "${#faltando[@]}" -gt 0 ]; then
-            echo "::error::Faltam segredos da assinatura do release: ${faltando[*]}. Cadastre em Settings > Secrets and variables > Actions; sem eles não sai APK de release."
+            echo "::error::Faltam segredos da assinatura do release no environment release: ${faltando[*]}. Cadastre em Settings > Environments > release; sem eles não sai APK de release."
             exit 1
           fi
-          # Fora do repositório: o keystore temporário nunca entra no checkout nem no artefato.
+          # Fora do repositório e legível só pelo dono do processo: o keystore nunca entra no checkout nem no artefato.
+          umask 077
           printf '%s' "$MOTO_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/moto-release.keystore"
         env:
           MOTO_KEYSTORE_BASE64: ${{ secrets.MOTO_KEYSTORE_BASE64 }}
@@ -142,9 +188,9 @@ jobs:
           MOTO_KEY_ALIAS: ${{ secrets.MOTO_KEY_ALIAS }}
           MOTO_KEY_PASSWORD: ${{ secrets.MOTO_KEY_PASSWORD }}
 
+      # Sem configuration cache: no AGP 9.5.0 storePassword e keyPassword entrariam no cache gravado em disco.
       - name: APK de release assinado
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --no-configuration-cache
         env:
           MOTO_KEYSTORE_PATH: ${{ runner.temp }}/moto-release.keystore
           MOTO_KEYSTORE_PASSWORD: ${{ secrets.MOTO_KEYSTORE_PASSWORD }}
@@ -154,7 +200,6 @@ jobs:
       # Do apksigner, só a impressão digital SHA-256 vai para o log (o DN e os outros resumos ficam de fora).
       - name: Assinatura do APK
         id: apk
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           apk=app/build/outputs/apk/release/app-release.apk
           if [ ! -f "$apk" ]; then
@@ -172,7 +217,6 @@ jobs:
           echo "sha7=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Artefato do APK
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v7
         with:
           name: diario-de-bordo-release-${{ steps.apk.outputs.sha7 }}
@@ -180,18 +224,5 @@ jobs:
           if-no-files-found: error
 
       - name: Apagar o keystore temporário
-        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: rm -f "$RUNNER_TEMP/moto-release.keystore"
-
-      - name: Relatórios
         if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: relatorios
-          path: |
-            app/build/reports/
-            app/build/test-results/
-            app/build/outputs/roborazzi/
-            buildSrc/build/reports/
-            app/schemas/
-          if-no-files-found: ignore
+        run: rm -f "$RUNNER_TEMP/moto-release.keystore"
