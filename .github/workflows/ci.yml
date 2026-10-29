@@ -124,7 +124,7 @@ jobs:
       # o release segue sem assinatura e o AAB do teto acima nunca é assinado (as variáveis só existem nestes passos).
       # Segredo só por env, nunca interpolado no run; nenhum valor é impresso, só os nomes do que falta.
       - name: Segredos da assinatura
-        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || github.event_name == 'pull_request'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           faltando=()
           for nome in MOTO_KEYSTORE_BASE64 MOTO_KEYSTORE_PASSWORD MOTO_KEY_ALIAS MOTO_KEY_PASSWORD; do
@@ -139,7 +139,7 @@ jobs:
         env:
           MOTO_KEYSTORE_BASE64: ${{ secrets.MOTO_KEYSTORE_BASE64 }}
           MOTO_KEYSTORE_PASSWORD: ${{ secrets.MOTO_KEYSTORE_PASSWORD }}
-          MOTO_KEY_ALIAS: ""
+          MOTO_KEY_ALIAS: ${{ secrets.MOTO_KEY_ALIAS }}
           MOTO_KEY_PASSWORD: ${{ secrets.MOTO_KEY_PASSWORD }}
 
       - name: APK de release assinado
