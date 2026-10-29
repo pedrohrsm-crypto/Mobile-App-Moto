@@ -29,6 +29,25 @@ reprovar "texto fixo em Text(\"...\")" "$(grep -rnE '\bText\("' app/src/main/jav
 reprovar "log no código do app (risco #23)" "$(grep -rnE 'android\.util\.Log\b|\bLog\.(v|d|i|w|e|wtf|println)\(|\bTimber\.|\bprintln\(|\bprint\(|\.printStackTrace\(' \
   app/src/main/java --include=*.kt)"
 
+# 5. Keystore nunca no git (#63): pela extensão e pelo começo do arquivo, para pegar também um keystore renomeado
+# (JKS começa com FE ED FE ED; PKCS12, o padrão do keytool, com 30 82 .. .. 02 01 03) ou colado em base64 ("/u3+7Q").
+keystores() {
+  local arquivo cabeca
+  while IFS= read -r -d '' arquivo; do
+    [ -f "$arquivo" ] || continue
+    if [[ "${arquivo,,}" =~ \.(jks|keystore|p12|pfx|bks)$ ]]; then
+      echo "$arquivo"
+      continue
+    fi
+    cabeca="$(head -c 7 "$arquivo" | od -An -tx1 | tr -d ' \n')"
+    if [[ "$cabeca" == feedfeed* || "$cabeca" =~ ^3082....020103$ ]]; then
+      echo "$arquivo"
+    fi
+  done < <(git ls-files -z)
+  git grep -lF '/u3+7Q' -- . ':!ferramentas/guardas.sh' 2>/dev/null
+}
+reprovar "keystore no git (#63): a chave fica só nos segredos do GitHub" "$(keystores | sort -u)"
+
 if [ "$problemas" -gt 0 ]; then
   echo "$problemas ocorrência(s) fora das regras."
   exit 1

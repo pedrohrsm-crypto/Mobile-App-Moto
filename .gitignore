@@ -11,6 +11,8 @@
 .cxx
 *.keystore
 *.jks
+*.p12
+*.pfx
 /buildSrc/build
 /buildSrc/.gradle
 /buildSrc/.kotlin

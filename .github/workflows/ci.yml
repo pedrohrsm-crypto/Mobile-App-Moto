@@ -120,6 +120,69 @@ jobs:
             exit 1
           fi
 
+      # APK de release assinado (#63): só no push na main. Em PR (inclusive Dependabot e fork) estes passos não rodam,
+      # o release segue sem assinatura e o AAB do teto acima nunca é assinado (as variáveis só existem nestes passos).
+      # Segredo só por env, nunca interpolado no run; nenhum valor é impresso, só os nomes do que falta.
+      - name: Segredos da assinatura
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          faltando=()
+          for nome in MOTO_KEYSTORE_BASE64 MOTO_KEYSTORE_PASSWORD MOTO_KEY_ALIAS MOTO_KEY_PASSWORD; do
+            [ -n "${!nome}" ] || faltando+=("$nome")
+          done
+          if [ "${#faltando[@]}" -gt 0 ]; then
+            echo "::error::Faltam segredos da assinatura do release: ${faltando[*]}. Cadastre em Settings > Secrets and variables > Actions; sem eles não sai APK de release."
+            exit 1
+          fi
+          # Fora do repositório: o keystore temporário nunca entra no checkout nem no artefato.
+          printf '%s' "$MOTO_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/moto-release.keystore"
+        env:
+          MOTO_KEYSTORE_BASE64: ${{ secrets.MOTO_KEYSTORE_BASE64 }}
+          MOTO_KEYSTORE_PASSWORD: ${{ secrets.MOTO_KEYSTORE_PASSWORD }}
+          MOTO_KEY_ALIAS: ${{ secrets.MOTO_KEY_ALIAS }}
+          MOTO_KEY_PASSWORD: ${{ secrets.MOTO_KEY_PASSWORD }}
+
+      - name: APK de release assinado
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: ./gradlew assembleRelease
+        env:
+          MOTO_KEYSTORE_PATH: ${{ runner.temp }}/moto-release.keystore
+          MOTO_KEYSTORE_PASSWORD: ${{ secrets.MOTO_KEYSTORE_PASSWORD }}
+          MOTO_KEY_ALIAS: ${{ secrets.MOTO_KEY_ALIAS }}
+          MOTO_KEY_PASSWORD: ${{ secrets.MOTO_KEY_PASSWORD }}
+
+      # Do apksigner, só a impressão digital SHA-256 vai para o log (o DN e os outros resumos ficam de fora).
+      - name: Assinatura do APK
+        id: apk
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          apk=app/build/outputs/apk/release/app-release.apk
+          if [ ! -f "$apk" ]; then
+            echo "::error::$apk não existe: o release saiu sem assinatura."
+            ls app/build/outputs/apk/release/ || true
+            exit 1
+          fi
+          status=0
+          saida="$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$apk" 2>&1)" || status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "::error::apksigner verify reprovou o APK (exit $status)."
+            exit 1
+          fi
+          echo "$saida" | grep -E 'certificate SHA-256 digest' || { echo "::error::apksigner não imprimiu a impressão digital SHA-256."; exit 1; }
+          echo "sha7=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Artefato do APK
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v7
+        with:
+          name: diario-de-bordo-release-${{ steps.apk.outputs.sha7 }}
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+
+      - name: Apagar o keystore temporário
+        if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: rm -f "$RUNNER_TEMP/moto-release.keystore"
+
       - name: Relatórios
         if: always()
         uses: actions/upload-artifact@v7
