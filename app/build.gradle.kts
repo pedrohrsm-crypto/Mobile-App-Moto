@@ -11,6 +11,19 @@ plugins {
     alias(libs.plugins.roborazzi)
 }
 
+// Assinatura do release (#63): só por variáveis de ambiente, que o CI preenche no push na main a partir dos segredos.
+// Sem nenhuma delas (bancada, PR, Dependabot), o release sai sem assinatura, como antes. Com só parte, o build para.
+val variaveisAssinatura = listOf("MOTO_KEYSTORE_PATH", "MOTO_KEYSTORE_PASSWORD", "MOTO_KEY_ALIAS", "MOTO_KEY_PASSWORD")
+val assinatura =
+    variaveisAssinatura.associateWith { nome ->
+        providers.environmentVariable(nome).orNull?.takeIf(String::isNotBlank)
+    }
+val faltandoAssinatura = assinatura.filterValues { it == null }.keys
+if (faltandoAssinatura.isNotEmpty() && faltandoAssinatura.size < variaveisAssinatura.size) {
+    // Só os nomes: o valor de uma variável de assinatura nunca vai para o log.
+    throw GradleException("Assinatura do release incompleta; faltam: ${faltandoAssinatura.joinToString()}")
+}
+
 android {
     namespace = "com.pedrohrsm.diariodebordo"
     // compileSdk 37 porque androidx.core 1.19 exige; targetSdk 36 é a exigência atual da Play.
@@ -29,8 +42,20 @@ android {
         buildConfigField("boolean", "PREMIUM_HABILITADO", "false")
     }
 
+    signingConfigs {
+        if (faltandoAssinatura.isEmpty()) {
+            create("release") {
+                storeFile = file(assinatura.getValue("MOTO_KEYSTORE_PATH")!!)
+                storePassword = assinatura.getValue("MOTO_KEYSTORE_PASSWORD")
+                keyAlias = assinatura.getValue("MOTO_KEY_ALIAS")
+                keyPassword = assinatura.getValue("MOTO_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

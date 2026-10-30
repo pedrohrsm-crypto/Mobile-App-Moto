@@ -132,3 +132,97 @@ jobs:
             buildSrc/build/reports/
             app/schemas/
           if-no-files-found: ignore
+
+  # APK de release assinado (#63): job próprio, só no push na main e depois dos portões. Os segredos MOTO_* são do
+  # environment "release" (restrito à main), não do repositório: segredo de repositório chega a qualquer branch do
+  # repositório, inclusive num PR. Em PR (inclusive Dependabot e fork) este job nem começa.
+  apk-release:
+    name: APK de release assinado
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TZ: UTC
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Só leitura: nada deste job, que roda com a chave, vai para o cache compartilhado.
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
+          cache-read-only: true
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: "platforms;android-37.0 build-tools;36.0.0"
+
+      # Segredo só por env, nunca interpolado no run; nenhum valor é impresso, só os nomes do que falta.
+      - name: Segredos da assinatura
+        run: |
+          faltando=()
+          for nome in MOTO_KEYSTORE_BASE64 MOTO_KEYSTORE_PASSWORD MOTO_KEY_ALIAS MOTO_KEY_PASSWORD; do
+            [ -n "${!nome}" ] || faltando+=("$nome")
+          done
+          if [ "${#faltando[@]}" -gt 0 ]; then
+            echo "::error::Faltam segredos da assinatura do release no environment release: ${faltando[*]}. Cadastre em Settings > Environments > release; sem eles não sai APK de release."
+            exit 1
+          fi
+          # Fora do repositório e legível só pelo dono do processo: o keystore nunca entra no checkout nem no artefato.
+          umask 077
+          printf '%s' "$MOTO_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/moto-release.keystore"
+        env:
+          MOTO_KEYSTORE_BASE64: ${{ secrets.MOTO_KEYSTORE_BASE64 }}
+          MOTO_KEYSTORE_PASSWORD: ${{ secrets.MOTO_KEYSTORE_PASSWORD }}
+          MOTO_KEY_ALIAS: ${{ secrets.MOTO_KEY_ALIAS }}
+          MOTO_KEY_PASSWORD: ${{ secrets.MOTO_KEY_PASSWORD }}
+
+      # Sem configuration cache: no AGP 9.5.0 storePassword e keyPassword entrariam no cache gravado em disco.
+      - name: APK de release assinado
+        run: ./gradlew assembleRelease --no-configuration-cache
+        env:
+          MOTO_KEYSTORE_PATH: ${{ runner.temp }}/moto-release.keystore
+          MOTO_KEYSTORE_PASSWORD: ${{ secrets.MOTO_KEYSTORE_PASSWORD }}
+          MOTO_KEY_ALIAS: ${{ secrets.MOTO_KEY_ALIAS }}
+          MOTO_KEY_PASSWORD: ${{ secrets.MOTO_KEY_PASSWORD }}
+
+      # Do apksigner, só a impressão digital SHA-256 vai para o log (o DN e os outros resumos ficam de fora).
+      - name: Assinatura do APK
+        id: apk
+        run: |
+          apk=app/build/outputs/apk/release/app-release.apk
+          if [ ! -f "$apk" ]; then
+            echo "::error::$apk não existe: o release saiu sem assinatura."
+            ls app/build/outputs/apk/release/ || true
+            exit 1
+          fi
+          status=0
+          saida="$("$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs "$apk" 2>&1)" || status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "::error::apksigner verify reprovou o APK (exit $status)."
+            exit 1
+          fi
+          echo "$saida" | grep -E 'certificate SHA-256 digest' || { echo "::error::apksigner não imprimiu a impressão digital SHA-256."; exit 1; }
+          echo "sha7=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Artefato do APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: diario-de-bordo-release-${{ steps.apk.outputs.sha7 }}
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+
+      - name: Apagar o keystore temporário
+        if: always()
+        run: rm -f "$RUNNER_TEMP/moto-release.keystore"
