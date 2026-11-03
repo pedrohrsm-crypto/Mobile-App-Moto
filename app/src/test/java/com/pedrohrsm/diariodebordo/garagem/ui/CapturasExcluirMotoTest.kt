@@ -1,6 +1,8 @@
 package com.pedrohrsm.diariodebordo.garagem.ui
 
+import android.os.Looper
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureScreenRoboImage
@@ -13,7 +15,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
+import java.time.Duration
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
@@ -43,7 +47,10 @@ class CapturasExcluirMotoTest(private val caso: Caso) {
     fun captura() {
         // O diálogo abre noutra janela, com a densidade dela: a fonte do sistema vale para todas as janelas.
         RuntimeEnvironment.setFontScale(caso.fonte)
-        rule.setContent {
+        // O campo de texto dentro do diálogo nunca deixa o Compose ocioso no Robolectric (o mesmo vale para o
+        // diálogo do hodômetro, que por isso não tinha captura): o conteúdo entra direto na activity, sem a espera
+        // de ociosidade da regra, e o looper anda um tempo fixo antes da captura.
+        rule.activity.setContent {
             DiarioTheme(tema = caso.tema, modoOficina = caso.modoOficina) {
                 MotoDetalheScreen(MotoDetalheEstado.Pronto(moto, leituras, kmAtual = 23_450))
                 DialogoExcluirMoto(
@@ -65,10 +72,12 @@ class CapturasExcluirMotoTest(private val caso: Caso) {
                 )
             }
         }
+        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(ABERTURA_MS))
         captureScreenRoboImage(caso.arquivo)
     }
 
     companion object {
+        private const val ABERTURA_MS = 2_000L
         private val moto = Moto(id = "1", apelido = "Bandida", marca = "Harley-Davidson", modelo = "Sportster 883")
         private val leituras = listOf(
             LeituraHodometro(motoId = "1", km = 23_450, lidaEm = 1_790_000_000_000, fusoHorario = "America/Sao_Paulo"),
