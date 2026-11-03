@@ -157,12 +157,11 @@ class MotoDetalheViewModel @Inject constructor(
         }
     }
 
-    private fun erroDeApagar(falha: Throwable): ErroApagar =
-        when ((falha as? ExclusaoRecusadaException)?.motivo) {
-            ValidacaoExclusao.UnicaComRegistrosDeKm -> ErroApagar.UnicaComRegistrosDeKm
-            ValidacaoExclusao.NaoEncontrada -> ErroApagar.LeituraSumiu
-            else -> ErroApagar.Falha(falha.message)
-        }
+    private fun erroDeApagar(falha: Throwable): ErroApagar = when ((falha as? ExclusaoRecusadaException)?.motivo) {
+        ValidacaoExclusao.UnicaComRegistrosDeKm -> ErroApagar.UnicaComRegistrosDeKm
+        ValidacaoExclusao.NaoEncontrada -> ErroApagar.LeituraSumiu
+        else -> ErroApagar.Falha(falha.message)
+    }
 
     private fun erroDe(falha: Throwable): ErroHodometro =
         (falha as? EdicaoRecusadaException)?.let { erroDeEdicao(it.motivo) } ?: erroDeLeitura(falha)
