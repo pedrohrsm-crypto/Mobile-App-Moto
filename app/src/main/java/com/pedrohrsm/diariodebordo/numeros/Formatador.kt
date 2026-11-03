@@ -25,6 +25,7 @@ object Formatador {
     private val umaCasa = DecimalFormat("#,##0.0", simbolos)
     private val data = DateTimeFormatter.ofPattern("dd/MM/yyyy")
     private val dataHora = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+    private val diaMes = DateTimeFormatter.ofPattern("dd/MM")
 
     fun km(km: Int): String = "${inteiro.format(km)} km"
 
@@ -54,6 +55,9 @@ object Formatador {
     }
 
     fun data(millis: Long, fuso: ZoneId): String = data.format(Instant.ofEpochMilli(millis).atZone(fuso))
+
+    /** "dd/mm", para citar uma leitura numa mensagem curta. */
+    fun diaMes(millis: Long, fuso: ZoneId): String = diaMes.format(Instant.ofEpochMilli(millis).atZone(fuso))
 
     fun dataHora(millis: Long, fuso: ZoneId): String = dataHora.format(Instant.ofEpochMilli(millis).atZone(fuso))
 

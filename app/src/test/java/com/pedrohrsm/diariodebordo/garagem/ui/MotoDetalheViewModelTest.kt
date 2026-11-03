@@ -8,6 +8,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
+import com.pedrohrsm.diariodebordo.garagem.dominio.Vizinha
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
@@ -23,6 +24,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -85,5 +87,70 @@ class MotoDetalheViewModelTest {
         vm.salvarHodometro()
         assertNull(vm.dialogo.value)
         assertEquals(24_010, hodometro.kmAtual(moto.id))
+    }
+
+    private suspend fun leituras(moto: Moto) = hodometro.observarDaMoto(moto.id).first()
+
+    @Test
+    fun corrigirUmaLeituraDoMeioForaDoIntervaloMostraAsDuasVizinhasEAVioladaENaoGrava() = runTest {
+        val moto = motoComKm(1_000)
+        hodometro.registrar(moto.id, 2_000, lidaEm = 5_000_000_000_000)
+        hodometro.registrar(moto.id, 3_000, lidaEm = 6_000_000_000_000)
+        val vm = abrir(moto)
+        val meio = leituras(moto).first { it.km == 2_000 }
+        vm.abrirCorrecao(meio)
+        assertEquals("2000", vm.dialogo.value?.texto)
+        vm.alterarHodometro("3.500")
+        vm.salvarHodometro()
+        val erro = vm.dialogo.value?.erro as ErroHodometro.ForaDoIntervalo
+        assertEquals(Vizinha.SEGUINTE, erro.violada)
+        assertEquals(1_000, erro.anterior?.km)
+        assertEquals(3_000, erro.seguinte?.km)
+        assertEquals(3_000, hodometro.kmAtual(moto.id))
+    }
+
+    @Test
+    fun corrigirDentroDoIntervaloFechaODialogoEMudaOKmAtual() = runTest {
+        val moto = motoComKm(23_450)
+        val vm = abrir(moto)
+        vm.abrirCorrecao(leituras(moto).single())
+        vm.alterarHodometro("2.345")
+        vm.salvarHodometro()
+        assertNull(vm.dialogo.value)
+        assertEquals(2_345, hodometro.kmAtual(moto.id))
+    }
+
+    @Test
+    fun apagarPedeConfirmacaoENadaSaiAntes() = runTest {
+        val moto = motoComKm(1_000)
+        hodometro.registrar(moto.id, 2_000)
+        val vm = abrir(moto)
+        val ultima = leituras(moto).first()
+        vm.pedirApagar(ultima)
+        assertEquals(ultima, vm.apagar.value?.leitura)
+        assertEquals(2_000, hodometro.kmAtual(moto.id))
+        vm.confirmarApagar()
+        assertNull(vm.apagar.value)
+        assertEquals(1_000, hodometro.kmAtual(moto.id))
+    }
+
+    @Test
+    fun apagarAUnicaLeituraSemRegistrosPassaEMantemOAvisoQuandoHaRegistros() = runTest {
+        val dao = FakeLeituraHodometroDao()
+        val repositorio = HodometroRepositorio(dao, TransacaoFalsa(), relogio, AgendadorFalso())
+        val moto = motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        repositorio.registrar(moto.id, 500)
+        val vm = MotoDetalheViewModel(
+            SavedStateHandle(mapOf(MotoDetalheViewModel.ARG_MOTO_ID to moto.id)),
+            motos,
+            repositorio,
+            motoAtual,
+        )
+        dao.registrosComKm = 1
+        vm.pedirApagar(repositorio.observarDaMoto(moto.id).first().single())
+        vm.confirmarApagar()
+        assertEquals(ErroApagar.UnicaComRegistrosDeKm, vm.apagar.value?.erro)
+        assertTrue(vm.apagar.value?.apagando == false)
+        assertEquals(500, repositorio.kmAtual(moto.id))
     }
 }

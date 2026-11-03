@@ -2,6 +2,7 @@ package com.pedrohrsm.diariodebordo.garagem.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -34,6 +35,7 @@ import com.pedrohrsm.diariodebordo.core.ui.EstadoErro
 import com.pedrohrsm.diariodebordo.core.ui.EstadoVazio
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
+import com.pedrohrsm.diariodebordo.garagem.dominio.PontoDoHodometro
 import com.pedrohrsm.diariodebordo.numeros.Formatador
 
 /**
@@ -50,7 +52,21 @@ data class AcoesMoto(
 fun MotoDetalheRoute(acoes: AcoesMoto, viewModel: MotoDetalheViewModel = hiltViewModel()) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     val dialogo by viewModel.dialogo.collectAsStateWithLifecycle()
-    MotoDetalheScreen(estado = estado, acoes = acoes, onAtualizarHodometro = viewModel::abrirHodometro)
+    val apagar by viewModel.apagar.collectAsStateWithLifecycle()
+    MotoDetalheScreen(
+        estado = estado,
+        acoes = acoes,
+        onAtualizarHodometro = viewModel::abrirHodometro,
+        onEditarLeitura = viewModel::abrirCorrecao,
+        onApagarLeitura = viewModel::pedirApagar,
+    )
+    apagar?.let {
+        DialogoApagarLeituraView(
+            confirmacao = it,
+            onConfirmar = viewModel::confirmarApagar,
+            onFechar = viewModel::cancelarApagar,
+        )
+    }
     dialogo?.let {
         DialogoHodometroView(
             dialogo = it,
@@ -66,6 +82,8 @@ fun MotoDetalheScreen(
     estado: MotoDetalheEstado,
     acoes: AcoesMoto = AcoesMoto(),
     onAtualizarHodometro: () -> Unit = {},
+    onEditarLeitura: (LeituraHodometro) -> Unit = {},
+    onApagarLeitura: (LeituraHodometro) -> Unit = {},
 ) {
     val titulo = (estado as? MotoDetalheEstado.Pronto)?.moto?.apelido ?: stringResource(R.string.moto_titulo)
     TelaDiario(
@@ -93,7 +111,7 @@ fun MotoDetalheScreen(
                         },
                     )
                 }
-                items(estado.leituras, key = { it.id }) { LeituraItem(it) }
+                items(estado.leituras, key = { it.id }) { LeituraItem(it, onEditarLeitura, onApagarLeitura) }
             }
         }
     }
@@ -127,10 +145,83 @@ fun BotaoSecundario(texto: String, onClick: () -> Unit, modifier: Modifier = Mod
 }
 
 @Composable
-private fun LeituraItem(leitura: LeituraHodometro) {
+private fun LeituraItem(
+    leitura: LeituraHodometro,
+    onEditar: (LeituraHodometro) -> Unit,
+    onApagar: (LeituraHodometro) -> Unit,
+) {
+    val escala = LocalEscalaDiario.current
     ListItem(
         headlineContent = { Text(Formatador.km(leitura.km)) },
-        supportingContent = { Text(Formatador.data(leitura.lidaEm, Formatador.fuso(leitura.fusoHorario))) },
+        supportingContent = {
+            Column {
+                Text(Formatador.data(leitura.lidaEm, Formatador.fuso(leitura.fusoHorario)))
+                Row(horizontalArrangement = Arrangement.spacedBy(escala.espaco(8.dp))) {
+                    TextButton(
+                        onClick = { onEditar(leitura) },
+                        modifier = Modifier.heightIn(min = escala.alvoMinimo),
+                    ) { Text(stringResource(R.string.editar)) }
+                    TextButton(
+                        onClick = { onApagar(leitura) },
+                        modifier = Modifier.heightIn(min = escala.alvoMinimo),
+                    ) { Text(stringResource(R.string.apagar)) }
+                }
+            }
+        },
+    )
+}
+
+private fun textoDaVizinha(ponto: PontoDoHodometro): Pair<String, String> =
+    Formatador.km(ponto.km) to Formatador.diaMes(ponto.lidaEm, Formatador.fuso(ponto.fusoHorario))
+
+@Composable
+private fun mensagemForaDoIntervalo(erro: ErroHodometro.ForaDoIntervalo): String {
+    val anterior = erro.anterior
+    val seguinte = erro.seguinte
+    return when {
+        anterior != null && seguinte != null -> {
+            val (kmA, dataA) = textoDaVizinha(anterior)
+            val (kmS, dataS) = textoDaVizinha(seguinte)
+            stringResource(R.string.hodometro_entre, kmA, kmS, dataA, dataS)
+        }
+        anterior != null -> {
+            val (kmA, dataA) = textoDaVizinha(anterior)
+            stringResource(R.string.hodometro_acima_de, kmA, dataA)
+        }
+        seguinte != null -> {
+            val (kmS, dataS) = textoDaVizinha(seguinte)
+            stringResource(R.string.hodometro_abaixo_de, kmS, dataS)
+        }
+        else -> stringResource(R.string.km_invalido)
+    }
+}
+
+@Composable
+private fun DialogoApagarLeituraView(confirmacao: ConfirmacaoApagar, onConfirmar: () -> Unit, onFechar: () -> Unit) {
+    val leitura = confirmacao.leitura
+    val km = Formatador.km(leitura.km)
+    val data = Formatador.data(leitura.lidaEm, Formatador.fuso(leitura.fusoHorario))
+    val erro = when (val e = confirmacao.erro) {
+        null -> null
+        ErroApagar.UnicaComRegistrosDeKm -> stringResource(R.string.hodometro_apagar_unica)
+        ErroApagar.LeituraSumiu -> stringResource(R.string.hodometro_leitura_sumiu)
+        is ErroApagar.Falha -> stringResource(R.string.erro_ao_salvar, e.detalhe.orEmpty())
+    }
+    AlertDialog(
+        onDismissRequest = onFechar,
+        title = { Text(stringResource(R.string.hodometro_apagar_titulo, km)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(LocalEscalaDiario.current.espaco(8.dp))) {
+                Text(stringResource(R.string.hodometro_apagar_texto, "$km, $data"))
+                erro?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirmar, enabled = !confirmacao.apagando) {
+                Text(stringResource(R.string.apagar))
+            }
+        },
+        dismissButton = { TextButton(onClick = onFechar) { Text(stringResource(R.string.cancelar)) } },
     )
 }
 
@@ -147,10 +238,13 @@ private fun DialogoHodometroView(
         is ErroHodometro.Menor -> stringResource(R.string.hodometro_menor, Formatador.km(e.anteriorKm))
         is ErroHodometro.Igual -> stringResource(R.string.hodometro_igual, Formatador.km(e.anteriorKm))
         is ErroHodometro.Falha -> stringResource(R.string.erro_ao_salvar, e.detalhe.orEmpty())
+        is ErroHodometro.ForaDoIntervalo -> mensagemForaDoIntervalo(e)
+        ErroHodometro.LeituraSumiu -> stringResource(R.string.hodometro_leitura_sumiu)
     }
+    val titulo = if (dialogo.editando == null) R.string.hodometro_atualizar else R.string.hodometro_corrigir_titulo
     AlertDialog(
         onDismissRequest = onFechar,
-        title = { Text(stringResource(R.string.hodometro_atualizar)) },
+        title = { Text(stringResource(titulo)) },
         text = {
             CampoTexto(
                 valor = dialogo.texto,

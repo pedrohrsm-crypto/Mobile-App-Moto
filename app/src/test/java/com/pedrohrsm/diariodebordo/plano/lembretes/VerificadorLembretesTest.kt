@@ -64,6 +64,33 @@ class VerificadorLembretesTest {
     }
 
     @Test
+    fun corrigirOHodometroRecalculaOLembreteDeVencido() = runTest {
+        // Óleo vencido a partir dos 15.000: o km lançado errado (10.500) escondia o aviso.
+        val item = motoComOleo(kmAtual = 10_500)
+        assertEquals(0, verificador.verificar())
+        val leitura = hodometro.observarDaMoto(item.motoId).first().single()
+
+        hodometro.corrigir(leitura.id, 15_200)
+
+        assertEquals(1, verificador.verificar())
+        assertEquals(listOf(Urgencia.VENCIDO), notificador.avisos.map { it.urgencia })
+        assertEquals(Urgencia.VENCIDO, avisadoComo(item))
+    }
+
+    @Test
+    fun apagarALeituraErradaDevolveOKmAtualQueOPlanoLe() = runTest {
+        val item = motoComOleo(kmAtual = 12_000)
+        val errada = hodometro.registrar(item.motoId, 99_000)
+        assertEquals(1, verificador.verificar())
+        assertEquals(Urgencia.VENCIDO, avisadoComo(item))
+
+        hodometro.apagar(errada.id)
+
+        assertEquals(12_000, hodometro.kmAtual(item.motoId))
+        assertEquals(12_000, hodometro.observarKmAtuais().first().single().km)
+    }
+
+    @Test
     fun itemQueSaltaDireitoParaVencidoAvisaUmaVezSo() = runTest {
         val item = motoComOleo(kmAtual = 15_500)
         assertEquals(1, verificador.verificar())
