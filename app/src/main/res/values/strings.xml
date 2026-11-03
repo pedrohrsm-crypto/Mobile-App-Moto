@@ -54,6 +54,7 @@
     <string name="hodometro_entre">O km precisa ficar entre %1$s e %2$s (leituras de %3$s e %4$s).</string>
     <string name="hodometro_acima_de">O km precisa ser maior que %1$s (leitura de %2$s).</string>
     <string name="hodometro_abaixo_de">O km precisa ser menor que %1$s (leitura de %2$s).</string>
+    <string name="hodometro_igual_outra">Já existe outra leitura com %1$s (de %2$s). Cada leitura precisa ter um km diferente.</string>
     <string name="hodometro_leitura_sumiu">Essa leitura não existe mais. Feche e abra a moto de novo.</string>
     <string name="hodometro_apagar_titulo">Apagar a leitura de %1$s?</string>
     <string name="hodometro_apagar_texto">A leitura de %1$s sai do histórico e o km atual é recalculado.</string>

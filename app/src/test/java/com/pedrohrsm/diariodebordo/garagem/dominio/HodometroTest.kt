@@ -110,14 +110,48 @@ class CorrecaoDeHodometroTest {
 
     @Test
     fun vizinhaEhPelaDataENaoPeloKm() {
-        // A leitura da data do meio tem o maior km (retroativo do diário): a ordem é a da data.
-        val retroativa = ponto("r", 5_000, dia = 2)
-        val leituras = listOf(a, retroativa, ponto("z", 6_000, dia = 3))
-        assertEquals(ValidacaoEdicao.Aceita, validarEdicao(leituras, "r", 5_500))
+        // Retroativo do diário: a data do meio tem o MAIOR km. Pela data a ordem é a(1.000), r(7.000), z(6.000);
+        // pelo km seria a(1.000), z(6.000), r(7.000), e z ganharia r como seguinte em vez de anterior.
+        val r = ponto("r", 7_000, dia = 2)
+        val z = ponto("z", 6_000, dia = 3)
+        val leituras = listOf(a, r, z)
         assertEquals(
-            ValidacaoEdicao.ForaDoIntervalo(Vizinha.SEGUINTE, anterior = a, seguinte = leituras[2]),
+            ValidacaoEdicao.ForaDoIntervalo(Vizinha.ANTERIOR, anterior = r, seguinte = null),
+            validarEdicao(leituras, "z", 6_500),
+        )
+        assertEquals(ValidacaoEdicao.Aceita, validarEdicao(leituras, "z", 7_001))
+        assertEquals(
+            ValidacaoEdicao.ForaDoIntervalo(Vizinha.SEGUINTE, anterior = a, seguinte = z),
             validarEdicao(leituras, "r", 6_000),
         )
+    }
+
+    @Test
+    fun leiturasDaMesmaDataDesempatamPeloKmEntaoPeloId() {
+        // Mesma data: a ordem é pelo km (1.000 antes de 2.000), mesmo com o id "a" vindo antes do id "b".
+        val menor = PontoDoHodometro("b", 1_000, lidaEm = 2 * 86_400_000L)
+        val maior = PontoDoHodometro("a", 2_000, lidaEm = 2 * 86_400_000L)
+        assertEquals(listOf(menor, maior), ordenarPelaData(listOf(maior, menor)))
+        assertEquals(ValidacaoEdicao.Aceita, validarEdicao(listOf(maior, menor), "b", 1_500))
+        assertEquals(
+            ValidacaoEdicao.ForaDoIntervalo(Vizinha.SEGUINTE, anterior = null, seguinte = maior),
+            validarEdicao(listOf(maior, menor), "b", 2_500),
+        )
+    }
+
+    @Test
+    fun kmIgualAoDeOutraLeituraEhRecusadoMesmoSemSerVizinha() {
+        // Retroativo do diário: a(1.000, dia 1), r(7.000, dia 2), z(6.000, dia 3). Editar a para 6.000 cabe
+        // abaixo da vizinha r, mas repete o km de z, que não é vizinha dela.
+        val r = ponto("r", 7_000, dia = 2)
+        val z = ponto("z", 6_000, dia = 3)
+        assertEquals(
+            ValidacaoEdicao.IgualAOutraLeitura(z),
+            validarEdicao(listOf(a, r, z), "a", 6_000),
+        )
+        assertEquals(ValidacaoEdicao.Aceita, validarEdicao(listOf(a, r, z), "a", 6_001))
+        // O próprio km não conta como repetido.
+        assertEquals(ValidacaoEdicao.Aceita, validarEdicao(listOf(a, r, z), "a", a.km))
     }
 
     @Test

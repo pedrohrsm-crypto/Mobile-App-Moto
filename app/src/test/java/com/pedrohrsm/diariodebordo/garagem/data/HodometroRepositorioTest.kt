@@ -7,6 +7,7 @@ import com.pedrohrsm.diariodebordo.garagem.dominio.ExclusaoRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.KM_MAXIMO
 import com.pedrohrsm.diariodebordo.garagem.dominio.LeituraRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.LimiteDeMotosException
+import com.pedrohrsm.diariodebordo.garagem.dominio.PontoDoHodometro
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoEdicao
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoExclusao
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoLeitura
@@ -229,5 +230,34 @@ class HodometroRepositorioTest {
         assertTrue(runCatching { repositorio.apagar(primeira.id) }.exceptionOrNull() is IllegalStateException)
         assertTrue(runCatching { repositorio.corrigir(primeira.id, 500) }.exceptionOrNull() is IllegalStateException)
         assertEquals(3, dao.linhas.value.count { it.excluidoEm == null })
+    }
+
+    @Test
+    fun corrigirPreservaOFusoDaLeituraAntiga() = runTest {
+        // O relógio do teste está em São Paulo; a leitura foi lançada em Tóquio.
+        val antiga = LeituraHodometro(motoId = "moto", km = 1_000, lidaEm = 1_000, fusoHorario = "Asia/Tokyo")
+        dao.inserir(antiga)
+        val nova = hodometro.corrigir(antiga.id, 900)
+        assertEquals("Asia/Tokyo", nova.fusoHorario)
+        assertEquals(antiga.lidaEm, nova.lidaEm)
+    }
+
+    @Test
+    fun editarParaOKmDeOutraLeituraQueNaoEVizinhaEhRecusadoENaoGravaNada() = runTest {
+        // Retroativo do diário: pela data a ordem é 1.000, 7.000, 6.000; editar a primeira para 6.000 cabe
+        // abaixo da vizinha (7.000) mas repete o km da terceira.
+        val primeira = LeituraHodometro(motoId = "moto", km = 1_000, lidaEm = 1_000)
+        val terceira = LeituraHodometro(motoId = "moto", km = 6_000, lidaEm = 3_000)
+        listOf(primeira, LeituraHodometro(motoId = "moto", km = 7_000, lidaEm = 2_000), terceira)
+            .forEach { dao.inserir(it) }
+        val antes = dao.linhas.value
+        val recusa = runCatching { hodometro.corrigir(primeira.id, 6_000) }.exceptionOrNull()
+        assertEquals(
+            ValidacaoEdicao.IgualAOutraLeitura(
+                PontoDoHodometro(terceira.id, 6_000, 3_000, terceira.fusoHorario),
+            ),
+            (recusa as EdicaoRecusadaException).motivo,
+        )
+        assertEquals(antes, dao.linhas.value)
     }
 }

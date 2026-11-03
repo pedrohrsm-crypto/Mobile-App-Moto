@@ -52,6 +52,9 @@ sealed interface ErroHodometro {
     ) : ErroHodometro
 
     data object LeituraSumiu : ErroHodometro
+
+    /** O km já existe em outra leitura ativa da moto (que não é vizinha pela data). */
+    data class IgualAOutra(val outra: PontoDoHodometro) : ErroHodometro
 }
 
 /** [editando] é a leitura que está sendo corrigida; nulo é uma leitura nova ("Atualizar hodômetro"). */
@@ -171,6 +174,7 @@ class MotoDetalheViewModel @Inject constructor(
             ErroHodometro.ForaDoIntervalo(motivo.violada, motivo.anterior, motivo.seguinte)
         ValidacaoEdicao.Negativa, ValidacaoEdicao.AcimaDoLimite -> ErroHodometro.Invalido
         ValidacaoEdicao.NaoEncontrada -> ErroHodometro.LeituraSumiu
+        is ValidacaoEdicao.IgualAOutraLeitura -> ErroHodometro.IgualAOutra(motivo.outra)
         ValidacaoEdicao.Aceita -> ErroHodometro.Falha(null)
     }
 

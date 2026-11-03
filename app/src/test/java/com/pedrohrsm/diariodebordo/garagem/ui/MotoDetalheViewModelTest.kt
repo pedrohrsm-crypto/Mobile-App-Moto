@@ -5,6 +5,7 @@ import com.pedrohrsm.diariodebordo.core.database.TransacaoFalsa
 import com.pedrohrsm.diariodebordo.garagem.data.FakeLeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.FakeMotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
+import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
@@ -152,5 +153,29 @@ class MotoDetalheViewModelTest {
         assertEquals(ErroApagar.UnicaComRegistrosDeKm, vm.apagar.value?.erro)
         assertTrue(vm.apagar.value?.apagando == false)
         assertEquals(500, repositorio.kmAtual(moto.id))
+    }
+
+    @Test
+    fun corrigirParaOKmDeOutraLeituraMostraQualLeituraJaTemEsseKm() = runTest {
+        val dao = FakeLeituraHodometroDao()
+        val repositorio = HodometroRepositorio(dao, TransacaoFalsa(), relogio, AgendadorFalso())
+        val moto = motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
+        val primeira = LeituraHodometro(motoId = moto.id, km = 1_000, lidaEm = 1_000)
+        val terceira = LeituraHodometro(motoId = moto.id, km = 6_000, lidaEm = 3_000)
+        listOf(primeira, LeituraHodometro(motoId = moto.id, km = 7_000, lidaEm = 2_000), terceira)
+            .forEach { dao.inserir(it) }
+        val vm = MotoDetalheViewModel(
+            SavedStateHandle(mapOf(MotoDetalheViewModel.ARG_MOTO_ID to moto.id)),
+            motos,
+            repositorio,
+            motoAtual,
+        )
+        vm.abrirCorrecao(primeira)
+        vm.alterarHodometro("6.000")
+        vm.salvarHodometro()
+        val erro = vm.dialogo.value?.erro as ErroHodometro.IgualAOutra
+        assertEquals(terceira.id, erro.outra.id)
+        assertEquals(6_000, erro.outra.km)
+        assertEquals(7_000, repositorio.kmAtual(moto.id))
     }
 }

@@ -261,6 +261,10 @@ internal fun CampoDialogoHodometro(dialogo: DialogoHodometro, onTexto: (String) 
         is ErroHodometro.Falha -> stringResource(R.string.erro_ao_salvar, e.detalhe.orEmpty())
         is ErroHodometro.ForaDoIntervalo -> mensagemForaDoIntervalo(e)
         ErroHodometro.LeituraSumiu -> stringResource(R.string.hodometro_leitura_sumiu)
+        is ErroHodometro.IgualAOutra -> {
+            val (km, data) = textoDaVizinha(e.outra)
+            stringResource(R.string.hodometro_igual_outra, km, data)
+        }
     }
     CampoTexto(
         valor = dialogo.texto,

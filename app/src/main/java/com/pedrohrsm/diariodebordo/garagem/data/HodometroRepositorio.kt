@@ -59,9 +59,10 @@ class HodometroRepositorio @Inject constructor(
     }.also { avancou -> if (avancou) lembretes.recalcularAgora() }
 
     /**
-     * Corrige o km de uma leitura já lançada: a antiga é marcada excluída e uma nova entra com a mesma data, tudo
-     * na mesma transação (rastro para a sincronização, sem mudar o schema). Fora do intervalo das vizinhas pela
-     * data lança [EdicaoRecusadaException]. Km igual ao atual não grava nada. Devolve a leitura que vale agora.
+     * Corrige o km de uma leitura já lançada: a antiga é marcada excluída e uma nova entra com a mesma data e o
+     * mesmo fuso, tudo na mesma transação (rastro para a sincronização, sem mudar o schema). Fora do intervalo das
+     * vizinhas pela data, ou igual ao km de outra leitura, lança [EdicaoRecusadaException]. Km igual ao atual não
+     * grava nada. Devolve a leitura que vale agora.
      */
     suspend fun corrigir(leituraId: String, novoKm: Int): LeituraHodometro {
         val corrigida = transacao.executar {
@@ -71,7 +72,7 @@ class HodometroRepositorio @Inject constructor(
             if (antiga.km == novoKm) return@executar null
             val linhas = dao.marcarExcluida(leituraId, relogio.millis())
             check(linhas == 1) { "Leitura $leituraId não foi substituída ($linhas linhas)" }
-            gravar(antiga.motoId, novoKm, antiga.lidaEm)
+            gravar(antiga.motoId, novoKm, antiga.lidaEm, antiga.fusoHorario.ifBlank { relogio.zone.id })
         }
         return corrigida?.also { lembretes.recalcularAgora() } ?: checkNotNull(dao.buscar(leituraId))
     }
@@ -97,7 +98,12 @@ class HodometroRepositorio @Inject constructor(
 
     private fun LeituraHodometro.ponto() = PontoDoHodometro(id, km, lidaEm, fusoHorario)
 
-    private suspend fun gravar(motoId: String, km: Int, lidaEm: Long): LeituraHodometro {
+    private suspend fun gravar(
+        motoId: String,
+        km: Int,
+        lidaEm: Long,
+        fuso: String = relogio.zone.id,
+    ): LeituraHodometro {
         val agora = relogio.millis()
         val nova = LeituraHodometro(
             motoId = motoId,
@@ -105,7 +111,7 @@ class HodometroRepositorio @Inject constructor(
             lidaEm = lidaEm,
             criadoEm = agora,
             alteradoEm = agora,
-            fusoHorario = relogio.zone.id,
+            fusoHorario = fuso,
         )
         dao.inserir(nova)
         return nova

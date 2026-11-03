@@ -38,6 +38,12 @@ sealed interface ValidacaoEdicao {
     data object Negativa : ValidacaoEdicao
     data object AcimaDoLimite : ValidacaoEdicao
     data object NaoEncontrada : ValidacaoEdicao
+
+    /**
+     * Dentro do intervalo das vizinhas, mas igual ao km de outra leitura ativa da moto. Só acontece quando a
+     * ordem pela data não é crescente no km (leituras retroativas do diário): o km de cada leitura é único.
+     */
+    data class IgualAOutraLeitura(val outra: PontoDoHodometro) : ValidacaoEdicao
     data class ForaDoIntervalo(
         val violada: Vizinha,
         val anterior: PontoDoHodometro?,
@@ -52,6 +58,7 @@ fun ordenarPelaData(leituras: List<PontoDoHodometro>): List<PontoDoHodometro> =
 /**
  * Valida a edição da leitura [id] para [novoKm] contra as vizinhas pela data da leitura. Sem vizinha anterior
  * (primeira leitura) só vale o limite de cima, e vice-versa. A própria leitura não conta como vizinha.
+ * Além das vizinhas, o km não pode repetir o de nenhuma outra leitura ativa ([ValidacaoEdicao.IgualAOutraLeitura]).
  */
 fun validarEdicao(leituras: List<PontoDoHodometro>, id: String, novoKm: Int): ValidacaoEdicao {
     val ordenadas = ordenarPelaData(leituras)
@@ -68,7 +75,9 @@ fun validarEdicao(leituras: List<PontoDoHodometro>, id: String, novoKm: Int): Va
                     ValidacaoEdicao.ForaDoIntervalo(Vizinha.ANTERIOR, anterior, seguinte)
                 seguinte != null && novoKm >= seguinte.km ->
                     ValidacaoEdicao.ForaDoIntervalo(Vizinha.SEGUINTE, anterior, seguinte)
-                else -> ValidacaoEdicao.Aceita
+                else -> ordenadas.firstOrNull { it.id != id && it.km == novoKm }
+                    ?.let { ValidacaoEdicao.IgualAOutraLeitura(it) }
+                    ?: ValidacaoEdicao.Aceita
             }
         }
     }
