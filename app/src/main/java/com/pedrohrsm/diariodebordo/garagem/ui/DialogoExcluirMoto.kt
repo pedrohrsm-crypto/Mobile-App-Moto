@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -23,13 +22,15 @@ import com.pedrohrsm.diariodebordo.core.ui.CampoTexto
 
 const val TAG_BOTAO_EXCLUIR_MOTO = "botao_excluir_moto"
 
-/** Ação destrutiva no fim da tela da moto, longe do hodômetro e do diário (#65, UX/UI). */
+/**
+ * Ação destrutiva no fim da tela da moto, longe do hodômetro e do diário (#65, UX/UI). Cor padrão do TextButton:
+ * a guarda de contraste (#55) só aceita as cores que ela mede; o texto e a confirmação dizem que é destrutivo.
+ */
 @Composable
 fun BotaoExcluirMoto(onClick: () -> Unit, modifier: Modifier = Modifier) {
     TextButton(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().heightIn(min = LocalEscalaDiario.current.alvoMinimo),
-        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
     ) { Text(stringResource(R.string.moto_excluir)) }
 }
 
@@ -95,7 +96,6 @@ fun DialogoExcluirMoto(
                 onClick = onExcluir,
                 enabled = dialogo.podeExcluir,
                 modifier = Modifier.testTag(TAG_BOTAO_EXCLUIR_MOTO),
-                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
             ) { Text(stringResource(R.string.excluir)) }
         },
         dismissButton = {
