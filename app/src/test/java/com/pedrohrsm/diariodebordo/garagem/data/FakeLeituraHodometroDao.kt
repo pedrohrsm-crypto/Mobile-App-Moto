@@ -10,6 +10,9 @@ class FakeLeituraHodometroDao(private val transacao: TransacaoFalsa? = null) : L
     val linhas = MutableStateFlow<List<LeituraHodometro>>(emptyList())
     val foraDaTransacao = mutableListOf<String>()
 
+    /** Quantos registros do diário da moto têm km (o DAO real conta na tabela `registros`). */
+    var registrosComKm = 0
+
     private fun conferir(chamada: String) {
         if (transacao != null && !transacao.dentro) foraDaTransacao += chamada
     }
@@ -35,5 +38,27 @@ class FakeLeituraHodometroDao(private val transacao: TransacaoFalsa? = null) : L
         conferir("inserir")
         require(linhas.value.none { it.id == item.id }) { "id repetido: ${item.id}" }
         linhas.value = linhas.value + item
+    }
+
+    override suspend fun ativasDaMoto(motoId: String): List<LeituraHodometro> {
+        conferir("ativasDaMoto")
+        return ativas(motoId).sortedWith(compareBy<LeituraHodometro> { it.lidaEm }.thenBy { it.km }.thenBy { it.id })
+    }
+
+    override suspend fun buscar(id: String): LeituraHodometro? {
+        conferir("buscar")
+        return linhas.value.firstOrNull { it.id == id && it.excluidoEm == null }
+    }
+
+    override suspend fun marcarExcluida(id: String, quando: Long): Int {
+        conferir("marcarExcluida")
+        val alvo = linhas.value.firstOrNull { it.id == id && it.excluidoEm == null } ?: return 0
+        linhas.value = linhas.value.map { if (it.id == id) alvo.copy(excluidoEm = quando, alteradoEm = quando) else it }
+        return 1
+    }
+
+    override suspend fun registrosComKm(motoId: String): Int {
+        conferir("registrosComKm")
+        return registrosComKm
     }
 }

@@ -17,6 +17,7 @@
     <string name="cancelar">Cancelar</string>
     <string name="editar">Editar</string>
     <string name="excluir">Excluir</string>
+    <string name="apagar">Apagar</string>
     <string name="ok">OK</string>
     <string name="remover">Remover</string>
     <string name="campo_obrigatorio">Preencha este campo.</string>
@@ -75,6 +76,15 @@
     <string name="hodometro_sem_leitura">Hodômetro sem leitura</string>
     <string name="hodometro_menor">O hodômetro não volta: a última leitura foi %1$s.</string>
     <string name="hodometro_igual">Esse km já está registrado (%1$s).</string>
+    <string name="hodometro_corrigir_titulo">Corrigir leitura</string>
+    <string name="hodometro_entre">O km precisa ficar entre %1$s e %2$s (leituras de %3$s e %4$s).</string>
+    <string name="hodometro_acima_de">O km precisa ser maior que %1$s (leitura de %2$s).</string>
+    <string name="hodometro_abaixo_de">O km precisa ser menor que %1$s (leitura de %2$s).</string>
+    <string name="hodometro_igual_outra">Já existe outra leitura com %1$s (de %2$s). Cada leitura precisa ter um km diferente.</string>
+    <string name="hodometro_leitura_sumiu">Essa leitura não existe mais. Feche e abra a moto de novo.</string>
+    <string name="hodometro_apagar_titulo">Apagar a leitura de %1$s?</string>
+    <string name="hodometro_apagar_texto">A leitura de %1$s sai do histórico e o km atual é recalculado.</string>
+    <string name="hodometro_apagar_unica">Essa é a única leitura da moto e há registros do diário com km. Para apagá-la, antes tire o km desses registros.</string>
     <!-- Diário -->
     <string name="diario_titulo">Diário</string>
     <string name="diario_titulo_moto">Diário · %1$s</string>

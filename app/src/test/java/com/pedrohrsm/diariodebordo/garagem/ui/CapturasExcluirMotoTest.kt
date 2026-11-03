@@ -1,9 +1,23 @@
 package com.pedrohrsm.diariodebordo.garagem.ui
 
 import android.os.Looper
+import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.github.takahirom.roborazzi.ExperimentalRoborazziApi
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.DiarioTheme
@@ -15,16 +29,16 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
-import java.time.Duration
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * Portão visual da exclusão da moto (#65): o diálogo sobre a tela da moto, com o apelido já digitado (botão
- * habilitado), em 360 dp, nos 3 temas, com e sem modo oficina, fonte em 140% e 200%.
- * Gravar: `./gradlew recordRoborazziDebug`; conferir: `./gradlew verifyRoborazziDebug`.
+ * Portão visual da exclusão da moto (#65): o `AlertDialog` real, com a contagem, o atalho do backup e o apelido já
+ * digitado (botão habilitado), sobre a tela da moto e com o teclado aberto (a pessoa está digitando), em 360 dp, nos
+ * 3 temas, com e sem modo oficina, fonte em 140% e 200%. O diálogo abre noutra janela: a captura da tela inteira
+ * pega as duas. Gravar: `./gradlew recordRoborazziDebug`; conferir: `./gradlew verifyRoborazziDebug`.
  */
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -47,38 +61,57 @@ class CapturasExcluirMotoTest(private val caso: Caso) {
     fun captura() {
         // O diálogo abre noutra janela, com a densidade dela: a fonte do sistema vale para todas as janelas.
         RuntimeEnvironment.setFontScale(caso.fonte)
-        // O campo de texto dentro do diálogo nunca deixa o Compose ocioso no Robolectric (o mesmo vale para o
-        // diálogo do hodômetro, que por isso não tinha captura): o conteúdo entra direto na activity, sem a espera
-        // de ociosidade da regra, e o looper anda um tempo fixo antes da captura.
+        // O campo do diálogo não deixa o Compose ficar ocioso (AppNotIdle no setContent da regra, como no #66):
+        // monta-se a tela direto na activity e avança-se o looper à mão.
+        rule.mainClock.autoAdvance = false
         rule.activity.setContent {
             DiarioTheme(tema = caso.tema, modoOficina = caso.modoOficina) {
-                MotoDetalheScreen(MotoDetalheEstado.Pronto(moto, leituras, kmAtual = 23_450))
-                DialogoExcluirMoto(
-                    dialogo = DialogoExclusao(
-                        apelido = moto.apelido,
-                        contagem = ContagemDaMoto(
-                            registros = 12,
-                            fotos = 5,
-                            itensDoPlano = 7,
-                            rotas = 3,
-                            leituras = 4,
-                        ),
-                        texto = moto.apelido,
-                    ),
-                    onTexto = {},
-                    onExcluir = {},
-                    onBackup = {},
-                    onFechar = {},
-                )
+                Box(Modifier.fillMaxSize()) {
+                    MotoDetalheScreen(MotoDetalheEstado.Pronto(moto, leituras, kmAtual = 23_450))
+                    DialogoExcluirMoto(
+                        dialogo = DialogoExclusao(apelido = moto.apelido, contagem = contagem, texto = moto.apelido),
+                        onTexto = {},
+                        onExcluir = {},
+                        onBackup = {},
+                        onFechar = {},
+                    )
+                    // O teclado em si não é desenhado pela JVM: esta faixa ocupa o lugar dele na captura.
+                    Box(
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .windowInsetsBottomHeight(WindowInsets.ime)
+                            .background(MaterialTheme.colorScheme.inverseSurface),
+                    )
+                }
             }
         }
-        shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(ABERTURA_MS))
+        shadowOf(Looper.getMainLooper()).idle()
+        abrirTeclado()
+        rule.mainClock.advanceTimeByFrame()
+        shadowOf(Looper.getMainLooper()).idle()
         captureScreenRoboImage(caso.arquivo)
     }
 
+    /** Teclado aberto: o sistema manda um inset de IME de [ALTURA_TECLADO_DP] para a janela, como no aparelho. */
+    private fun abrirTeclado() {
+        rule.runOnUiThread {
+            val raiz = rule.activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0)
+            val altura = (ALTURA_TECLADO_DP * raiz.resources.displayMetrics.density).toInt()
+            val ime = WindowInsetsCompat.Type.ime()
+            val insets = WindowInsetsCompat.Builder()
+                .setInsets(ime, Insets.of(0, 0, 0, altura))
+                .setVisible(ime, true)
+                .build()
+            ViewCompat.dispatchApplyWindowInsets(raiz, insets)
+        }
+        shadowOf(Looper.getMainLooper()).idle()
+    }
+
     companion object {
-        private const val ABERTURA_MS = 2_000L
+        private const val ALTURA_TECLADO_DP = 300
         private val moto = Moto(id = "1", apelido = "Bandida", marca = "Harley-Davidson", modelo = "Sportster 883")
+        private val contagem = ContagemDaMoto(registros = 12, fotos = 5, itensDoPlano = 7, rotas = 3, leituras = 4)
         private val leituras = listOf(
             LeituraHodometro(motoId = "1", km = 23_450, lidaEm = 1_790_000_000_000, fusoHorario = "America/Sao_Paulo"),
         )

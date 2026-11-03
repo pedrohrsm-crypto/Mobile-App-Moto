@@ -36,6 +36,13 @@ class FormatadorTest {
     }
 
     @Test
+    fun diaMesNoFusoDaLeitura() {
+        val meiaNoiteUtc = 1_790_812_800_000 // 2026-10-01T00:00:00Z
+        assertEquals("01/10", Formatador.diaMes(meiaNoiteUtc, ZoneId.of("UTC")))
+        assertEquals("30/09", Formatador.diaMes(meiaNoiteUtc, ZoneId.of("America/Sao_Paulo")))
+    }
+
+    @Test
     fun distanciaDeRotaEmMetrosAte1KmDepoisEmKm() {
         assertEquals("0 m", Formatador.distancia(0).semNbsp())
         assertEquals("999 m", Formatador.distancia(999).semNbsp())

@@ -8,8 +8,14 @@ import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
+import com.pedrohrsm.diariodebordo.garagem.dominio.EdicaoRecusadaException
+import com.pedrohrsm.diariodebordo.garagem.dominio.ExclusaoRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.LeituraRecusadaException
+import com.pedrohrsm.diariodebordo.garagem.dominio.PontoDoHodometro
+import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoEdicao
+import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoExclusao
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoLeitura
+import com.pedrohrsm.diariodebordo.garagem.dominio.Vizinha
 import com.pedrohrsm.diariodebordo.numeros.Leitor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -37,9 +43,39 @@ sealed interface ErroHodometro {
     data class Menor(val anteriorKm: Int) : ErroHodometro
     data class Igual(val anteriorKm: Int) : ErroHodometro
     data class Falha(val detalhe: String?) : ErroHodometro
+
+    /** Edição fora do intervalo das vizinhas pela data: a mensagem cita as duas (ou a que existe) e as datas. */
+    data class ForaDoIntervalo(
+        val violada: Vizinha,
+        val anterior: PontoDoHodometro?,
+        val seguinte: PontoDoHodometro?,
+    ) : ErroHodometro
+
+    data object LeituraSumiu : ErroHodometro
+
+    /** O km já existe em outra leitura ativa da moto (que não é vizinha pela data). */
+    data class IgualAOutra(val outra: PontoDoHodometro) : ErroHodometro
 }
 
-data class DialogoHodometro(val texto: String = "", val erro: ErroHodometro? = null, val salvando: Boolean = false)
+/** [editando] é a leitura que está sendo corrigida; nulo é uma leitura nova ("Atualizar hodômetro"). */
+data class DialogoHodometro(
+    val texto: String = "",
+    val erro: ErroHodometro? = null,
+    val salvando: Boolean = false,
+    val editando: LeituraHodometro? = null,
+)
+
+sealed interface ErroApagar {
+    data object UnicaComRegistrosDeKm : ErroApagar
+    data object LeituraSumiu : ErroApagar
+    data class Falha(val detalhe: String?) : ErroApagar
+}
+
+data class ConfirmacaoApagar(
+    val leitura: LeituraHodometro,
+    val erro: ErroApagar? = null,
+    val apagando: Boolean = false,
+)
 
 @HiltViewModel
 class MotoDetalheViewModel @Inject constructor(
@@ -77,6 +113,10 @@ class MotoDetalheViewModel @Inject constructor(
         _dialogo.value = null
     }
 
+    fun abrirCorrecao(leitura: LeituraHodometro) {
+        _dialogo.value = DialogoHodometro(texto = leitura.km.toString(), editando = leitura)
+    }
+
     fun alterarHodometro(texto: String) = _dialogo.update { it?.copy(texto = texto, erro = null) }
 
     fun salvarHodometro() {
@@ -89,13 +129,56 @@ class MotoDetalheViewModel @Inject constructor(
         }
         _dialogo.value = atual.copy(salvando = true, erro = null)
         viewModelScope.launch {
-            runCatching { hodometro.registrar(motoId, km) }
+            runCatching {
+                val editando = atual.editando
+                if (editando == null) hodometro.registrar(motoId, km) else hodometro.corrigir(editando.id, km)
+            }
                 .onSuccess { _dialogo.value = null }
                 .onFailure { falha -> _dialogo.update { it?.copy(salvando = false, erro = erroDe(falha)) } }
         }
     }
 
+    private val _apagar = MutableStateFlow<ConfirmacaoApagar?>(null)
+    val apagar: StateFlow<ConfirmacaoApagar?> = _apagar.asStateFlow()
+
+    fun pedirApagar(leitura: LeituraHodometro) {
+        _apagar.value = ConfirmacaoApagar(leitura)
+    }
+
+    fun cancelarApagar() {
+        _apagar.value = null
+    }
+
+    fun confirmarApagar() {
+        val atual = _apagar.value ?: return
+        if (atual.apagando) return
+        _apagar.value = atual.copy(apagando = true, erro = null)
+        viewModelScope.launch {
+            runCatching { hodometro.apagar(atual.leitura.id) }
+                .onSuccess { _apagar.value = null }
+                .onFailure { falha -> _apagar.update { it?.copy(apagando = false, erro = erroDeApagar(falha)) } }
+        }
+    }
+
+    private fun erroDeApagar(falha: Throwable): ErroApagar = when ((falha as? ExclusaoRecusadaException)?.motivo) {
+        ValidacaoExclusao.UnicaComRegistrosDeKm -> ErroApagar.UnicaComRegistrosDeKm
+        ValidacaoExclusao.NaoEncontrada -> ErroApagar.LeituraSumiu
+        else -> ErroApagar.Falha(falha.message)
+    }
+
     private fun erroDe(falha: Throwable): ErroHodometro =
+        (falha as? EdicaoRecusadaException)?.let { erroDeEdicao(it.motivo) } ?: erroDeLeitura(falha)
+
+    private fun erroDeEdicao(motivo: ValidacaoEdicao): ErroHodometro = when (motivo) {
+        is ValidacaoEdicao.ForaDoIntervalo ->
+            ErroHodometro.ForaDoIntervalo(motivo.violada, motivo.anterior, motivo.seguinte)
+        ValidacaoEdicao.Negativa, ValidacaoEdicao.AcimaDoLimite -> ErroHodometro.Invalido
+        ValidacaoEdicao.NaoEncontrada -> ErroHodometro.LeituraSumiu
+        is ValidacaoEdicao.IgualAOutraLeitura -> ErroHodometro.IgualAOutra(motivo.outra)
+        ValidacaoEdicao.Aceita -> ErroHodometro.Falha(null)
+    }
+
+    private fun erroDeLeitura(falha: Throwable): ErroHodometro =
         when (val motivo = (falha as? LeituraRecusadaException)?.motivo) {
             is ValidacaoLeitura.MenorQueAnterior -> ErroHodometro.Menor(motivo.anteriorKm)
             is ValidacaoLeitura.IgualAnterior -> ErroHodometro.Igual(motivo.anteriorKm)

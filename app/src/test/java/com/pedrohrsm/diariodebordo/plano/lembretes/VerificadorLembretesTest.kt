@@ -10,9 +10,11 @@ import com.pedrohrsm.diariodebordo.plano.data.FakeItemDoPlanoDao
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
 import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
 import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
+import com.pedrohrsm.diariodebordo.plano.dominio.situacao
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -61,6 +63,40 @@ class VerificadorLembretesTest {
         assertEquals(item.motoId, notificador.avisos.last().motoId)
         assertEquals(item.id, notificador.avisos.last().itemId)
         assertEquals(0, verificador.verificar())
+    }
+
+    @Test
+    fun corrigirOHodometroRecalculaOLembreteDeVencido() = runTest {
+        // Óleo vencido a partir dos 15.000: o km lançado errado (10.500) escondia o aviso.
+        val item = motoComOleo(kmAtual = 10_500)
+        assertEquals(0, verificador.verificar())
+        val leitura = hodometro.observarDaMoto(item.motoId).first().single()
+
+        hodometro.corrigir(leitura.id, 15_200)
+
+        assertEquals(1, verificador.verificar())
+        assertEquals(listOf(Urgencia.VENCIDO), notificador.avisos.map { it.urgencia })
+        assertEquals(Urgencia.VENCIDO, avisadoComo(item))
+    }
+
+    @Test
+    fun apagarALeituraErradaDevolveOKmAtualQueOPlanoLe() = runTest {
+        val item = motoComOleo(kmAtual = 12_000)
+        val errada = hodometro.registrar(item.motoId, 99_000)
+        val atual = checkNotNull(plano.buscar(item.id))
+        assertEquals(Urgencia.VENCIDO, atual.situacao(hodometro.kmAtual(item.motoId), relogio)?.urgencia)
+        assertEquals(1, verificador.verificar())
+        assertEquals(Urgencia.VENCIDO, avisadoComo(item))
+
+        hodometro.apagar(errada.id)
+
+        // O plano e o verificador leem o km atual que sobrou (12.000): a urgência recalcula para "em dia".
+        assertEquals(12_000, hodometro.kmAtual(item.motoId))
+        assertEquals(12_000, hodometro.observarKmAtuais().first().single().km)
+        assertEquals(Urgencia.EM_DIA, atual.situacao(hodometro.kmAtual(item.motoId), relogio)?.urgencia)
+        // Sem urgência nova não há aviso novo: o aviso VENCIDO do km errado não se repete.
+        assertEquals(0, verificador.verificar())
+        assertEquals(1, notificador.avisos.size)
     }
 
     @Test
