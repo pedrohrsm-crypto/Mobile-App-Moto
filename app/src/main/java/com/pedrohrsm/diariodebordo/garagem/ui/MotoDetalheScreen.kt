@@ -197,25 +197,11 @@ private fun mensagemForaDoIntervalo(erro: ErroHodometro.ForaDoIntervalo): String
 }
 
 @Composable
-private fun DialogoApagarLeituraView(confirmacao: ConfirmacaoApagar, onConfirmar: () -> Unit, onFechar: () -> Unit) {
-    val leitura = confirmacao.leitura
-    val km = Formatador.km(leitura.km)
-    val data = Formatador.data(leitura.lidaEm, Formatador.fuso(leitura.fusoHorario))
-    val erro = when (val e = confirmacao.erro) {
-        null -> null
-        ErroApagar.UnicaComRegistrosDeKm -> stringResource(R.string.hodometro_apagar_unica)
-        ErroApagar.LeituraSumiu -> stringResource(R.string.hodometro_leitura_sumiu)
-        is ErroApagar.Falha -> stringResource(R.string.erro_ao_salvar, e.detalhe.orEmpty())
-    }
+internal fun DialogoApagarLeituraView(confirmacao: ConfirmacaoApagar, onConfirmar: () -> Unit, onFechar: () -> Unit) {
     AlertDialog(
         onDismissRequest = onFechar,
-        title = { Text(stringResource(R.string.hodometro_apagar_titulo, km)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(LocalEscalaDiario.current.espaco(8.dp))) {
-                Text(stringResource(R.string.hodometro_apagar_texto, "$km, $data"))
-                erro?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            }
-        },
+        title = { Text(stringResource(R.string.hodometro_apagar_titulo, Formatador.km(confirmacao.leitura.km))) },
+        text = { TextoDialogoApagar(confirmacao) },
         confirmButton = {
             TextButton(onClick = onConfirmar, enabled = !confirmacao.apagando) {
                 Text(stringResource(R.string.apagar))
@@ -225,13 +211,48 @@ private fun DialogoApagarLeituraView(confirmacao: ConfirmacaoApagar, onConfirmar
     )
 }
 
+/** Corpo do diálogo de apagar: o que sai do histórico e, se a regra recusou, o porquê. */
 @Composable
-private fun DialogoHodometroView(
+internal fun TextoDialogoApagar(confirmacao: ConfirmacaoApagar) {
+    val leitura = confirmacao.leitura
+    val km = Formatador.km(leitura.km)
+    val data = Formatador.data(leitura.lidaEm, Formatador.fuso(leitura.fusoHorario))
+    val erro = when (val e = confirmacao.erro) {
+        null -> null
+        ErroApagar.UnicaComRegistrosDeKm -> stringResource(R.string.hodometro_apagar_unica)
+        ErroApagar.LeituraSumiu -> stringResource(R.string.hodometro_leitura_sumiu)
+        is ErroApagar.Falha -> stringResource(R.string.erro_ao_salvar, e.detalhe.orEmpty())
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(LocalEscalaDiario.current.espaco(8.dp))) {
+        Text(stringResource(R.string.hodometro_apagar_texto, "$km, $data"))
+        erro?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+    }
+}
+
+@Composable
+internal fun DialogoHodometroView(
     dialogo: DialogoHodometro,
     onTexto: (String) -> Unit,
     onSalvar: () -> Unit,
     onFechar: () -> Unit,
 ) {
+    AlertDialog(
+        onDismissRequest = onFechar,
+        title = { Text(stringResource(tituloDoDialogo(dialogo))) },
+        text = { CampoDialogoHodometro(dialogo, onTexto) },
+        confirmButton = {
+            TextButton(onClick = onSalvar, enabled = !dialogo.salvando) { Text(stringResource(R.string.salvar)) }
+        },
+        dismissButton = { TextButton(onClick = onFechar) { Text(stringResource(R.string.cancelar)) } },
+    )
+}
+
+internal fun tituloDoDialogo(dialogo: DialogoHodometro): Int =
+    if (dialogo.editando == null) R.string.hodometro_atualizar else R.string.hodometro_corrigir_titulo
+
+/** Campo do km com a mensagem de erro da regra (inclusive "entre X e Y" da correção). */
+@Composable
+internal fun CampoDialogoHodometro(dialogo: DialogoHodometro, onTexto: (String) -> Unit) {
     val erro = when (val e = dialogo.erro) {
         null -> null
         ErroHodometro.Invalido -> stringResource(R.string.km_invalido)
@@ -241,23 +262,12 @@ private fun DialogoHodometroView(
         is ErroHodometro.ForaDoIntervalo -> mensagemForaDoIntervalo(e)
         ErroHodometro.LeituraSumiu -> stringResource(R.string.hodometro_leitura_sumiu)
     }
-    val titulo = if (dialogo.editando == null) R.string.hodometro_atualizar else R.string.hodometro_corrigir_titulo
-    AlertDialog(
-        onDismissRequest = onFechar,
-        title = { Text(stringResource(titulo)) },
-        text = {
-            CampoTexto(
-                valor = dialogo.texto,
-                onValor = onTexto,
-                rotulo = stringResource(R.string.hodometro_km_atual),
-                teclado = KeyboardType.Number,
-                erro = erro,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onSalvar, enabled = !dialogo.salvando) { Text(stringResource(R.string.salvar)) }
-        },
-        dismissButton = { TextButton(onClick = onFechar) { Text(stringResource(R.string.cancelar)) } },
+    CampoTexto(
+        valor = dialogo.texto,
+        onValor = onTexto,
+        rotulo = stringResource(R.string.hodometro_km_atual),
+        teclado = KeyboardType.Number,
+        erro = erro,
     )
 }
 
