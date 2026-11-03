@@ -29,6 +29,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.ParameterizedRobolectricTestRunner
+import java.time.Duration
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
@@ -62,8 +63,8 @@ class CapturasExcluirMotoTest(private val caso: Caso) {
         // O diálogo abre noutra janela, com a densidade dela: a fonte do sistema vale para todas as janelas.
         RuntimeEnvironment.setFontScale(caso.fonte)
         // O campo do diálogo não deixa o Compose ficar ocioso (AppNotIdle no setContent da regra, como no #66):
-        // monta-se a tela direto na activity e avança-se o looper à mão.
-        rule.mainClock.autoAdvance = false
+        // monta-se a tela direto na activity. Diferente do #66, o texto do diálogo rola: com o relógio parado o
+        // looper nunca esvazia (idle() não volta), então o relógio anda sozinho e o looper roda um tempo fixo.
         rule.activity.setContent {
             DiarioTheme(tema = caso.tema, modoOficina = caso.modoOficina) {
                 Box(Modifier.fillMaxSize()) {
@@ -86,10 +87,9 @@ class CapturasExcluirMotoTest(private val caso: Caso) {
                 }
             }
         }
-        shadowOf(Looper.getMainLooper()).idle()
+        rodar()
         abrirTeclado()
-        rule.mainClock.advanceTimeByFrame()
-        shadowOf(Looper.getMainLooper()).idle()
+        rodar()
         captureScreenRoboImage(caso.arquivo)
     }
 
@@ -105,11 +105,13 @@ class CapturasExcluirMotoTest(private val caso: Caso) {
                 .build()
             ViewCompat.dispatchApplyWindowInsets(raiz, insets)
         }
-        shadowOf(Looper.getMainLooper()).idle()
     }
+
+    private fun rodar() = shadowOf(Looper.getMainLooper()).idleFor(Duration.ofMillis(ESPERA_MS))
 
     companion object {
         private const val ALTURA_TECLADO_DP = 300
+        private const val ESPERA_MS = 1_000L
         private val moto = Moto(id = "1", apelido = "Bandida", marca = "Harley-Davidson", modelo = "Sportster 883")
         private val contagem = ContagemDaMoto(registros = 12, fotos = 5, itensDoPlano = 7, rotas = 3, leituras = 4)
         private val leituras = listOf(

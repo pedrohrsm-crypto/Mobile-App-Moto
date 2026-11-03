@@ -74,10 +74,13 @@ fun DialogoExcluirMoto(
                 TextButton(onClick = onBackup, enabled = !dialogo.excluindo) {
                     Text(stringResource(R.string.moto_excluir_ir_backup))
                 }
+                // A instrução fica fora do campo: um rótulo que quebra linha dentro do OutlinedTextField (fonte 200%
+                // no modo oficina) mede o campo sem parar e trava o diálogo. O rótulo é curto e cabe sempre.
+                Text(stringResource(R.string.moto_excluir_digite, dialogo.apelido))
                 CampoTexto(
                     valor = dialogo.texto,
                     onValor = onTexto,
-                    rotulo = stringResource(R.string.moto_excluir_digite, dialogo.apelido),
+                    rotulo = stringResource(R.string.moto_apelido),
                 )
                 val erro = when (val e = dialogo.erro) {
                     null -> null
