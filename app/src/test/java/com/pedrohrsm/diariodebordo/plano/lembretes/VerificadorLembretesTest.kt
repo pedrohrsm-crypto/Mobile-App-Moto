@@ -13,6 +13,7 @@ import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
