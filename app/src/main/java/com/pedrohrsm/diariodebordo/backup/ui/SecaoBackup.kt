@@ -50,7 +50,9 @@ fun SecaoBackup(viewModel: BackupViewModel = hiltViewModel()) {
     if (estado.confirmandoExportacao) {
         AvisoDadosPessoais(
             comRotas = estado.comRotas,
+            comLocais = estado.comLocais,
             onRotas = viewModel::alternarRotas,
+            onLocais = viewModel::alternarLocais,
             onContinuar = { criar.launch(viewModel.nomeSugerido()) },
             onCancelar = viewModel::cancelarExportacao,
         )
@@ -80,11 +82,16 @@ fun SecaoBackupConteudo(estado: BackupEstado, onExportar: () -> Unit = {}, onImp
     }
 }
 
-/** Risco #23: o arquivo leva dado pessoal e localização; a pessoa pode deixar as rotas de fora. */
+/**
+ * Risco #23: o arquivo leva dado pessoal; a pessoa pode deixar as rotas e os locais dos registros de fora.
+ * As duas caixas abrem desmarcadas a cada exportação ([BackupViewModel.pedirExportacao]).
+ */
 @Composable
 fun AvisoDadosPessoais(
     comRotas: Boolean,
+    comLocais: Boolean,
     onRotas: (Boolean) -> Unit = {},
+    onLocais: (Boolean) -> Unit = {},
     onContinuar: () -> Unit = {},
     onCancelar: () -> Unit = {},
 ) {
@@ -92,24 +99,31 @@ fun AvisoDadosPessoais(
         onDismissRequest = onCancelar,
         title = { Text(stringResource(R.string.backup_aviso_titulo)) },
         text = {
-            // A opção das rotas vem antes do texto: com a fonte grande, ela fica à vista sem rolar o aviso.
+            // As opções vêm antes do texto: com a fonte grande, elas ficam à vista sem rolar o aviso.
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                Row(
-                    Modifier
-                        .heightIn(min = LocalEscalaDiario.current.alvoMinimo)
-                        .toggleable(value = comRotas, role = Role.Checkbox, onValueChange = onRotas),
-                    horizontalArrangement = Arrangement.spacedBy(LocalEscalaDiario.current.espaco(8.dp)),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Checkbox(checked = comRotas, onCheckedChange = null)
-                    Text(stringResource(R.string.backup_incluir_rotas))
-                }
+                CaixaDoAviso(stringResource(R.string.backup_incluir_locais), comLocais, onLocais)
+                CaixaDoAviso(stringResource(R.string.backup_incluir_rotas), comRotas, onRotas)
                 Text(stringResource(R.string.backup_aviso_texto))
             }
         },
         confirmButton = { TextButton(onClick = onContinuar) { Text(stringResource(R.string.backup_escolher_local)) } },
         dismissButton = { TextButton(onClick = onCancelar) { Text(stringResource(R.string.cancelar)) } },
     )
+}
+
+/** A linha inteira é o alvo do toque, com a altura mínima do modo oficina. */
+@Composable
+private fun CaixaDoAviso(texto: String, marcada: Boolean, onMudar: (Boolean) -> Unit) {
+    Row(
+        Modifier
+            .heightIn(min = LocalEscalaDiario.current.alvoMinimo)
+            .toggleable(value = marcada, role = Role.Checkbox, onValueChange = onMudar),
+        horizontalArrangement = Arrangement.spacedBy(LocalEscalaDiario.current.espaco(8.dp)),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(checked = marcada, onCheckedChange = null)
+        Text(texto)
+    }
 }
 
 /** Decisão #13: um toque na moto que fica; nada é gravado antes disso. */
@@ -143,10 +157,9 @@ fun EscolhaDaMoto(candidatas: List<Moto>, onEscolher: (String) -> Unit = {}, onC
 private fun textoDoResultado(resultado: ResultadoBackup): String = when (resultado) {
     is ResultadoBackup.Exportado -> {
         val r = resultado.resumo
-        val base = stringResource(R.string.backup_exportado, r.motos, r.registros, r.fotos, r.rotas)
-        if (r.fotosFaltando >
-            0
-        ) {
+        val locais = stringResource(if (r.comLocais) R.string.backup_locais_incluidos else R.string.backup_locais_fora)
+        val base = stringResource(R.string.backup_exportado, r.motos, r.registros, r.fotos, r.rotas) + "\n\n" + locais
+        if (r.fotosFaltando > 0) {
             base + "\n\n" + stringResource(R.string.backup_fotos_faltando, r.fotosFaltando)
         } else {
             base

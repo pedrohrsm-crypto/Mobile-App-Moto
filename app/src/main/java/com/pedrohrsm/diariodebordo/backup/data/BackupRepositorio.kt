@@ -5,6 +5,7 @@ import com.pedrohrsm.diariodebordo.backup.dominio.EscolhaDeMotoNecessariaExcepti
 import com.pedrohrsm.diariodebordo.backup.dominio.Mesclagem
 import com.pedrohrsm.diariodebordo.backup.dominio.aplicarLimiteDeMotos
 import com.pedrohrsm.diariodebordo.backup.dominio.mesclar
+import com.pedrohrsm.diariodebordo.backup.dominio.paraOArquivo
 import com.pedrohrsm.diariodebordo.core.database.Transacao
 import com.pedrohrsm.diariodebordo.core.premium.Premium
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
@@ -18,7 +19,15 @@ import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
-data class ResumoExportacao(val motos: Int, val registros: Int, val fotos: Int, val rotas: Int, val fotosFaltando: Int)
+data class ResumoExportacao(
+    val motos: Int,
+    val registros: Int,
+    val fotos: Int,
+    val rotas: Int,
+    val fotosFaltando: Int,
+    /** Os locais dos registros foram no arquivo (a pessoa marcou a caixa). */
+    val comLocais: Boolean,
+)
 
 data class ResumoImportacao(val novos: Int, val atualizados: Int, val fotos: Int)
 
@@ -36,8 +45,11 @@ class BackupRepositorio @Inject constructor(
     private val premium: Premium,
     private val relogio: Clock,
 ) {
-    /** Só o que está ativo. Sem rotas, os rolês continuam no diário, mas sem o traçado. */
-    suspend fun montarCopia(comRotas: Boolean): CopiaDeSeguranca {
+    /**
+     * Só o que está ativo. Sem rotas, os rolês continuam no diário, mas sem o traçado. Sem locais, os registros
+     * vão sem latitude e longitude ([paraOArquivo]).
+     */
+    suspend fun montarCopia(comRotas: Boolean, comLocais: Boolean): CopiaDeSeguranca {
         val motos = dao.motos().filter { it.excluidoEm == null }
         val motoIds = motos.map { it.id }.toSet()
         val rotas = if (comRotas) dao.rotas().filter { it.excluidoEm == null && it.motoId in motoIds } else emptyList()
@@ -45,6 +57,7 @@ class BackupRepositorio @Inject constructor(
         val registros = dao.registros()
             .filter { it.excluidoEm == null && it.motoId in motoIds }
             .map { if (it.rotaId == null || it.rotaId in rotaIds) it else it.copy(rotaId = null) }
+            .map { it.paraOArquivo(comLocais) }
         val registroIds = registros.map { it.id }.toSet()
         return CopiaDeSeguranca(
             geradoEm = relogio.millis(),
@@ -62,8 +75,8 @@ class BackupRepositorio @Inject constructor(
      * Gera o .zip e guarda uma cópia em files/exportacao/ (a que o backup automático do Android leva)
      * antes de mandar para o destino escolhido pela pessoa.
      */
-    suspend fun exportar(destino: OutputStream, comRotas: Boolean): ResumoExportacao {
-        val copia = montarCopia(comRotas)
+    suspend fun exportar(destino: OutputStream, comRotas: Boolean, comLocais: Boolean): ResumoExportacao {
+        val copia = montarCopia(comRotas, comLocais)
         val arquivo = arquivos.ultimaExportacao()
         val parcial = File(arquivo.parentFile, "${arquivo.name}.parcial")
         val faltando = parcial.outputStream().use { PacoteZip.escrever(it, copia, arquivos::abrirFoto) }
@@ -75,6 +88,7 @@ class BackupRepositorio @Inject constructor(
             fotos = copia.fotos.map { it.arquivo }.distinct().size - faltando.size,
             rotas = copia.rotas.size,
             fotosFaltando = faltando.size,
+            comLocais = comLocais,
         )
     }
 

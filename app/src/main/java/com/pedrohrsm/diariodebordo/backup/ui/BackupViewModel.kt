@@ -39,6 +39,8 @@ data class BackupEstado(
     val confirmandoExportacao: Boolean = false,
     /** Privacidade por padrão (risco #23, decisão do PM em 27-Out-2026): as rotas só saem se a pessoa marcar. */
     val comRotas: Boolean = false,
+    /** Mesma regra para os locais dos registros (risco #23, decisão do dono R3, em 4-Nov-2026). */
+    val comLocais: Boolean = false,
     val escolhendoMoto: EscolhaDeMoto? = null,
     val ocupado: Boolean = false,
     val resultado: ResultadoBackup? = null,
@@ -57,19 +59,26 @@ class BackupViewModel @Inject constructor(
     /** Nome sugerido no seletor do sistema, com a data para não sobrescrever backups antigos. */
     fun nomeSugerido(): String = "diario-de-bordo-${LocalDate.now(relogio)}.zip"
 
-    /** Cada vez que o aviso abre, as rotas voltam desmarcadas: a escolha de antes não vale para esta exportação. */
-    fun pedirExportacao() = _estado.update { it.copy(confirmandoExportacao = true, comRotas = false, resultado = null) }
+    /**
+     * Cada vez que o aviso abre, as rotas e os locais voltam desmarcados: a escolha de antes não vale para esta
+     * exportação.
+     */
+    fun pedirExportacao() = _estado.update {
+        it.copy(confirmandoExportacao = true, comRotas = false, comLocais = false, resultado = null)
+    }
 
     fun alternarRotas(comRotas: Boolean) = _estado.update { it.copy(comRotas = comRotas) }
+
+    fun alternarLocais(comLocais: Boolean) = _estado.update { it.copy(comLocais = comLocais) }
 
     fun cancelarExportacao() = _estado.update { it.copy(confirmandoExportacao = false) }
 
     /** Chamado com o destino escolhido; null = a pessoa fechou o seletor. */
     fun exportar(uri: String?) {
-        val comRotas = _estado.value.comRotas
+        val (comRotas, comLocais) = _estado.value.let { it.comRotas to it.comLocais }
         _estado.update { it.copy(confirmandoExportacao = false) }
         if (uri == null) return
-        executar { ResultadoBackup.Exportado(canal.escrever(uri) { backup.exportar(it, comRotas) }) }
+        executar { ResultadoBackup.Exportado(canal.escrever(uri) { backup.exportar(it, comRotas, comLocais) }) }
     }
 
     /** Lê primeiro só os dados: se a importação passaria do limite de motos, pergunta qual fica antes de gravar. */

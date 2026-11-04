@@ -164,9 +164,12 @@ class BackupRepositorioTest {
         arquivos.fotos["oleo.jpg"] = JPEG
     }
 
-    private suspend fun Aparelho.exportar(comRotas: Boolean = true): Pair<ByteArray, ResumoExportacao> {
+    private suspend fun Aparelho.exportar(
+        comRotas: Boolean = true,
+        comLocais: Boolean = true,
+    ): Pair<ByteArray, ResumoExportacao> {
         val saida = ByteArrayOutputStream()
-        val resumo = repositorio.exportar(saida, comRotas)
+        val resumo = repositorio.exportar(saida, comRotas, comLocais)
         return saida.toByteArray() to resumo
     }
 
@@ -179,7 +182,10 @@ class BackupRepositorioTest {
     @Test
     fun exportarEImportarNoutroAparelhoRecuperaAsSeteTabelas() = runTest {
         val (arquivo, resumo) = Aparelho().cheio().exportar()
-        assertEquals(ResumoExportacao(motos = 1, registros = 2, fotos = 1, rotas = 1, fotosFaltando = 0), resumo)
+        assertEquals(
+            ResumoExportacao(motos = 1, registros = 2, fotos = 1, rotas = 1, fotosFaltando = 0, comLocais = true),
+            resumo,
+        )
 
         val novo = Aparelho()
         val importado = novo.repositorio.importar(arquivo.inputStream())
@@ -214,6 +220,57 @@ class BackupRepositorioTest {
         novo.repositorio.importar(arquivo.inputStream())
         assertTrue(novo.backup.rotas().isEmpty())
         assertNull(novo.backup.registros().single { it.id == "role" }.rotaId)
+    }
+
+    /** O rolê tem local; o óleo, não. Sem os locais, só o rolê muda, e só na latitude e na longitude. */
+    @Test
+    fun exportarSemLocaisTiraLatitudeELongitudeDeTodosOsRegistrosEMantemOResto() = runTest {
+        val (arquivo, _) = Aparelho().cheio().exportar(comLocais = false)
+        assertEquals(
+            setOf(role.copy(latitude = null, longitude = null), oleo),
+            PacoteZip.lerDados(arquivo.inputStream()).registros.toSet(),
+        )
+    }
+
+    @Test
+    fun exportarComLocaisMantemLatitudeELongitude() = runTest {
+        val (arquivo, _) = Aparelho().cheio().exportar(comLocais = true)
+        assertEquals(setOf(role, oleo), PacoteZip.lerDados(arquivo.inputStream()).registros.toSet())
+    }
+
+    @Test
+    fun resumoDaExportacaoDizSeOsLocaisForam() = runTest {
+        val aparelho = Aparelho().cheio()
+        val marcados = listOf(false, true).map { aparelho.exportar(comLocais = it).second.comLocais }
+        assertEquals(listOf(false, true), marcados)
+    }
+
+    /** Ida e volta sem locais: as sete tabelas chegam iguais, menos a latitude e a longitude do rolê. */
+    @Test
+    fun exportarSemLocaisEImportarNoutroAparelhoPerdeSoOsLocais() = runTest {
+        val (arquivo, _) = Aparelho().cheio().exportar(comLocais = false)
+        val novo = Aparelho()
+        novo.repositorio.importar(arquivo.inputStream())
+        assertEquals(
+            listOf(
+                listOf(moto),
+                listOf(leitura),
+                setOf(role.copy(latitude = null, longitude = null), oleo),
+                listOf(foto),
+                listOf(item),
+                listOf(rota),
+                1,
+            ),
+            listOf(
+                novo.backup.motos(),
+                novo.backup.leituras(),
+                novo.backup.registros().toSet(),
+                novo.backup.fotos(),
+                novo.backup.itensDoPlano(),
+                novo.backup.rotas(),
+                novo.arquivos.fotos.size,
+            ),
+        )
     }
 
     @Test
