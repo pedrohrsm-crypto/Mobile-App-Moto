@@ -64,7 +64,7 @@ class BackupViewModel @Inject constructor(
      * exportação.
      */
     fun pedirExportacao() = _estado.update {
-        it.copy(confirmandoExportacao = true, comRotas = false, comLocais = false, resultado = null)
+        it.copy(confirmandoExportacao = true, comRotas = false, resultado = null)
     }
 
     fun alternarRotas(comRotas: Boolean) = _estado.update { it.copy(comRotas = comRotas) }
@@ -78,7 +78,7 @@ class BackupViewModel @Inject constructor(
         val (comRotas, comLocais) = _estado.value.let { it.comRotas to it.comLocais }
         _estado.update { it.copy(confirmandoExportacao = false) }
         if (uri == null) return
-        executar { ResultadoBackup.Exportado(canal.escrever(uri) { backup.exportar(it, comRotas, comLocais) }) }
+        executar { ResultadoBackup.Exportado(canal.escrever(uri) { backup.exportar(it, comRotas, false) }) }
     }
 
     /** Lê primeiro só os dados: se a importação passaria do limite de motos, pergunta qual fica antes de gravar. */
