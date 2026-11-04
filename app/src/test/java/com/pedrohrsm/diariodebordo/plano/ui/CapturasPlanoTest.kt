@@ -16,7 +16,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
@@ -96,6 +98,11 @@ class CapturasPlanoTest(private val caso: Caso) {
             }
         }
         if (caso.tela.teclado) abrirTeclado()
+        // Quem corrige o feito está digitando no km dele: o formulário rola até a data, com o erro do km à vista.
+        if (caso.tela == Tela.ITEM_FORM_FEITO) {
+            rule.onNodeWithText("Data da última vez", substring = true).performScrollTo()
+            rule.waitForIdle()
+        }
         rule.onRoot().captureRoboImage(caso.arquivo)
     }
 
