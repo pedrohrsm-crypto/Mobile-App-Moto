@@ -63,7 +63,7 @@ class BackupRepositorio @Inject constructor(
         return CopiaDeSeguranca(
             geradoEm = relogio.millis(),
             fusoHorario = relogio.zone.id,
-            locaisOmitidos = !comLocais,
+            locaisOmitidos = false,
             motos = motos,
             leituras = dao.leituras().filter { it.excluidoEm == null && it.motoId in motoIds },
             registros = registros,

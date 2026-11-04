@@ -16,7 +16,6 @@ fun Registro.paraOArquivo(comLocais: Boolean): Registro =
  * chega igual. Arquivo com locais chega como está.
  */
 fun List<Registro>.paraOAparelho(locaisOmitidos: Boolean, doAparelho: List<Registro>): List<Registro> {
-    if (!locaisOmitidos) return this
     val porId = doAparelho.associateBy { it.id }
     return map { vindo ->
         porId[vindo.id]?.let { vindo.copy(latitude = it.latitude, longitude = it.longitude) } ?: vindo
