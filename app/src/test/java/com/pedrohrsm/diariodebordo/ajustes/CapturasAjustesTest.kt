@@ -62,7 +62,7 @@ class CapturasAjustesTest(private val caso: Caso) {
 
     data class Caso(val tela: Tela, val tema: TemaDiario, val modoOficina: Boolean, val fonte: Float) {
         val arquivo: String
-            get() = "src/test/snapshots/ajustes/${tela.pasta}/${tema.name.lowercase()}" +
+            get() = "src/test/snapshots/ajustes/${tela.pasta}/${tela.pasta}--${tema.name.lowercase()}" +
                 "-${if (modoOficina) "oficina" else "normal"}-fonte${(fonte * 100).toInt()}.png"
 
         override fun toString() = arquivo.removePrefix("src/test/snapshots/").removeSuffix(".png")
