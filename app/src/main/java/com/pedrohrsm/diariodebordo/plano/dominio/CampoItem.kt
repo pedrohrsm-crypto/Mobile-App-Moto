@@ -2,7 +2,8 @@ package com.pedrohrsm.diariodebordo.plano.dominio
 
 import com.pedrohrsm.diariodebordo.numeros.Leitor
 
-enum class CampoItem { NOME, INTERVALO, KM, DIAS }
+/** [FEITO_KM] e [FEITO_DATA]: o "feito" editado à mão (#69), conferido por [validarFeito]. */
+enum class CampoItem { NOME, INTERVALO, KM, DIAS, FEITO_KM, FEITO_DATA }
 
 /** Campos inválidos do item do plano. Precisa de nome e de pelo menos um intervalo (km ou dias). */
 fun validarItem(nome: String, kmTexto: String, diasTexto: String): Set<CampoItem> = buildSet {

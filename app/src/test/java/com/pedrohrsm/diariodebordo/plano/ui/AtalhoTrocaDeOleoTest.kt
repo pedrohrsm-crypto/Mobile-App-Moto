@@ -19,6 +19,7 @@ import com.pedrohrsm.diariodebordo.plano.data.AtalhoTrocaDeOleo
 import com.pedrohrsm.diariodebordo.plano.data.FakeItemDoPlanoDao
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
 import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
+import com.pedrohrsm.diariodebordo.plano.data.planoFalso
 import com.pedrohrsm.diariodebordo.plano.dominio.CHAVE_TROCA_DE_OLEO
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
@@ -48,7 +49,14 @@ class AtalhoTrocaDeOleoTest {
             listOf(ItemDoPlano(id = "oleo", motoId = "m", chave = CHAVE_TROCA_DE_OLEO, nome = "Troca de óleo"))
     }
     private val registrosDao = FakeRegistroDao()
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), transacao, relogio, AgendadorFalso())
+    private val hodometro =
+        HodometroRepositorio(
+            FakeLeituraHodometroDao(),
+            transacao,
+            relogio,
+            AgendadorFalso(),
+            planoFalso(relogio, transacao),
+        )
     private val plano = PlanoRepositorio(itensDao, transacao, relogio, AgendadorFalso())
 
     private fun viewModel(preferencias: FakePreferencias) = AtalhoTrocaDeOleoViewModel(

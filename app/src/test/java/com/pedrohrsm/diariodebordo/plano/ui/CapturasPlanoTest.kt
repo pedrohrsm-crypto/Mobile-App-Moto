@@ -31,6 +31,7 @@ import com.pedrohrsm.diariodebordo.plano.dominio.CHAVE_TROCA_DE_OLEO
 import com.pedrohrsm.diariodebordo.plano.dominio.CampoItem
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Rule
 import org.junit.Test
@@ -57,6 +58,9 @@ class CapturasPlanoTest(private val caso: Caso) {
         PLANO_SEM_MOTO("plano-sem-moto"),
         PLANO_ERRO("plano-erro"),
         ITEM_FORM("item-plano-form", teclado = true),
+
+        /** A edição de um item com o feito (#69): o km acima do atual recusado, com o teclado aberto. */
+        ITEM_FORM_FEITO("item-plano-form-feito", teclado = true),
     }
 
     data class Caso(val tela: Tela, val tema: TemaDiario, val modoOficina: Boolean, val fonte: Float) {
@@ -126,6 +130,20 @@ class CapturasPlanoTest(private val caso: Caso) {
                     km = "5.0x0",
                     dias = "",
                     invalidos = setOf(CampoItem.NOME, CampoItem.KM),
+                ),
+            )
+            Tela.ITEM_FORM_FEITO -> ItemPlanoFormScreen(
+                ItemPlanoFormEstado(
+                    carregando = false,
+                    editando = true,
+                    motoId = estradeira.id,
+                    nome = "Troca de óleo",
+                    km = "5.000",
+                    dias = "180",
+                    feitoKm = "190.000",
+                    feitoDia = LocalDate.of(2026, 5, 1),
+                    kmAtual = 187_450,
+                    invalidos = setOf(CampoItem.FEITO_KM),
                 ),
             )
         }

@@ -12,14 +12,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +36,7 @@ import com.pedrohrsm.diariodebordo.core.designsystem.componentes.TelaDiario
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.DiarioTheme
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.LocalEscalaDiario
 import com.pedrohrsm.diariodebordo.core.ui.BotaoPrincipal
+import com.pedrohrsm.diariodebordo.core.ui.CampoDia
 import com.pedrohrsm.diariodebordo.core.ui.CampoTexto
 import com.pedrohrsm.diariodebordo.core.ui.EscolhaUnica
 import com.pedrohrsm.diariodebordo.core.ui.EstadoCarregando
@@ -52,7 +49,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 
 @Composable
 fun RegistroFormRoute(onConcluido: () -> Unit, viewModel: RegistroFormViewModel = hiltViewModel()) {
@@ -250,36 +246,16 @@ private fun Fotos(estado: RegistroFormEstado, acoes: AcoesRegistroForm) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CampoData(dataEm: Long, onData: (Long) -> Unit) {
-    var aberto by remember { mutableStateOf(false) }
     val fuso = ZoneId.systemDefault()
-    OutlinedButton(onClick = {
-        aberto = true
-    }, modifier = Modifier.heightIn(min = LocalEscalaDiario.current.alvoMinimo)) {
-        Text(stringResource(R.string.registro_data, Formatador.data(dataEm, fuso)))
-    }
-    if (aberto) {
-        // O DatePicker trabalha com a meia-noite UTC do dia escolhido; a hora do registro é mantida.
-        val dia = Instant.ofEpochMilli(dataEm).atZone(fuso)
-        val estadoData = rememberDatePickerState(
-            initialSelectedDateMillis = dia.toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli(),
-        )
-        DatePickerDialog(
-            onDismissRequest = { aberto = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    estadoData.selectedDateMillis?.let { utc ->
-                        val escolhido = Instant.ofEpochMilli(utc).atZone(ZoneOffset.UTC).toLocalDate()
-                        onData(juntar(escolhido, dia.toLocalTime(), fuso))
-                    }
-                    aberto = false
-                }) { Text(stringResource(R.string.ok)) }
-            },
-            dismissButton = { TextButton(onClick = { aberto = false }) { Text(stringResource(R.string.cancelar)) } },
-        ) { DatePicker(state = estadoData) }
-    }
+    // A hora do registro é mantida; só o dia muda.
+    val dia = Instant.ofEpochMilli(dataEm).atZone(fuso)
+    CampoDia(
+        dia = dia.toLocalDate(),
+        texto = stringResource(R.string.registro_data, Formatador.data(dataEm, fuso)),
+        onDia = { escolhido -> onData(juntar(escolhido, dia.toLocalTime(), fuso)) },
+    )
 }
 
 private fun juntar(data: LocalDate, hora: LocalTime, fuso: ZoneId): Long =

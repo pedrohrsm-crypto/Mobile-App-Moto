@@ -51,11 +51,22 @@
         <item quantity="one">%d rota gravada</item>
         <item quantity="other">%d rotas gravadas</item>
     </plurals>
+    <plurals name="moto_excluir_leituras">
+        <item quantity="one">%d leitura do hodômetro</item>
+        <item quantity="other">%d leituras do hodômetro</item>
+    </plurals>
     <string name="moto_excluir_backup">Não dá para desfazer. Se quiser guardar uma cópia, exporte o backup antes.</string>
     <string name="moto_excluir_ir_backup">Ir para Ajustes e exportar o backup</string>
     <string name="moto_excluir_digite">Digite %1$s para confirmar</string>
     <string name="moto_excluir_gravando">Uma rota desta moto está sendo gravada. Pare a gravação antes de excluir.</string>
     <string name="moto_excluir_falha">Não foi possível excluir. Nada foi apagado. %1$s</string>
+    <!-- Exclusão feita, com falha num passo depois do commit (#72) -->
+    <string name="moto_excluida_titulo">Moto excluída</string>
+    <plurals name="moto_excluida_fotos_ficaram">
+        <item quantity="one">A moto foi excluída; %d foto não pôde ser apagada do aparelho. Ela ocupa espaço, mas não está ligada a nenhum dado.</item>
+        <item quantity="other">A moto foi excluída; %d fotos não puderam ser apagadas do aparelho. Elas ocupam espaço, mas não estão ligadas a nenhum dado.</item>
+    </plurals>
+    <string name="moto_excluida_lembretes">Os lembretes não foram recalculados agora; a verificação diária confere de novo.</string>
     <string name="moto_form_nova">Nova moto</string>
     <string name="moto_form_editar">Editar moto</string>
     <string name="moto_apelido">Apelido</string>
@@ -185,6 +196,13 @@
     <string name="item_plano_excluir_titulo">Excluir este item?</string>
     <string name="item_plano_excluir_texto">O item sai do plano e deixa de gerar lembretes.</string>
     <string name="item_plano_sem_intervalo">Informe km, dias ou os dois.</string>
+    <!-- O feito do item, editável (#69) -->
+    <string name="item_plano_feito_titulo">Feito pela última vez</string>
+    <string name="item_plano_feito_explica">Corrija se o km ou a data do último serviço ficaram errados. A próxima revisão conta daqui.</string>
+    <string name="item_plano_feito_km">Km da última vez</string>
+    <string name="item_plano_feito_km_invalido">Use um km entre 0 e %1$s, o km atual da moto.</string>
+    <string name="item_plano_feito_data">Data da última vez: %1$s</string>
+    <string name="item_plano_feito_data_invalida">A data não pode ser depois de hoje.</string>
     <string name="lembrete_vencido">Venceu: %1$s</string>
     <string name="lembrete_proximo">Vence logo: %1$s</string>
     <string name="lembrete_texto">%1$s · toque para ver o plano</string>

@@ -11,6 +11,7 @@ import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoLeitura
 import com.pedrohrsm.diariodebordo.garagem.dominio.validarEdicao
 import com.pedrohrsm.diariodebordo.garagem.dominio.validarExclusao
 import com.pedrohrsm.diariodebordo.garagem.dominio.validarLeitura
+import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorLembretes
 import java.time.Clock
 import javax.inject.Inject
@@ -26,6 +27,7 @@ class HodometroRepositorio @Inject constructor(
     private val transacao: Transacao,
     private val relogio: Clock,
     private val lembretes: AgendadorLembretes,
+    private val plano: PlanoRepositorio,
 ) {
     fun observarDaMoto(motoId: String): Flow<List<LeituraHodometro>> = dao.observarDaMoto(motoId)
 
@@ -62,7 +64,8 @@ class HodometroRepositorio @Inject constructor(
      * Corrige o km de uma leitura já lançada: a antiga é marcada excluída e uma nova entra com a mesma data e o
      * mesmo fuso, tudo na mesma transação (rastro para a sincronização, sem mudar o schema). Fora do intervalo das
      * vizinhas pela data, ou igual ao km de outra leitura, lança [EdicaoRecusadaException]. Km igual ao atual não
-     * grava nada. Devolve a leitura que vale agora.
+     * grava nada. Os itens do plano feitos no km antigo passam ao km novo na mesma transação (#69): se o plano não
+     * grava, a correção é desfeita. Devolve a leitura que vale agora.
      */
     suspend fun corrigir(leituraId: String, novoKm: Int): LeituraHodometro {
         val corrigida = transacao.executar {
@@ -72,7 +75,9 @@ class HodometroRepositorio @Inject constructor(
             if (antiga.km == novoKm) return@executar null
             val linhas = dao.marcarExcluida(leituraId, relogio.millis())
             check(linhas == 1) { "Leitura $leituraId não foi substituída ($linhas linhas)" }
-            gravar(antiga.motoId, novoKm, antiga.lidaEm, antiga.fusoHorario.ifBlank { relogio.zone.id })
+            val nova = gravar(antiga.motoId, novoKm, antiga.lidaEm, antiga.fusoHorario.ifBlank { relogio.zone.id })
+            plano.acompanharCorrecaoDoHodometro(antiga.motoId, kmAntigo = antiga.km, kmNovo = novoKm)
+            nova
         }
         return corrigida?.also { lembretes.recalcularAgora() } ?: checkNotNull(dao.buscar(leituraId))
     }

@@ -23,6 +23,10 @@ interface ItemDoPlanoDao {
     @Query("SELECT * FROM itens_plano WHERE id = :id AND excluidoEm IS NULL")
     suspend fun buscar(id: String): ItemDoPlano?
 
+    /** Todos os itens não excluídos da moto, inclusive as pendências resolvidas (a correção do hodômetro, #69). */
+    @Query("SELECT * FROM itens_plano WHERE motoId = :motoId AND excluidoEm IS NULL ORDER BY id")
+    suspend fun ativosDaMoto(motoId: String): List<ItemDoPlano>
+
     @Query("SELECT COUNT(*) FROM itens_plano WHERE registroOrigemId = :registroId AND excluidoEm IS NULL")
     suspend fun contarDaOcorrencia(registroId: String): Int
 

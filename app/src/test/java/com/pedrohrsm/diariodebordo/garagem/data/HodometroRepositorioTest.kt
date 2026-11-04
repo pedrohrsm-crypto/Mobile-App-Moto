@@ -12,6 +12,7 @@ import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoEdicao
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoExclusao
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoLeitura
 import com.pedrohrsm.diariodebordo.garagem.dominio.Vizinha
+import com.pedrohrsm.diariodebordo.plano.data.planoFalso
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
@@ -30,7 +31,7 @@ class HodometroRepositorioTest {
     private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
     private val dao = FakeLeituraHodometroDao()
     private val agendador = AgendadorFalso()
-    private val hodometro = HodometroRepositorio(dao, TransacaoFalsa(), relogio, agendador)
+    private val hodometro = HodometroRepositorio(dao, TransacaoFalsa(), relogio, agendador, planoFalso(relogio))
 
     @Test
     fun registrarPreencheControleEViraKmAtual() = runTest {
@@ -79,7 +80,8 @@ class HodometroRepositorioTest {
     fun leituraDoKmAtualEInsercaoFicamNaMesmaTransacao() = runTest {
         val transacao = TransacaoFalsa()
         val vigiado = FakeLeituraHodometroDao(transacao)
-        val repositorio = HodometroRepositorio(vigiado, transacao, relogio, AgendadorFalso())
+        val repositorio =
+            HodometroRepositorio(vigiado, transacao, relogio, AgendadorFalso(), planoFalso(relogio, transacao))
         // O vigia funciona: uma leitura feita fora de transação é anotada.
         vigiado.kmAtual("moto")
         assertEquals(listOf("kmAtual"), vigiado.foraDaTransacao)
@@ -141,7 +143,8 @@ class HodometroRepositorioTest {
     fun editarMarcaUmaLinhaExcluidaInsereUmaNovaNaMesmaTransacaoEMudaOKmAtual() = runTest {
         val transacao = TransacaoFalsa()
         val vigiado = FakeLeituraHodometroDao(transacao)
-        val repositorio = HodometroRepositorio(vigiado, transacao, relogio, AgendadorFalso())
+        val repositorio =
+            HodometroRepositorio(vigiado, transacao, relogio, AgendadorFalso(), planoFalso(relogio, transacao))
         val (_, _, ultima) = listOf(
             repositorio.registrar("moto", 1_000, lidaEm = 1_000),
             repositorio.registrar("moto", 2_000, lidaEm = 2_000),
@@ -226,7 +229,8 @@ class HodometroRepositorioTest {
         val concorrente = object : LeituraHodometroDao by dao {
             override suspend fun marcarExcluida(id: String, quando: Long): Int = 0
         }
-        val repositorio = HodometroRepositorio(concorrente, TransacaoFalsa(), relogio, AgendadorFalso())
+        val repositorio =
+            HodometroRepositorio(concorrente, TransacaoFalsa(), relogio, AgendadorFalso(), planoFalso(relogio))
         assertTrue(runCatching { repositorio.apagar(primeira.id) }.exceptionOrNull() is IllegalStateException)
         assertTrue(runCatching { repositorio.corrigir(primeira.id, 500) }.exceptionOrNull() is IllegalStateException)
         assertEquals(3, dao.linhas.value.count { it.excluidoEm == null })
