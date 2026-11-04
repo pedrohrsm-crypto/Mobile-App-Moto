@@ -19,6 +19,6 @@ fun List<Registro>.paraOAparelho(locaisOmitidos: Boolean, doAparelho: List<Regis
     if (!locaisOmitidos) return this
     val porId = doAparelho.associateBy { it.id }
     return map { vindo ->
-        porId[vindo.id]?.let { vindo.copy() } ?: vindo
+        porId[vindo.id]?.let { vindo.copy(latitude = it.latitude, longitude = it.longitude) } ?: vindo
     }
 }
