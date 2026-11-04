@@ -30,6 +30,32 @@
     <string name="garagem_adicionar">Adicionar moto</string>
     <string name="garagem_limite_gratis">O plano grátis guarda 1 moto. Mais motos virão no premium.</string>
     <string name="moto_titulo">Moto</string>
+    <!-- Excluir moto (#65) -->
+    <string name="moto_excluir">Excluir moto</string>
+    <string name="moto_excluir_titulo">Excluir %1$s?</string>
+    <string name="moto_excluir_contando">Contando o que é desta moto…</string>
+    <string name="moto_excluir_some">Some deste aparelho, junto com a moto:</string>
+    <plurals name="moto_excluir_registros">
+        <item quantity="one">%d registro do diário</item>
+        <item quantity="other">%d registros do diário</item>
+    </plurals>
+    <plurals name="moto_excluir_fotos">
+        <item quantity="one">%d foto</item>
+        <item quantity="other">%d fotos</item>
+    </plurals>
+    <plurals name="moto_excluir_itens">
+        <item quantity="one">%d item do plano de manutenção</item>
+        <item quantity="other">%d itens do plano de manutenção</item>
+    </plurals>
+    <plurals name="moto_excluir_rotas">
+        <item quantity="one">%d rota gravada</item>
+        <item quantity="other">%d rotas gravadas</item>
+    </plurals>
+    <string name="moto_excluir_backup">Não dá para desfazer. Se quiser guardar uma cópia, exporte o backup antes.</string>
+    <string name="moto_excluir_ir_backup">Ir para Ajustes e exportar o backup</string>
+    <string name="moto_excluir_digite">Digite %1$s para confirmar</string>
+    <string name="moto_excluir_gravando">Uma rota desta moto está sendo gravada. Pare a gravação antes de excluir.</string>
+    <string name="moto_excluir_falha">Não foi possível excluir. Nada foi apagado. %1$s</string>
     <string name="moto_form_nova">Nova moto</string>
     <string name="moto_form_editar">Editar moto</string>
     <string name="moto_apelido">Apelido</string>

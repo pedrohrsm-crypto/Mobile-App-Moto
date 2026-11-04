@@ -226,6 +226,13 @@ private fun NavGraphBuilder.grafoGaragem(nav: NavController) {
             acoes = AcoesMoto(
                 onEditar = { nav.navigate(Rotas.motoEditar(motoId)) },
                 onDiario = { nav.irParaAba(Destino.DIARIO) },
+                // Se a moto abriu por um lembrete sem a garagem na pilha, a garagem entra no lugar dela.
+                onExcluida = {
+                    if (!nav.popBackStack(Rotas.GARAGEM, inclusive = false)) {
+                        nav.navigate(Rotas.GARAGEM) { popUpTo(nav.graph.findStartDestination().id) }
+                    }
+                },
+                onBackup = { nav.navigate(Rotas.AJUSTES) },
                 atalhos = { AtalhoTrocaDeOleoRoute() },
             ),
         )

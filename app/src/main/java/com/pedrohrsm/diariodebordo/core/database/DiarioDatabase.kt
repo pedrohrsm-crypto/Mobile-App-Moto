@@ -7,6 +7,7 @@ import com.pedrohrsm.diariodebordo.diario.data.FotoRegistro
 import com.pedrohrsm.diariodebordo.diario.data.FotoRegistroDao
 import com.pedrohrsm.diariodebordo.diario.data.Registro
 import com.pedrohrsm.diariodebordo.diario.data.RegistroDao
+import com.pedrohrsm.diariodebordo.garagem.data.ExclusaoDeMotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
@@ -45,6 +46,7 @@ abstract class DiarioDatabase : RoomDatabase() {
     abstract fun pontoDeRotaDao(): PontoDeRotaDao
     abstract fun itemDoPlanoDao(): ItemDoPlanoDao
     abstract fun backupDao(): BackupDao
+    abstract fun exclusaoDeMotoDao(): ExclusaoDeMotoDao
 
     companion object {
         const val NOME = "diario.db"

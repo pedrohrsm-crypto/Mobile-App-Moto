@@ -16,6 +16,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -45,11 +46,19 @@ import com.pedrohrsm.diariodebordo.numeros.Formatador
 data class AcoesMoto(
     val onEditar: () -> Unit = {},
     val onDiario: () -> Unit = {},
+    /** Depois de excluir a moto (#65): volta para a garagem. */
+    val onExcluida: () -> Unit = {},
+    /** Atalho do diálogo de exclusão para exportar o backup antes. */
+    val onBackup: () -> Unit = {},
     val atalhos: @Composable () -> Unit = {},
 )
 
 @Composable
-fun MotoDetalheRoute(acoes: AcoesMoto, viewModel: MotoDetalheViewModel = hiltViewModel()) {
+fun MotoDetalheRoute(
+    acoes: AcoesMoto,
+    viewModel: MotoDetalheViewModel = hiltViewModel(),
+    exclusao: ExcluirMotoViewModel = hiltViewModel(),
+) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     val dialogo by viewModel.dialogo.collectAsStateWithLifecycle()
     val apagar by viewModel.apagar.collectAsStateWithLifecycle()
@@ -59,7 +68,9 @@ fun MotoDetalheRoute(acoes: AcoesMoto, viewModel: MotoDetalheViewModel = hiltVie
         onAtualizarHodometro = viewModel::abrirHodometro,
         onEditarLeitura = viewModel::abrirCorrecao,
         onApagarLeitura = viewModel::pedirApagar,
+        onExcluir = { (estado as? MotoDetalheEstado.Pronto)?.let { exclusao.abrir(it.moto.apelido) } },
     )
+    ExclusaoDaMoto(exclusao, acoes)
     apagar?.let {
         DialogoApagarLeituraView(
             confirmacao = it,
@@ -78,12 +89,32 @@ fun MotoDetalheRoute(acoes: AcoesMoto, viewModel: MotoDetalheViewModel = hiltVie
 }
 
 @Composable
+private fun ExclusaoDaMoto(viewModel: ExcluirMotoViewModel, acoes: AcoesMoto) {
+    val dialogo by viewModel.dialogo.collectAsStateWithLifecycle()
+    val excluida by viewModel.excluida.collectAsStateWithLifecycle()
+    LaunchedEffect(excluida) { if (excluida) acoes.onExcluida() }
+    dialogo?.let {
+        DialogoExcluirMoto(
+            dialogo = it,
+            onTexto = viewModel::alterarTexto,
+            onExcluir = viewModel::excluir,
+            onBackup = {
+                viewModel.fechar()
+                acoes.onBackup()
+            },
+            onFechar = viewModel::fechar,
+        )
+    }
+}
+
+@Composable
 fun MotoDetalheScreen(
     estado: MotoDetalheEstado,
     acoes: AcoesMoto = AcoesMoto(),
     onAtualizarHodometro: () -> Unit = {},
     onEditarLeitura: (LeituraHodometro) -> Unit = {},
     onApagarLeitura: (LeituraHodometro) -> Unit = {},
+    onExcluir: () -> Unit = {},
 ) {
     val titulo = (estado as? MotoDetalheEstado.Pronto)?.moto?.apelido ?: stringResource(R.string.moto_titulo)
     TelaDiario(
@@ -112,6 +143,7 @@ fun MotoDetalheScreen(
                     )
                 }
                 items(estado.leituras, key = { it.id }) { LeituraItem(it, onEditarLeitura, onApagarLeitura) }
+                item { BotaoExcluirMoto(onExcluir, Modifier.padding(LocalEscalaDiario.current.espaco(16.dp))) }
             }
         }
     }

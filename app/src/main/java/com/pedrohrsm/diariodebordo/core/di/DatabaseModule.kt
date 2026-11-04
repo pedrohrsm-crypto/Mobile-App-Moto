@@ -9,6 +9,7 @@ import com.pedrohrsm.diariodebordo.core.database.Transacao
 import com.pedrohrsm.diariodebordo.core.database.TransacaoRoom
 import com.pedrohrsm.diariodebordo.diario.data.FotoRegistroDao
 import com.pedrohrsm.diariodebordo.diario.data.RegistroDao
+import com.pedrohrsm.diariodebordo.garagem.data.ExclusaoDeMotoDao
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.MotoDao
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlanoDao
@@ -41,6 +42,9 @@ object DatabaseModule {
         if (debug) construtor.fallbackToDestructiveMigration(dropAllTables = true)
         return construtor.build()
     }
+
+    @Provides
+    fun provideExclusaoDeMotoDao(database: DiarioDatabase): ExclusaoDeMotoDao = database.exclusaoDeMotoDao()
 
     @Provides
     fun provideMotoDao(database: DiarioDatabase): MotoDao = database.motoDao()
