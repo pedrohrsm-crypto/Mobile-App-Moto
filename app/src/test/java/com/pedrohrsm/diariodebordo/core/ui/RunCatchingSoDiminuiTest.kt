@@ -11,7 +11,9 @@ import org.junit.Test
  * [tentar]. Catraca: os usos que existiam em 4-Nov-2026 estão em [USOS_DE_HOJE] e a lista só diminui. Um uso novo
  * reprova, inclusive num arquivo que ainda não existe; um uso retirado sem sair da lista também reprova, para a
  * lista encolher junto. Cada uso é identificado pelo arquivo e pela linha de código (sem o número da linha, que
- * muda a cada edição do arquivo).
+ * muda a cada edição do arquivo), e a comparação conta as repetições: dois usos com o mesmo texto no mesmo arquivo
+ * valem dois. A busca é por linha: um `runCatching` com a chave `{` só na linha seguinte escapa (o ktlint quase
+ * sempre deixa a chave na mesma linha).
  */
 class RunCatchingSoDiminuiTest {
 
@@ -29,10 +31,17 @@ class RunCatchingSoDiminuiTest {
     @Test
     fun runCatchingNovoReprovaEAListaSoDiminui() {
         assertTrue("rode da pasta app/: ${raiz.absolutePath}", raiz.isDirectory)
-        val achados = usosNoCodigo()
-        assertEquals("runCatching novo: use tentar (core/ui/Tentar.kt)", emptyList<String>(), achados - USOS_DE_HOJE)
-        assertEquals("uso retirado: tire-o também de USOS_DE_HOJE", emptyList<String>(), USOS_DE_HOJE - achados)
+        val achados = usosNoCodigo().groupingBy { it }.eachCount()
+        val hoje = USOS_DE_HOJE.groupingBy { it }.eachCount()
+        assertEquals("runCatching novo: use tentar (core/ui/Tentar.kt)", emptyList<String>(), aMais(achados, hoje))
+        assertEquals("uso retirado: tire-o também de USOS_DE_HOJE", emptyList<String>(), aMais(hoje, achados))
     }
+
+    /** O que [de] tem a mais que [que], contando repetições: "arquivo: linha (antes → agora)". */
+    private fun aMais(de: Map<String, Int>, que: Map<String, Int>): List<String> =
+        de.filter { (uso, vezes) -> vezes > (que[uso] ?: 0) }
+            .map { (uso, vezes) -> "$uso (${que[uso] ?: 0} → $vezes)" }
+            .sorted()
 
     @Test
     fun aGuardaPegaAsVariantesDoRunCatching() {
@@ -42,14 +51,15 @@ class RunCatchingSoDiminuiTest {
             "repositorio.runCatching { salvar() }",
             "kotlin.runCatching { salvar() }",
             "runCatching{ salvar() }",
+            "val r = runCatching<Unit> { salvar() }",
         ).forEach { assertTrue(it, USO.containsMatchIn(it)) }
         listOf("tentar { salvar() }", "// sem runCatchingAqui", "fun meuRunCatching() {")
             .forEach { assertTrue(it, !USO.containsMatchIn(it)) }
     }
 
     private companion object {
-        /** `runCatching {`, `.runCatching {` e `kotlin.runCatching {`; não pega nomes que só contêm a palavra. */
-        val USO = Regex("""(^|[^A-Za-z0-9_])runCatching\s*\{""")
+        /** `runCatching {`, `.runCatching {`, `kotlin.runCatching {` e `runCatching<T> {`; não pega nomes que só contêm a palavra. */
+        val USO = Regex("""(^|[^A-Za-z0-9_])runCatching\s*(<[^>]*>)?\s*\{""")
 
         /** Medidos em 4-Nov-2026 (head 0a8b4c1, `grep -rnE` sobre app/src/main/java): 13 usos. */
         val USOS_DE_HOJE = listOf(
