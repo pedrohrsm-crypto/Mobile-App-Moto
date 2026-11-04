@@ -78,7 +78,7 @@ class BackupViewModel @Inject constructor(
         val (comRotas, comLocais) = _estado.value.let { it.comRotas to it.comLocais }
         _estado.update { it.copy(confirmandoExportacao = false) }
         if (uri == null) return
-        executar { ResultadoBackup.Exportado(canal.escrever(uri) { backup.exportar(it, comRotas, true) }) }
+        executar { ResultadoBackup.Exportado(canal.escrever(uri) { backup.exportar(it, comRotas, comLocais) }) }
     }
 
     /** Lê primeiro só os dados: se a importação passaria do limite de motos, pergunta qual fica antes de gravar. */
