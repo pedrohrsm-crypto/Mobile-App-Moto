@@ -8,4 +8,4 @@ import com.pedrohrsm.diariodebordo.diario.data.Registro
  * o resto vai inteiro. É a única regra do que sai do registro quando o local fica de fora.
  */
 fun Registro.paraOArquivo(comLocais: Boolean): Registro =
-    if (comLocais) this else copy(latitude = null, longitude = null)
+    if (comLocais) this else copy(latitude = null, longitude = null, hodometroKm = null)
