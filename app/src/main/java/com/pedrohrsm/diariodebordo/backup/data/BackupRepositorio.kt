@@ -88,7 +88,7 @@ class BackupRepositorio @Inject constructor(
             fotos = copia.fotos.map { it.arquivo }.distinct().size - faltando.size,
             rotas = copia.rotas.size,
             fotosFaltando = faltando.size,
-            comLocais = true,
+            comLocais = comLocais,
         )
     }
 
