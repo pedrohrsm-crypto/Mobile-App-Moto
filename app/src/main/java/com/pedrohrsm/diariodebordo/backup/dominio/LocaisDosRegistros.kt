@@ -9,3 +9,16 @@ import com.pedrohrsm.diariodebordo.diario.data.Registro
  */
 fun Registro.paraOArquivo(comLocais: Boolean): Registro =
     if (comLocais) this else copy(latitude = null, longitude = null)
+
+/**
+ * Decisão do PM (4-Nov-2026): um arquivo sem locais ([locaisOmitidos]) não apaga o local que o aparelho já tem. Cada
+ * registro que chega fica com a latitude e a longitude do registro de mesmo id no aparelho; o que o aparelho não tem
+ * chega igual. Arquivo com locais chega como está.
+ */
+fun List<Registro>.paraOAparelho(locaisOmitidos: Boolean, doAparelho: List<Registro>): List<Registro> {
+    if (!locaisOmitidos) return this
+    val porId = doAparelho.associateBy { it.id }
+    return map { vindo ->
+        porId[vindo.id]?.let { vindo.copy(latitude = it.latitude, longitude = it.longitude) } ?: vindo
+    }
+}

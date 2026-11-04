@@ -44,4 +44,25 @@ class LocaisDosRegistrosTest {
     fun comLocaisOArquivoLevaORegistroIgual() {
         assertEquals(registro, registro.paraOArquivo(comLocais = true))
     }
+
+    /** Registro de outro aparelho, editado depois e exportado sem locais. */
+    private val semLocal =
+        registro.copy(titulo = "Barulho resolvido", alteradoEm = 2_000, latitude = null, longitude = null)
+    private val novo = registro.copy(id = "novo", latitude = null, longitude = null)
+    private val doAparelho = listOf(registro, registro.copy(id = "so-no-aparelho", latitude = 1.0, longitude = 2.0))
+
+    @Test
+    fun arquivoSemLocaisFicaComOLocalDoAparelhoEORegistroNovoChegaIgual() {
+        assertEquals(
+            listOf(semLocal.copy(latitude = -23.55, longitude = -46.63), novo),
+            listOf(semLocal, novo).paraOAparelho(locaisOmitidos = true, doAparelho = doAparelho),
+        )
+    }
+
+    @Test
+    fun arquivoComLocaisChegaComoEsta() {
+        val comOutroLocal = registro.copy(latitude = -22.9, longitude = -43.2)
+        val chegando = listOf(comOutroLocal).paraOAparelho(locaisOmitidos = false, doAparelho = doAparelho)
+        assertEquals(listOf(comOutroLocal), chegando)
+    }
 }

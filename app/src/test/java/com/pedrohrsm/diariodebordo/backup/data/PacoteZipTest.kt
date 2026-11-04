@@ -123,6 +123,13 @@ class PacoteZipTest {
         assertFalse(nomeDeFotoValido("a..jpg"))
     }
 
+    /** Arquivo de antes do #73, sem o campo: os locais foram, e a importação os aplica como sempre. */
+    @Test
+    fun arquivoAntigoSemAMarcaDosLocaisContaComoLocaisIncluidos() {
+        val antigo = zip(PacoteZip.DADOS to """{"formato":1,"geradoEm":1,"fusoHorario":"UTC"}""".toByteArray())
+        assertFalse(PacoteZip.lerDados(antigo.inputStream()).locaisOmitidos)
+    }
+
     @Test(expected = ArquivoInvalidoException::class)
     fun arquivoQueNaoEhZip() {
         PacoteZip.ler("isto não é um zip".toByteArray().inputStream()) { _, _ -> }

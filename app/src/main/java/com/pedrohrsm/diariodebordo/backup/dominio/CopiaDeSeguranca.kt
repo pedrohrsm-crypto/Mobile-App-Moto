@@ -21,6 +21,11 @@ data class CopiaDeSeguranca(
     val formato: Int = FORMATO_ATUAL,
     val geradoEm: Long,
     val fusoHorario: String,
+    /**
+     * A pessoa deixou os locais dos registros de fora (risco #23). Ausente nos arquivos antigos = locais incluídos.
+     * Na importação, o local que o aparelho já tem fica ([paraOAparelho]).
+     */
+    val locaisOmitidos: Boolean = false,
     val motos: List<Moto> = emptyList(),
     val leituras: List<LeituraHodometro> = emptyList(),
     val registros: List<Registro> = emptyList(),

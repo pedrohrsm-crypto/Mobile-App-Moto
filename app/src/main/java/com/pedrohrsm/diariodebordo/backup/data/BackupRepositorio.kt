@@ -5,6 +5,7 @@ import com.pedrohrsm.diariodebordo.backup.dominio.EscolhaDeMotoNecessariaExcepti
 import com.pedrohrsm.diariodebordo.backup.dominio.Mesclagem
 import com.pedrohrsm.diariodebordo.backup.dominio.aplicarLimiteDeMotos
 import com.pedrohrsm.diariodebordo.backup.dominio.mesclar
+import com.pedrohrsm.diariodebordo.backup.dominio.paraOAparelho
 import com.pedrohrsm.diariodebordo.backup.dominio.paraOArquivo
 import com.pedrohrsm.diariodebordo.core.database.Transacao
 import com.pedrohrsm.diariodebordo.core.premium.Premium
@@ -62,6 +63,7 @@ class BackupRepositorio @Inject constructor(
         return CopiaDeSeguranca(
             geradoEm = relogio.millis(),
             fusoHorario = relogio.zone.id,
+            locaisOmitidos = !comLocais,
             motos = motos,
             leituras = dao.leituras().filter { it.excluidoEm == null && it.motoId in motoIds },
             registros = registros,
@@ -151,8 +153,10 @@ class BackupRepositorio @Inject constructor(
             mesclar(dao.leituras(), copia.leituras, {
                 it.id
             }, { it.alteradoEm }).also { dao.gravarLeituras(it.gravar) },
-            mesclar(dao.registros(), copia.registros, { it.id }, { it.alteradoEm })
-                .also { dao.gravarRegistros(it.gravar) },
+            dao.registros().let { doAparelho ->
+                val chegando = copia.registros.paraOAparelho(copia.locaisOmitidos, doAparelho)
+                mesclar(doAparelho, chegando, { it.id }, { it.alteradoEm }).also { dao.gravarRegistros(it.gravar) }
+            },
             mesclar(dao.fotos(), copia.fotos, { it.id }, { it.alteradoEm }).also { dao.gravarFotos(it.gravar) },
             mesclar(dao.itensDoPlano(), copia.itensDoPlano, { it.id }, { it.alteradoEm })
                 .also { dao.gravarItensDoPlano(it.gravar) },

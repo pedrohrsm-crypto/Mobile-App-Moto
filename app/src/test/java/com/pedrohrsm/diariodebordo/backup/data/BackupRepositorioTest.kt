@@ -222,14 +222,48 @@ class BackupRepositorioTest {
         assertNull(novo.backup.registros().single { it.id == "role" }.rotaId)
     }
 
-    /** O rolê tem local; o óleo, não. Sem os locais, só o rolê muda, e só na latitude e na longitude. */
+    /**
+     * O rolê tem local e rota; a nota feita em casa tem local e nenhuma rota (o caso do risco #23); o óleo não tem
+     * local. Sem os locais, os dois com local mudam só na latitude e na longitude.
+     */
     @Test
     fun exportarSemLocaisTiraLatitudeELongitudeDeTodosOsRegistrosEMantemOResto() = runTest {
-        val (arquivo, _) = Aparelho().cheio().exportar(comLocais = false)
+        val casa = Registro(
+            id = "casa",
+            motoId = "m",
+            tipo = TipoRegistro.NOTA,
+            titulo = "Lavei na garagem",
+            dataEm = 4,
+            latitude = -22.91,
+            longitude = -43.17,
+            alteradoEm = 10,
+        )
+        val aparelho = Aparelho().cheio().apply { backup.gravarRegistros(listOf(casa)) }
+        val (arquivo, _) = aparelho.exportar(comLocais = false)
         assertEquals(
-            setOf(role.copy(latitude = null, longitude = null), oleo),
+            setOf(role.copy(latitude = null, longitude = null), casa.copy(latitude = null, longitude = null), oleo),
             PacoteZip.lerDados(arquivo.inputStream()).registros.toSet(),
         )
+    }
+
+    @Test
+    fun arquivoSemLocaisLevaAMarcaEOComLocaisNao() = runTest {
+        val aparelho = Aparelho().cheio()
+        val marcas = listOf(false, true).map {
+            PacoteZip.lerDados(aparelho.exportar(comLocais = it).first.inputStream()).locaisOmitidos
+        }
+        assertEquals(listOf(true, false), marcas)
+    }
+
+    /** Decisão do PM: o rolê editado noutro aparelho chega com o título novo e fica com o local que este já tem. */
+    @Test
+    fun importarArquivoSemLocaisMantemOLocalQueOAparelhoJaTem() = runTest {
+        val editado = role.copy(titulo = "Rolê na serra", alteradoEm = 50)
+        val outro = Aparelho().cheio().apply { backup.gravarRegistros(listOf(editado)) }
+        val (arquivo, _) = outro.exportar(comLocais = false)
+        val aparelho = Aparelho().cheio()
+        aparelho.repositorio.importar(arquivo.inputStream())
+        assertEquals(editado, aparelho.backup.registros().single { it.id == "role" })
     }
 
     @Test
