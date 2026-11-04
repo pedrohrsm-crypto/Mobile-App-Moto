@@ -8,6 +8,8 @@ import com.pedrohrsm.diariodebordo.backup.data.PacoteZip
 import com.pedrohrsm.diariodebordo.core.database.DiarioDatabase
 import com.pedrohrsm.diariodebordo.core.database.TransacaoRoom
 import com.pedrohrsm.diariodebordo.core.premium.Premium
+import com.pedrohrsm.diariodebordo.diario.data.Registro
+import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
@@ -122,6 +124,57 @@ class BackupViewModelTest {
         vm.cancelarExportacao()
         vm.pedirExportacao()
         assertFalse("a escolha de antes não vale para a próxima exportação", vm.estado.value.comRotas)
+    }
+
+    private val comLocal = Registro(
+        id = "r",
+        motoId = "m",
+        tipo = TipoRegistro.NOTA,
+        titulo = "Em casa",
+        dataEm = 1,
+        latitude = -23.55,
+        longitude = -46.63,
+    )
+
+    private fun exportarERegistrosDoArquivo(vm: BackupViewModel): List<Registro> {
+        vm.exportar("content://backup.zip")
+        esperar(vm)
+        return PacoteZip.lerDados(checkNotNull(documentos["content://backup.zip"]).inputStream()).registros
+    }
+
+    @Test
+    fun exportarSemMarcarOsLocaisDeixaOsLocaisDeFora() {
+        runBlocking {
+            dao.gravarMotos(listOf(doArquivo))
+            dao.gravarRegistros(listOf(comLocal))
+        }
+        val vm = BackupViewModel(repositorio, canal, relogio)
+        vm.pedirExportacao()
+        assertEquals(listOf(comLocal.copy(latitude = null, longitude = null)), exportarERegistrosDoArquivo(vm))
+    }
+
+    @Test
+    fun marcarOsLocaisLevaOsLocaisNoArquivo() {
+        runBlocking {
+            dao.gravarMotos(listOf(doArquivo))
+            dao.gravarRegistros(listOf(comLocal))
+        }
+        val vm = BackupViewModel(repositorio, canal, relogio)
+        vm.pedirExportacao()
+        vm.alternarLocais(true)
+        assertEquals(listOf(comLocal), exportarERegistrosDoArquivo(vm))
+    }
+
+    /** O aviso abre de novo depois de uma exportação com os locais marcados: a escolha não fica. */
+    @Test
+    fun reabrirOAvisoDepoisDeExportarComLocaisVoltaComOsLocaisDesmarcados() {
+        runBlocking { dao.gravarMotos(listOf(doArquivo)) }
+        val vm = BackupViewModel(repositorio, canal, relogio)
+        vm.pedirExportacao()
+        vm.alternarLocais(true)
+        exportarERegistrosDoArquivo(vm)
+        vm.pedirExportacao()
+        assertFalse("a escolha de antes não vale para a próxima exportação", vm.estado.value.comLocais)
     }
 
     @Test

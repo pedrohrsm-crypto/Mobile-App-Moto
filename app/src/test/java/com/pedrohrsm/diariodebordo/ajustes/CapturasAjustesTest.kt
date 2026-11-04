@@ -100,7 +100,7 @@ class CapturasAjustesTest(private val caso: Caso) {
             }
             Tela.AVISO_EXPORTAR -> {
                 AjustesScreen(ajuste) { SecaoBackupConteudo(BackupEstado()) }
-                AvisoDadosPessoais(comRotas = false)
+                AvisoDadosPessoais(comRotas = false, comLocais = false)
             }
             Tela.ESCOLHA_DA_MOTO -> {
                 AjustesScreen(ajuste) { SecaoBackupConteudo(BackupEstado(ocupado = true)) }
