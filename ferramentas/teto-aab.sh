@@ -29,7 +29,7 @@ tamanho="$(stat -c %s "$aab")"
 limite=$((teto + tolerancia))
 echo "AAB: $tamanho B · teto: $teto B · tolerância: $tolerancia B · limite: $limite B"
 if [ "$tamanho" -gt "$limite" ]; then
-  echo "✗ o AAB passou do limite (teto + tolerância) em $((tamanho - limite)) B. Subir o teto é decisão do dono (issue decisao); reduza o AAB ou abra a decisão e edite ferramentas/teto-aab.txt no PR com o motivo na mensagem do commit."
+  echo "✗ o AAB passou do limite (teto + tolerância) em $((tamanho - limite)) B. Reduza o AAB ou suba o teto em ferramentas/teto-aab.txt no PR, com o motivo na mensagem do commit: dependência nova ou mais de 50 KB é decisão do dono (issue decisao); abaixo disso, o PM autoriza (D10, #75)."
   exit 1
 fi
 if [ "$tamanho" -lt $((teto - tolerancia)) ]; then

@@ -33,7 +33,7 @@ Framework: v2.0 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 8. `./gradlew testDebugUnitTest` → verde; teste novo precisa ter sido **visto falhar** (bug plantado → vermelho → revertido)
    - Logo depois: `./gradlew verifyRoborazziDebug` → verde **e** `git status --porcelain -- app/src/test/snapshots` vazio (captura mudou ou é nova: `recordRoborazziDebug` e commitar)
 9. `./gradlew verificarManifestoRelease` → 0 (componente exportado entra na lista em `app/build.gradle.kts` com motivo)
-10. `./gradlew bundleRelease` → 0, depois `bash ferramentas/teto-aab.sh` → 0 (o AAB não passa de `ferramentas/teto-aab.txt`, teto + tolerância; subir o teto é decisão do dono, por issue `decisao`, e vai no PR com o motivo na mensagem do commit; o script avisa quando o AAB cai, para baixar o teto)
+10. `./gradlew bundleRelease` → 0, depois `bash ferramentas/teto-aab.sh` → 0 (o AAB não passa de `ferramentas/teto-aab.txt`, teto + tolerância; subir o teto vai no PR com o motivo na mensagem do commit: dependência nova ou aumento acima de 50 KB (51.200 B) num PR é decisão do dono, por issue `decisao`; abaixo disso o PM autoriza e registra no relatório da sprint (D10, #75); o script avisa quando o AAB cai, para baixar o teto)
 11. Visual: 3 temas (Oficina, Estrada, Cromo) × modo oficina × fonte 140% e 200% × tela de 360 dp × teclado aberto, quando houver interface
 
 ## Regras inegociáveis

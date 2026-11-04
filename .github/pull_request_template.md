@@ -12,7 +12,7 @@
 - [ ] `typecheck`: 0
 - [ ] testes unitários: N ✓ — cada teste novo foi **visto falhar** (bug plantado → vermelho → revertido)
 - [ ] capturas: `verifyRoborazziDebug` verde e `app/src/test/snapshots` sem mudança não commitada (se houver interface)
-- [ ] teto do AAB: `ferramentas/teto-aab.sh` → 0; subir o teto é decisão do dono (issue `decisao`) e vai com o motivo na mensagem do commit
+- [ ] teto do AAB: `ferramentas/teto-aab.sh` → 0; subir o teto vai com o motivo na mensagem do commit; dependência nova ou mais de 50 KB num PR é decisão do dono (issue `decisao`), abaixo disso o PM autoriza (D10, #75)
 - [ ] e2e: suíte inteira (sem arquivo fixo)
 - [ ] tabela de rotas do build igual à baseline (ou a mudança explicada abaixo)
 

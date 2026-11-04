@@ -17,6 +17,7 @@ caso() { # nome, esperado, tamanho, conteúdo do arquivo do teto, [trecho espera
 }
 T=$'teto: 10000\ntolerancia: 2048\n'
 caso "1 B acima de teto + tolerância reprova" 1 12049 "$T" "passou do limite"
+caso "a reprovação diz quem decide subir o teto (D10)" 1 12049 "$T" "mais de 50 KB é decisão do dono"
 caso "exatamente em teto + tolerância passa" 0 12048 "$T" "dentro"
 caso "acima do teto, dentro da tolerância, passa" 0 10100 "$T" "dentro"
 caso "abaixo de teto - tolerância avisa sem reprovar" 0 7951 "$T" "::warning::"
