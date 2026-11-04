@@ -25,7 +25,7 @@ data class CopiaDeSeguranca(
      * A pessoa deixou os locais dos registros de fora (risco #23). Ausente nos arquivos antigos = locais incluídos.
      * Na importação, o local que o aparelho já tem fica ([paraOAparelho]).
      */
-    val locaisOmitidos: Boolean = false,
+    val locaisOmitidos: Boolean = true,
     val motos: List<Moto> = emptyList(),
     val leituras: List<LeituraHodometro> = emptyList(),
     val registros: List<Registro> = emptyList(),

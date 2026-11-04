@@ -58,7 +58,7 @@ class BackupRepositorio @Inject constructor(
         val registros = dao.registros()
             .filter { it.excluidoEm == null && it.motoId in motoIds }
             .map { if (it.rotaId == null || it.rotaId in rotaIds) it else it.copy(rotaId = null) }
-            .map { it.paraOArquivo(comLocais) }
+            .map { if (it.rotaId != null) it.paraOArquivo(comLocais) else it }
         val registroIds = registros.map { it.id }.toSet()
         return CopiaDeSeguranca(
             geradoEm = relogio.millis(),
