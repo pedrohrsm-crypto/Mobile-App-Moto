@@ -3,6 +3,7 @@ package com.pedrohrsm.diariodebordo.plano.ui
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pedrohrsm.diariodebordo.core.ui.tentar
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.numeros.Leitor
@@ -104,14 +105,9 @@ class ItemPlanoFormViewModel @Inject constructor(
             nome = e.nome.trim(),
             intervaloKm = e.km.takeIf { it.isNotBlank() }?.let(Leitor::km),
             intervaloDias = e.dias.takeIf { it.isNotBlank() }?.trim()?.toIntOrNull(),
-        ).let {
-            if (feito ==
-                null
-            ) {
-                it
-            } else {
-                it.copy(ultimaVezKm = Leitor.km(e.feitoKm), ultimaVezEm = instante(it, feito))
-            }
+        ).let { editado ->
+            feito?.let { dia -> editado.copy(ultimaVezKm = Leitor.km(e.feitoKm), ultimaVezEm = instante(editado, dia)) }
+                ?: editado
         }
         viewModelScope.launch {
             tentar { plano.salvar(item, hodometro.kmAtual(motoId)) }

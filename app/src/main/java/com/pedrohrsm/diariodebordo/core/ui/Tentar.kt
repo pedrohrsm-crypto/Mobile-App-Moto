@@ -1,4 +1,4 @@
-package com.pedrohrsm.diariodebordo.plano.ui
+package com.pedrohrsm.diariodebordo.core.ui
 
 import kotlinx.coroutines.CancellationException
 

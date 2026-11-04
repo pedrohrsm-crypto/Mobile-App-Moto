@@ -3,11 +3,11 @@ package com.pedrohrsm.diariodebordo.garagem.ui
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pedrohrsm.diariodebordo.core.ui.tentar
 import com.pedrohrsm.diariodebordo.garagem.data.ExclusaoDeMoto
 import com.pedrohrsm.diariodebordo.garagem.dominio.ContagemDaMoto
 import com.pedrohrsm.diariodebordo.garagem.dominio.GravacaoEmAndamentoException
 import com.pedrohrsm.diariodebordo.garagem.dominio.confirmaExclusao
-import com.pedrohrsm.diariodebordo.plano.ui.tentar
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
