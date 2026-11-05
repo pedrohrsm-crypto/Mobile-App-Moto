@@ -33,7 +33,7 @@ Framework: v2.0 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 8. `./gradlew testDebugUnitTest` → verde; teste novo precisa ter sido **visto falhar** (bug plantado → vermelho → revertido)
    - Logo depois: `./gradlew verifyRoborazziDebug` → verde **e** `git status --porcelain -- app/src/test/snapshots` vazio (captura mudou ou é nova: `recordRoborazziDebug` e commitar)
 9. `./gradlew verificarManifestoRelease` → 0 (componente exportado entra na lista em `app/build.gradle.kts` com motivo)
-10. `./gradlew bundleRelease` → 0, depois `bash ferramentas/teto-aab.sh` → 0 (o AAB não passa de `ferramentas/teto-aab.txt`, teto + tolerância; subir o teto é decisão do dono, por issue `decisao`, e vai no PR com o motivo na mensagem do commit; o script avisa quando o AAB cai, para baixar o teto)
+10. `./gradlew bundleRelease` → 0, depois `bash ferramentas/teto-aab.sh` → 0 (o AAB não passa de `ferramentas/teto-aab.txt`, teto + tolerância; subir o teto vai no PR com o motivo na mensagem do commit: dependência nova ou aumento acima de 50 KB (51.200 B) num PR é decisão do dono, por issue `decisao`; abaixo disso o PM autoriza e registra no relatório da sprint (D10, #75); o script avisa quando o AAB cai, para baixar o teto)
 11. Visual: 3 temas (Oficina, Estrada, Cromo) × modo oficina × fonte 140% e 200% × tela de 360 dp × teclado aberto, quando houver interface
 
 ## Regras inegociáveis
@@ -42,7 +42,7 @@ Framework: v2.0 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 - Localização só com permissão concedida na hora do uso; o app funciona sem ela. Nada de coordenada, placa ou texto livre em log ou no Crashlytics; EXIF de GPS removido das fotos.
 - Uma regra de negócio mora em um lugar só (funções de domínio puras, testadas na JVM).
 - Toda tela usa `TelaDiario` (edge-to-edge, insets pelo `PaddingValues`); formulário usa `FormularioDiario` (rola e sobe com o teclado).
-- Toda cor vem do `ColorScheme` com par nos 3 temas; texto em `sp`, espaçamento em `dp`, nunca px. As catracas (contagem de cor crua, tamanho do AAB) não sobem.
+- Toda cor vem do `ColorScheme` com par nos 3 temas; texto em `sp`, espaçamento em `dp`, nunca px. A catraca da cor crua não sobe; a do tamanho do AAB só sobe pelo portão 10 (D10, #75).
 - **Regra da segunda ocorrência:** um bug que já aconteceu antes só é consertado junto com um primitivo, uma guarda ou um lint que impeça a volta (PFA-01, 2.3).
 - Todo número citado vem de um comando rodado, com data e SHA.
 - Versão nova de dependência só pelo `libs.versions.toml`.
