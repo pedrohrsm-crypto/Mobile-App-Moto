@@ -42,6 +42,11 @@ class FakeItemDoPlanoDao : ItemDoPlanoDao {
         return linhas.value.find { it.id == id && it.excluidoEm == null }
     }
 
+    override suspend fun ativosDaMoto(motoId: String): List<ItemDoPlano> {
+        conferir()
+        return linhas.value.filter { it.motoId == motoId && it.excluidoEm == null }.sortedBy { it.id }
+    }
+
     override suspend fun contarDaOcorrencia(registroId: String): Int {
         conferir()
         return linhas.value.count { it.registroOrigemId == registroId && it.excluidoEm == null }

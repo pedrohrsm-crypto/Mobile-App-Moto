@@ -7,12 +7,14 @@ import com.pedrohrsm.diariodebordo.garagem.dominio.GravacaoEmAndamentoException
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorLembretes
 import java.time.Clock
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 
 /**
  * Exclui a moto e tudo o que é dela (#65): registros, fotos, plano, rotas e leituras recebem `excluidoEm` numa
  * transação só (exclusão lógica, docs/offline-first.md). Cada marcação confere as linhas com a contagem lida
  * na mesma transação; se uma não bate, nada fica excluído. Depois do commit, os arquivos das fotos saem do
- * armazenamento do app e os lembretes são recalculados.
+ * armazenamento do app e os lembretes são recalculados. Esses dois passos não desfazem a exclusão (#72): a falha
+ * de um deles vira aviso no [Resultado], e só o cancelamento da corrotina é relançado.
  */
 class ExclusaoDeMoto @Inject constructor(
     private val dao: ExclusaoDeMotoDao,
@@ -23,7 +25,10 @@ class ExclusaoDeMoto @Inject constructor(
 ) {
     suspend fun contar(motoId: String): ContagemDaMoto = transacao.executar { lerContagem(motoId).first }
 
-    /** Devolve o que foi excluído e os arquivos de foto que não saíram do armazenamento (órfãos, sem dado ligado). */
+    /**
+     * Devolve o que foi excluído, os arquivos de foto que não saíram do armazenamento (órfãos, sem dado ligado) e se
+     * os lembretes foram recalculados. Só lança exceção antes do commit, quando nada foi excluído.
+     */
     suspend fun excluir(motoId: String): Resultado {
         val (contagem, arquivos) = transacao.executar {
             if (dao.contarRotasEmGravacao(motoId) > 0) throw GravacaoEmAndamentoException()
@@ -37,9 +42,18 @@ class ExclusaoDeMoto @Inject constructor(
             confere("moto", 1, dao.marcarMoto(motoId, agora))
             lida to fotosDaMoto
         }
-        val ficaram = arquivos.filterNot { fotos.apagar(it) }
-        lembretes.recalcularAgora()
-        return Resultado(contagem, ficaram)
+        val ficaram = arquivos.filterNot { arquivo -> depoisDoCommit { fotos.apagar(arquivo) } ?: false }
+        val recalculou = depoisDoCommit { lembretes.recalcularAgora() } != null
+        return Resultado(contagem, ficaram, recalculou)
+    }
+
+    /** Um passo depois do commit: a moto já foi excluída, então a falha vira null e o cancelamento segue adiante. */
+    private inline fun <T> depoisDoCommit(passo: () -> T): T? = try {
+        passo()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        null
     }
 
     private suspend fun lerContagem(motoId: String): Pair<ContagemDaMoto, List<String>> {
@@ -57,5 +71,9 @@ class ExclusaoDeMoto @Inject constructor(
     private fun confere(oque: String, esperado: Int, linhas: Int) =
         check(linhas == esperado) { "Moto: $esperado $oque a excluir, $linhas linhas excluídas" }
 
-    data class Resultado(val contagem: ContagemDaMoto, val fotosQueFicaram: List<String>)
+    data class Resultado(
+        val contagem: ContagemDaMoto,
+        val fotosQueFicaram: List<String>,
+        val lembretesRecalculados: Boolean,
+    )
 }

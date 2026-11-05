@@ -78,4 +78,38 @@ class DialogoExcluirMotoTest {
         mostrar(DialogoExclusao(apelido = "Bandida", contagem = null, texto = "Bandida"))
         rule.onNodeWithTag(TAG_BOTAO_EXCLUIR_MOTO).assertIsNotEnabled()
     }
+
+    @Test
+    fun mostraAsLeiturasDoHodometroQueVaoSumir() {
+        mostrar(DialogoExclusao(apelido = "Bandida", contagem = contagem))
+        rule.onNodeWithText("4 leituras do hodômetro").assertIsDisplayed()
+    }
+
+    @Test
+    fun umaLeituraDoHodometroFicaNoSingular() {
+        mostrar(DialogoExclusao(apelido = "Bandida", contagem = contagem.copy(leituras = 1)))
+        rule.onNodeWithText("1 leitura do hodômetro").assertIsDisplayed()
+    }
+
+    @Test
+    fun avisoDaExclusaoDizQuantasFotosFicaram() {
+        rule.setContent { DiarioTheme { DialogoAvisoExclusao(AvisoExclusao(2, lembretesRecalculados = true), {}) } }
+        rule.onNodeWithText("2 fotos não puderam ser apagadas", substring = true).assertIsDisplayed()
+        rule.onNodeWithText("lembretes", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun avisoSemFotosFalaSoDosLembretes() {
+        rule.setContent { DiarioTheme { DialogoAvisoExclusao(AvisoExclusao(0, lembretesRecalculados = false), {}) } }
+        rule.onNodeWithText("lembretes não foram recalculados", substring = true).assertIsDisplayed()
+        rule.onNodeWithText("fotos", substring = true).assertDoesNotExist()
+    }
+
+    @Test
+    fun okDoAvisoFechaParaVoltarAGaragem() {
+        var fechou = 0
+        rule.setContent { DiarioTheme { DialogoAvisoExclusao(AvisoExclusao(1, true), onFechar = { fechou++ }) } }
+        rule.onNodeWithText("OK").performClick()
+        assertEquals(1, fechou)
+    }
 }

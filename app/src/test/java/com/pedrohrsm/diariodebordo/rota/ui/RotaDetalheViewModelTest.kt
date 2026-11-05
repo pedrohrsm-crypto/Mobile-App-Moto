@@ -8,6 +8,7 @@ import com.pedrohrsm.diariodebordo.diario.data.RegistroRepositorio
 import com.pedrohrsm.diariodebordo.garagem.data.FakeLeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
 import com.pedrohrsm.diariodebordo.localizacao.Ponto
+import com.pedrohrsm.diariodebordo.plano.data.planoFalso
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import com.pedrohrsm.diariodebordo.rota.data.FakePontoDeRotaDao
 import com.pedrohrsm.diariodebordo.rota.data.FakeRotaDao
@@ -43,7 +44,13 @@ class RotaDetalheViewModelTest {
         RegistroRepositorio(
             FakeRegistroDao(),
             FakeFotoRegistroDao(),
-            HodometroRepositorio(FakeLeituraHodometroDao(), transacao, relogio, AgendadorFalso()),
+            HodometroRepositorio(
+                FakeLeituraHodometroDao(),
+                transacao,
+                relogio,
+                AgendadorFalso(),
+                planoFalso(relogio, transacao),
+            ),
             transacao,
             relogio,
         ),

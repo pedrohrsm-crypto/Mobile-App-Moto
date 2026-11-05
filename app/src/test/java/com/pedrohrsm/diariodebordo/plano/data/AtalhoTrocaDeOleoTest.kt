@@ -24,7 +24,14 @@ class AtalhoTrocaDeOleoTest {
     private val transacao = TransacaoFalsa()
     private val itensDao = FakeItemDoPlanoDao()
     private val registrosDao = FakeRegistroDao()
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), transacao, relogio, AgendadorFalso())
+    private val hodometro =
+        HodometroRepositorio(
+            FakeLeituraHodometroDao(),
+            transacao,
+            relogio,
+            AgendadorFalso(),
+            planoFalso(relogio, transacao),
+        )
     private val atalho = AtalhoTrocaDeOleo(
         PlanoRepositorio(itensDao, transacao, relogio, AgendadorFalso()),
         RegistroRepositorio(registrosDao, FakeFotoRegistroDao(), hodometro, transacao, relogio),

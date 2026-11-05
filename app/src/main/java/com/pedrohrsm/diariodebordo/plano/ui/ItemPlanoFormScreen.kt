@@ -27,9 +27,12 @@ import com.pedrohrsm.diariodebordo.core.designsystem.componentes.TelaDiario
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.DiarioTheme
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.LocalEscalaDiario
 import com.pedrohrsm.diariodebordo.core.ui.BotaoPrincipal
+import com.pedrohrsm.diariodebordo.core.ui.CampoDia
 import com.pedrohrsm.diariodebordo.core.ui.CampoTexto
 import com.pedrohrsm.diariodebordo.core.ui.EstadoCarregando
+import com.pedrohrsm.diariodebordo.numeros.Formatador
 import com.pedrohrsm.diariodebordo.plano.dominio.CampoItem
+import java.time.LocalDate
 
 @Composable
 fun ItemPlanoFormRoute(onConcluido: () -> Unit, viewModel: ItemPlanoFormViewModel = hiltViewModel()) {
@@ -83,6 +86,7 @@ fun ItemPlanoFormScreen(
                     if (CampoItem.INTERVALO in estado.invalidos) {
                         Text(stringResource(R.string.item_plano_sem_intervalo), color = MaterialTheme.colorScheme.error)
                     }
+                    estado.feitoDia?.let { dia -> CamposDoFeito(estado, dia, onAlterar) }
                     Text(stringResource(R.string.plano_dado_do_usuario), style = MaterialTheme.typography.bodySmall)
                     estado.erro?.let {
                         Text(stringResource(R.string.erro_ao_salvar, it), color = MaterialTheme.colorScheme.error)
@@ -107,6 +111,37 @@ fun ItemPlanoFormScreen(
                 TextButton(onClick = { confirmarExclusao = false }) { Text(stringResource(R.string.cancelar)) }
             },
         )
+    }
+}
+
+/** O "feito" do item (#69): km e data da última vez, para corrigir uma marcação errada ou um km que foi apagado. */
+@Composable
+private fun CamposDoFeito(
+    estado: ItemPlanoFormEstado,
+    dia: LocalDate,
+    onAlterar: ((ItemPlanoFormEstado) -> ItemPlanoFormEstado) -> Unit,
+) {
+    Text(stringResource(R.string.item_plano_feito_titulo), style = MaterialTheme.typography.titleMedium)
+    Text(stringResource(R.string.item_plano_feito_explica), style = MaterialTheme.typography.bodySmall)
+    val erroKm = when {
+        CampoItem.FEITO_KM !in estado.invalidos -> null
+        estado.kmAtual == null -> stringResource(R.string.km_invalido)
+        else -> stringResource(R.string.item_plano_feito_km_invalido, Formatador.km(estado.kmAtual))
+    }
+    CampoTexto(
+        valor = estado.feitoKm,
+        onValor = { v -> onAlterar { it.copy(feitoKm = v) } },
+        rotulo = stringResource(R.string.item_plano_feito_km),
+        teclado = KeyboardType.Number,
+        erro = erroKm,
+    )
+    CampoDia(
+        dia = dia,
+        texto = stringResource(R.string.item_plano_feito_data, Formatador.data(dia)),
+        onDia = { escolhido -> onAlterar { it.copy(feitoDia = escolhido) } },
+    )
+    if (CampoItem.FEITO_DATA in estado.invalidos) {
+        Text(stringResource(R.string.item_plano_feito_data_invalida), color = MaterialTheme.colorScheme.error)
     }
 }
 

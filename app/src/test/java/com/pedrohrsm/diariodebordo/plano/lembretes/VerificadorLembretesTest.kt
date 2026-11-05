@@ -9,6 +9,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.plano.data.FakeItemDoPlanoDao
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
 import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
+import com.pedrohrsm.diariodebordo.plano.data.planoFalso
 import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
 import com.pedrohrsm.diariodebordo.plano.dominio.situacao
 import java.time.Clock
@@ -29,7 +30,13 @@ class VerificadorLembretesTest {
     private val planoDao = FakeItemDoPlanoDao()
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
     private val hodometro =
-        HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, AgendadorFalso())
+        HodometroRepositorio(
+            FakeLeituraHodometroDao(),
+            TransacaoFalsa(),
+            relogio,
+            AgendadorFalso(),
+            planoFalso(relogio),
+        )
     private val plano = PlanoRepositorio(planoDao, TransacaoFalsa(), relogio, AgendadorFalso())
     private val notificador = NotificadorFalso()
     private val verificador = VerificadorLembretes(motos, hodometro, plano, notificador, relogio)

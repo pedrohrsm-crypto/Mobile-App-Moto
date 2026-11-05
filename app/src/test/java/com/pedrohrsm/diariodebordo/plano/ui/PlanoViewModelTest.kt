@@ -13,6 +13,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.plano.data.FakeItemDoPlanoDao
 import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
+import com.pedrohrsm.diariodebordo.plano.data.planoFalso
 import com.pedrohrsm.diariodebordo.plano.dominio.CHAVE_TROCA_DE_OLEO
 import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
 import com.pedrohrsm.diariodebordo.plano.dominio.planoBase
@@ -42,7 +43,14 @@ class PlanoViewModelTest {
     private val instante = Instant.parse("2026-10-01T12:00:00Z")
     private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, AgendadorFalso())
+    private val hodometro =
+        HodometroRepositorio(
+            FakeLeituraHodometroDao(),
+            TransacaoFalsa(),
+            relogio,
+            AgendadorFalso(),
+            planoFalso(relogio),
+        )
     private val dao = FakeItemDoPlanoDao()
     private val plano = PlanoRepositorio(dao, TransacaoFalsa(), relogio, AgendadorFalso())
 

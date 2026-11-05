@@ -10,18 +10,21 @@ import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
 import com.pedrohrsm.diariodebordo.diario.ui.GuardaFotosFalsa
 import com.pedrohrsm.diariodebordo.garagem.dominio.ContagemDaMoto
 import com.pedrohrsm.diariodebordo.garagem.dominio.GravacaoEmAndamentoException
-import com.pedrohrsm.diariodebordo.garagem.dominio.podeCadastrarMoto
+import com.pedrohrsm.diariodebordo.garagem.dominio.LimiteDeMotosException
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
+import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import com.pedrohrsm.diariodebordo.rota.data.Rota
 import java.io.IOException
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -126,7 +129,7 @@ class ExclusaoDeMotoTest {
     fun falhaNoMeioDaTransacaoNaoExcluiNada() = runTest {
         povoar("a", "Bandida")
         val real = banco.exclusaoDeMotoDao()
-        // Moto, fotos, registros e plano já marcados quando as rotas falham.
+        // Fotos, registros e plano já marcados quando as rotas falham; a moto seria marcada por último.
         val quebrado = object : ExclusaoDeMotoDao by real {
             override suspend fun marcarRotas(motoId: String, quando: Long): Int = throw IOException("disco cheio")
         }
@@ -172,7 +175,7 @@ class ExclusaoDeMotoTest {
     }
 
     @Test
-    fun motoExcluidaSaiDaMotoAtualEDoLimite() = runTest {
+    fun motoExcluidaSaiDaMotoAtual() = runTest {
         povoar("a", "Bandida")
         povoar("b", "Estradeira")
         val motoAtual = MotoAtual(motos)
@@ -184,12 +187,74 @@ class ExclusaoDeMotoTest {
 
         exclusao().excluir("b")
         assertNull(motoAtual.moto.first())
-        // O limite do plano grátis conta só as motos ativas: com as duas excluídas, cabe uma nova.
-        assertTrue(podeCadastrarMoto(motos.observarAtivos().first().size))
+    }
+
+    /**
+     * O limite do plano grátis conta só as motos ativas (#72, separado do teste da moto atual). A fixture tem uma
+     * moto só, no limite: antes de excluir o cadastro é recusado; depois, cabe uma nova.
+     */
+    @Test
+    fun motoExcluidaSaiDoLimiteDeMotos() = runTest {
+        povoar("a", "Bandida")
         val hodometro =
-            HodometroRepositorio(banco.leituraHodometroDao(), TransacaoRoom(banco), relogio, AgendadorFalso())
+            HodometroRepositorio(
+                banco.leituraHodometroDao(),
+                TransacaoRoom(banco),
+                relogio,
+                AgendadorFalso(),
+                PlanoRepositorio(banco.itemDoPlanoDao(), TransacaoRoom(banco), relogio, AgendadorFalso()),
+            )
         val cadastro = CadastroMoto(motos, hodometro, TransacaoRoom(banco), Premium(habilitado = false))
-        val nova = cadastro.cadastrar(Moto(apelido = "Nova", marca = "Yamaha", modelo = "Fazer"), kmInicial = 10)
-        assertEquals(listOf(nova.id), motos.observarAtivos().first().map { it.id })
+        val nova = Moto(apelido = "Nova", marca = "Yamaha", modelo = "Fazer")
+        try {
+            cadastro.cadastrar(nova, kmInicial = 10)
+            fail("com uma moto ativa, o plano grátis devia recusar a segunda")
+        } catch (_: LimiteDeMotosException) {
+        }
+
+        exclusao().excluir("a")
+        val criada = cadastro.cadastrar(nova, kmInicial = 10)
+        assertEquals(listOf(criada.id), motos.observarAtivos().first().map { it.id })
+    }
+
+    @Test
+    fun falhaAoApagarFotoDepoisDoCommitNaoDesfazAExclusao() = runTest {
+        povoar("a", "Bandida")
+        fotos.falhaAoApagar = { arquivo -> if (arquivo == "a-1.jpg") SecurityException("sem permissão") else null }
+
+        val resultado = exclusao().excluir("a")
+
+        assertEquals(setOf("a"), excluidos("motos"))
+        assertEquals(listOf("a-1.jpg"), resultado.fotosQueFicaram)
+        // A falha numa foto não para as outras nem o recálculo dos lembretes.
+        assertEquals(listOf("a-2.jpg"), fotos.apagadas)
+        assertEquals(1, agendador.recalculos)
+        assertTrue(resultado.lembretesRecalculados)
+    }
+
+    @Test
+    fun falhaAoRecalcularLembretesDepoisDoCommitViraAviso() = runTest {
+        povoar("a", "Bandida")
+        agendador.falha = IllegalStateException("WorkManager indisponível")
+
+        val resultado = exclusao().excluir("a")
+
+        assertEquals(setOf("a"), excluidos("motos"))
+        assertFalse(resultado.lembretesRecalculados)
+        assertEquals(emptyList<String>(), resultado.fotosQueFicaram)
+    }
+
+    @Test
+    fun cancelamentoDepoisDoCommitERelancado() = runTest {
+        povoar("a", "Bandida")
+        fotos.falhaAoApagar = { CancellationException("a tela saiu") }
+        try {
+            exclusao().excluir("a")
+            fail("o cancelamento da corrotina devia chegar a quem chamou")
+        } catch (e: CancellationException) {
+            assertEquals("a tela saiu", e.message)
+        }
+        // O commit já tinha acontecido: o cancelamento não desfaz a exclusão.
+        assertEquals(setOf("a"), excluidos("motos"))
     }
 }

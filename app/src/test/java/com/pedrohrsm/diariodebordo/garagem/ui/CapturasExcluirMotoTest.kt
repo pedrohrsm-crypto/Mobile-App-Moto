@@ -46,9 +46,15 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [36], qualifiers = "w360dp-h800dp-xhdpi")
 class CapturasExcluirMotoTest(private val caso: Caso) {
 
-    data class Caso(val tema: TemaDiario, val modoOficina: Boolean, val fonte: Float) {
+    /** [AVISO]: a moto já foi excluída e um passo depois do commit falhou (#72); sem campo, sem teclado. */
+    enum class Dialogo(val pasta: String, val teclado: Boolean) {
+        EXCLUIR("excluir-moto", teclado = true),
+        AVISO("excluir-moto-aviso", teclado = false),
+    }
+
+    data class Caso(val dialogo: Dialogo, val tema: TemaDiario, val modoOficina: Boolean, val fonte: Float) {
         val arquivo: String
-            get() = "src/test/snapshots/garagem/excluir-moto/${tema.name.lowercase()}" +
+            get() = "src/test/snapshots/garagem/${dialogo.pasta}/${tema.name.lowercase()}" +
                 "-${if (modoOficina) "oficina" else "normal"}-fonte${(fonte * 100).toInt()}.png"
 
         override fun toString() = arquivo.removePrefix("src/test/snapshots/").removeSuffix(".png")
@@ -69,13 +75,24 @@ class CapturasExcluirMotoTest(private val caso: Caso) {
             DiarioTheme(tema = caso.tema, modoOficina = caso.modoOficina) {
                 Box(Modifier.fillMaxSize()) {
                     MotoDetalheScreen(MotoDetalheEstado.Pronto(moto, leituras, kmAtual = 23_450))
-                    DialogoExcluirMoto(
-                        dialogo = DialogoExclusao(apelido = moto.apelido, contagem = contagem, texto = moto.apelido),
-                        onTexto = {},
-                        onExcluir = {},
-                        onBackup = {},
-                        onFechar = {},
-                    )
+                    when (caso.dialogo) {
+                        Dialogo.EXCLUIR -> DialogoExcluirMoto(
+                            dialogo = DialogoExclusao(
+                                apelido = moto.apelido,
+                                contagem = contagem,
+                                texto = moto.apelido,
+                            ),
+                            onTexto = {},
+                            onExcluir = {},
+                            onBackup = {},
+                            onFechar = {},
+                        )
+                        // As duas falhas juntas: o texto mais longo que o aviso mostra.
+                        Dialogo.AVISO -> DialogoAvisoExclusao(
+                            AvisoExclusao(fotosQueFicaram = 2, lembretesRecalculados = false),
+                            onFechar = {},
+                        )
+                    }
                     // O teclado em si não é desenhado pela JVM: esta faixa ocupa o lugar dele na captura.
                     Box(
                         Modifier
@@ -88,7 +105,7 @@ class CapturasExcluirMotoTest(private val caso: Caso) {
             }
         }
         rodar()
-        abrirTeclado()
+        if (caso.dialogo.teclado) abrirTeclado()
         rodar()
         captureScreenRoboImage(caso.arquivo)
     }
@@ -121,9 +138,11 @@ class CapturasExcluirMotoTest(private val caso: Caso) {
         @JvmStatic
         @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
         fun casos(): List<Array<Any>> = buildList {
-            for (tema in TemaDiario.entries) {
-                for (modoOficina in listOf(false, true)) {
-                    for (fonte in listOf(1.4f, 2.0f)) add(arrayOf(Caso(tema, modoOficina, fonte)))
+            for (dialogo in Dialogo.entries) {
+                for (tema in TemaDiario.entries) {
+                    for (modoOficina in listOf(false, true)) {
+                        for (fonte in listOf(1.4f, 2.0f)) add(arrayOf(Caso(dialogo, tema, modoOficina, fonte)))
+                    }
                 }
             }
         }
