@@ -54,6 +54,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Instala ao lado do app real, com banco e arquivos próprios: dados de exemplo nunca tocam os do dono (#77).
+            applicationIdSuffix = ".debug"
+        }
         release {
             signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true

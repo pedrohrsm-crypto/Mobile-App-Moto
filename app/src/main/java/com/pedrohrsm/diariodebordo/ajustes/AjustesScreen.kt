@@ -22,11 +22,16 @@ import com.pedrohrsm.diariodebordo.core.designsystem.componentes.TelaDiario
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.AjusteTema
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.LocalEscalaDiario
 import com.pedrohrsm.diariodebordo.core.premium.RecursoPremium
+import com.pedrohrsm.diariodebordo.exemplo.SecaoDadosDeExemplo
 
 @Composable
 fun AjustesRoute(viewModel: AjustesViewModel = hiltViewModel()) {
     val ajuste by viewModel.ajuste.collectAsStateWithLifecycle()
-    AjustesScreen(ajuste, viewModel::ajustar, viewModel.recursosPremium) { SecaoBackup() }
+    AjustesScreen(ajuste, viewModel::ajustar, viewModel.recursosPremium) {
+        SecaoBackup()
+        // Dados de exemplo (#77): no release esta chamada é uma função vazia (source set release).
+        SecaoDadosDeExemplo()
+    }
 }
 
 /** Aparência (1.8), backup (1.9) e, só com a flag ligada, o que o premium libera (1.10). */

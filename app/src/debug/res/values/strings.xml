@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Só no build debug: o app de exemplo se distingue do real no aparelho (#77). -->
+    <string name="app_name">Diário (exemplo)</string>
+    <string name="exemplo_titulo">Dados de exemplo</string>
+    <string name="exemplo_explicacao">Só neste build de teste: grava motos, registros, plano e rotas inventados para capturas e vídeo. Nada disto existe no app de verdade.</string>
+    <string name="exemplo_carregar">Carregar dados de exemplo</string>
+    <string name="exemplo_carregando">Gravando os dados de exemplo…</string>
+    <string name="exemplo_falhou">Não foi possível gravar os dados de exemplo.</string>
+    <plurals name="exemplo_carregado">
+        <item quantity="one">%1$d moto e %2$d registros de exemplo gravados.</item>
+        <item quantity="other">%1$d motos e %2$d registros de exemplo gravados.</item>
+    </plurals>
+</resources>
