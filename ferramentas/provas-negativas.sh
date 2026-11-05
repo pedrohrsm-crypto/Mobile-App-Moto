@@ -25,7 +25,7 @@ diff_testes="$(git diff -U3 --no-color "$base"...HEAD -- '*.kt')" || { echo "✗
 nomes() {
   local sinal=$1
   echo "$diff_testes" | awk -v sinal="$sinal" '
-    /^diff --git / { dentro = ($0 ~ /\/src\/(test|androidTest)\//); pend = 0; next }
+    /^diff --git / { dentro = ($0 ~ /\/src\/(test|androidTest)[A-Za-z]*\//); pend = 0; next }
     !dentro { next }
     /^(\+\+\+|---) / { next }
     {
