@@ -70,6 +70,7 @@ fun DialogoExcluirMoto(
                         ),
                     )
                     Text(pluralStringResource(R.plurals.moto_excluir_rotas, contagem.rotas, contagem.rotas))
+                    Text(pluralStringResource(R.plurals.moto_excluir_leituras, contagem.leituras, contagem.leituras))
                 }
                 Text(stringResource(R.string.moto_excluir_backup))
                 TextButton(onClick = onBackup, enabled = !dialogo.excluindo) {
@@ -101,5 +102,35 @@ fun DialogoExcluirMoto(
         dismissButton = {
             TextButton(onClick = onFechar, enabled = !dialogo.excluindo) { Text(stringResource(R.string.cancelar)) }
         },
+    )
+}
+
+/**
+ * A moto já foi excluída, mas um passo depois do commit falhou (#72): diz o que ficou para trás. Ao fechar, a tela
+ * volta para a garagem.
+ */
+@Composable
+fun DialogoAvisoExclusao(aviso: AvisoExclusao, onFechar: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onFechar,
+        title = { Text(stringResource(R.string.moto_excluida_titulo)) },
+        text = {
+            Column(
+                Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(LocalEscalaDiario.current.espaco(8.dp)),
+            ) {
+                if (aviso.fotosQueFicaram > 0) {
+                    Text(
+                        pluralStringResource(
+                            R.plurals.moto_excluida_fotos_ficaram,
+                            aviso.fotosQueFicaram,
+                            aviso.fotosQueFicaram,
+                        ),
+                    )
+                }
+                if (!aviso.lembretesRecalculados) Text(stringResource(R.string.moto_excluida_lembretes))
+            }
+        },
+        confirmButton = { TextButton(onClick = onFechar) { Text(stringResource(R.string.ok)) } },
     )
 }

@@ -7,6 +7,9 @@ import com.pedrohrsm.diariodebordo.diario.data.Registro
 import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
 import com.pedrohrsm.diariodebordo.garagem.dominio.ExclusaoRecusadaException
 import com.pedrohrsm.diariodebordo.garagem.dominio.ValidacaoExclusao
+import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
+import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlanoDao
+import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.io.IOException
 import java.time.Clock
@@ -49,8 +52,14 @@ class HodometroRepositorioRoomTest {
     @After
     fun fechar() = banco.close()
 
-    private fun repositorio(leituras: LeituraHodometroDao = dao) =
-        HodometroRepositorio(leituras, TransacaoRoom(banco), relogio, agendador)
+    private fun repositorio(leituras: LeituraHodometroDao = dao, itens: ItemDoPlanoDao = banco.itemDoPlanoDao()) =
+        HodometroRepositorio(
+            leituras,
+            TransacaoRoom(banco),
+            relogio,
+            agendador,
+            PlanoRepositorio(itens, TransacaoRoom(banco), relogio, AgendadorFalso()),
+        )
 
     /** Deixa tudo passar para o DAO de verdade, menos a inserção, que falha no meio da transação. */
     private fun daoQueFalhaNaInsercao(): LeituraHodometroDao = object : LeituraHodometroDao by dao {
@@ -137,5 +146,65 @@ class HodometroRepositorioRoomTest {
         repositorio.registrar("moto", 1_200, lidaEm = 2_000)
         repositorio.apagar(unica.id)
         assertEquals(1_200, dao.kmAtual("moto"))
+    }
+
+    /** Óleo feito aos 3.000 km: a leitura que a correção leva junto (#69). */
+    private suspend fun oleoFeitoAos3000() = ItemDoPlano(
+        id = "oleo",
+        motoId = "moto",
+        nome = "Óleo",
+        intervaloKm = 3_000,
+        ultimaVezKm = 3_000,
+        ultimaVezEm = 3_000,
+    ).also { banco.itemDoPlanoDao().inserir(it) }
+
+    @Test
+    fun corrigirNoBancoDeVerdadeLevaJuntoOItemDoPlano() = runTest {
+        val repositorio = repositorio()
+        repositorio.registrar("moto", 1_000, lidaEm = 1_000)
+        val ultima = repositorio.registrar("moto", 3_000, lidaEm = 3_000)
+        oleoFeitoAos3000()
+
+        repositorio.corrigir(ultima.id, 2_500)
+
+        assertEquals(2_500, banco.itemDoPlanoDao().buscar("oleo")?.ultimaVezKm)
+    }
+
+    @Test
+    fun falhaAoGravarOPlanoDesfazACorrecaoDaLeitura() = runTest {
+        val repositorio = repositorio()
+        val primeira = repositorio.registrar("moto", 1_000, lidaEm = 1_000)
+        val ultima = repositorio.registrar("moto", 3_000, lidaEm = 3_000)
+        oleoFeitoAos3000()
+        val recalculos = agendador.recalculos
+        val quebrado = object : ItemDoPlanoDao by banco.itemDoPlanoDao() {
+            override suspend fun atualizar(item: ItemDoPlano): Int = throw IOException("disco cheio")
+        }
+
+        val falha = runCatching { repositorio(itens = quebrado).corrigir(ultima.id, 2_500) }.exceptionOrNull()
+
+        assertTrue(falha is IOException)
+        // A leitura antiga segue ativa e a nova não entrou; os lembretes não foram pedidos.
+        assertEquals(listOf(primeira.id, ultima.id), dao.ativasDaMoto("moto").map { it.id })
+        assertEquals(3_000, dao.kmAtual("moto"))
+        assertEquals(recalculos, agendador.recalculos)
+    }
+
+    @Test
+    fun falhaNoSegundoItemDesfazOPrimeiroItemDoPlano() = runTest {
+        val repositorio = repositorio()
+        repositorio.registrar("moto", 1_000, lidaEm = 1_000)
+        val ultima = repositorio.registrar("moto", 3_000, lidaEm = 3_000)
+        val oleo = oleoFeitoAos3000()
+        val corrente = oleo.copy(id = "relacao", nome = "Relação").also { banco.itemDoPlanoDao().inserir(it) }
+        // O óleo grava; a relação falha. O óleo já gravado volta junto com a leitura.
+        val quebrado = object : ItemDoPlanoDao by banco.itemDoPlanoDao() {
+            override suspend fun atualizar(item: ItemDoPlano): Int =
+                if (item.id == corrente.id) throw IOException("disco cheio") else banco.itemDoPlanoDao().atualizar(item)
+        }
+
+        runCatching { repositorio(itens = quebrado).corrigir(ultima.id, 2_500) }
+
+        assertEquals(oleo, banco.itemDoPlanoDao().buscar("oleo"))
     }
 }

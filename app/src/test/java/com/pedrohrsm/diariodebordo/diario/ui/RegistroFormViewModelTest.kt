@@ -19,6 +19,7 @@ import com.pedrohrsm.diariodebordo.localizacao.FonteLocalizacaoFalsa
 import com.pedrohrsm.diariodebordo.localizacao.LocalIndisponivelException
 import com.pedrohrsm.diariodebordo.localizacao.Ponto
 import com.pedrohrsm.diariodebordo.localizacao.SemPermissaoDeLocalizacaoException
+import com.pedrohrsm.diariodebordo.plano.data.planoFalso
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
@@ -40,8 +41,12 @@ import org.junit.Test
 class GuardaFotosFalsa : GuardaFotos {
     val guardadas = mutableListOf<String>()
     val apagadas = mutableListOf<String>()
+
+    /** Exceção a lançar ao apagar este arquivo (ex.: `SecurityException` do `File.delete`); null apaga. */
+    var falhaAoApagar: (String) -> Throwable? = { null }
     override suspend fun importar(uri: String): String = "foto-${guardadas.size + 1}.jpg".also { guardadas += it }
     override fun apagar(arquivo: String): Boolean {
+        falhaAoApagar(arquivo)?.let { throw it }
         apagadas += arquivo
         return true
     }
@@ -54,7 +59,14 @@ class RegistroFormViewModelTest {
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
     private val motoAtual = MotoAtual(motos)
     private val registros = FakeRegistroDao()
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, AgendadorFalso())
+    private val hodometro =
+        HodometroRepositorio(
+            FakeLeituraHodometroDao(),
+            TransacaoFalsa(),
+            relogio,
+            AgendadorFalso(),
+            planoFalso(relogio),
+        )
     private val repositorio =
         RegistroRepositorio(registros, FakeFotoRegistroDao(), hodometro, TransacaoFalsa(), relogio)
     private val fotos = GuardaFotosFalsa()

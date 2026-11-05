@@ -3,10 +3,14 @@ package com.pedrohrsm.diariodebordo.plano.lembretes
 class AgendadorFalso : AgendadorLembretes {
     var diarios = 0
     var recalculos = 0
+
+    /** Quando preenchido, `recalcularAgora` lança esta exceção (o WorkManager indisponível). */
+    var falha: Throwable? = null
     override fun agendarDiario() {
         diarios++
     }
     override fun recalcularAgora() {
+        falha?.let { throw it }
         recalculos++
     }
 }

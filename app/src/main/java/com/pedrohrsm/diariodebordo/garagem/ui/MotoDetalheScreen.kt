@@ -92,7 +92,9 @@ fun MotoDetalheRoute(
 private fun ExclusaoDaMoto(viewModel: ExcluirMotoViewModel, acoes: AcoesMoto) {
     val dialogo by viewModel.dialogo.collectAsStateWithLifecycle()
     val excluida by viewModel.excluida.collectAsStateWithLifecycle()
+    val aviso by viewModel.aviso.collectAsStateWithLifecycle()
     LaunchedEffect(excluida) { if (excluida) acoes.onExcluida() }
+    aviso?.let { DialogoAvisoExclusao(it, onFechar = viewModel::fecharAviso) }
     dialogo?.let {
         DialogoExcluirMoto(
             dialogo = it,

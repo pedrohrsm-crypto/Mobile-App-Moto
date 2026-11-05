@@ -12,6 +12,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.garagem.dominio.CampoMoto
 import com.pedrohrsm.diariodebordo.garagem.dominio.LIMITE_MOTOS_GRATIS
+import com.pedrohrsm.diariodebordo.plano.data.planoFalso
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
@@ -35,7 +36,14 @@ class MotoFormViewModelTest {
 
     private val relogio = Clock.fixed(Instant.parse("2026-10-01T12:00:00Z"), ZoneId.of("America/Sao_Paulo"))
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, AgendadorFalso())
+    private val hodometro =
+        HodometroRepositorio(
+            FakeLeituraHodometroDao(),
+            TransacaoFalsa(),
+            relogio,
+            AgendadorFalso(),
+            planoFalso(relogio),
+        )
     private val cadastro = CadastroMoto(motos, hodometro, TransacaoFalsa(), Premium(habilitado = false))
     private val motoAtual = MotoAtual(motos)
 

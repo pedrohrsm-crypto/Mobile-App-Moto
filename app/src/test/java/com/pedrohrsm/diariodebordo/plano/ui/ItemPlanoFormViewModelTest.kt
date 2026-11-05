@@ -15,6 +15,7 @@ import com.pedrohrsm.diariodebordo.plano.dominio.CampoItem
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -35,9 +36,10 @@ class ItemPlanoFormViewModelTest {
 
     private val relogio = Clock.fixed(Instant.parse("2026-10-01T12:00:00Z"), ZoneId.of("America/Sao_Paulo"))
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, AgendadorFalso())
     private val dao = FakeItemDoPlanoDao()
-    private val plano = PlanoRepositorio(dao, TransacaoFalsa(), relogio, AgendadorFalso())
+    private val agendador = AgendadorFalso()
+    private val plano = PlanoRepositorio(dao, TransacaoFalsa(), relogio, agendador)
+    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, agendador, plano)
 
     @Before
     fun setUp() = Dispatchers.setMain(UnconfinedTestDispatcher())
@@ -54,6 +56,7 @@ class ItemPlanoFormViewModelTest {
         plano,
         hodometro,
         MotoAtual(motos),
+        relogio,
     )
 
     @Test
@@ -121,5 +124,66 @@ class ItemPlanoFormViewModelTest {
         assertFalse(vm.estado.value.concluido)
         assertFalse(vm.estado.value.salvando)
         assertNull(vm.estado.value.invalidos.firstOrNull())
+    }
+
+    /** Óleo a cada 3.000 km, feito aos 6.000 em 1-Set às 15h; criado antes, em 1-Ago (outra data, outro km). */
+    private suspend fun oleoFeito(motoId: String): ItemDoPlano = ItemDoPlano(
+        id = "oleo",
+        motoId = motoId,
+        nome = "Óleo",
+        intervaloKm = 3_000,
+        ultimaVezKm = 6_000,
+        ultimaVezEm = Instant.parse("2026-09-01T18:00:00Z").toEpochMilli(),
+        criadoEm = Instant.parse("2026-08-01T18:00:00Z").toEpochMilli(),
+    ).also { dao.inserir(it) }
+
+    @Test
+    fun editarCarregaOFeitoDoItem() = runTest {
+        val moto = moto()
+        val vm = abrir(oleoFeito(moto.id).id)
+        assertEquals("6000", vm.estado.value.feitoKm)
+        assertEquals(LocalDate.of(2026, 9, 1), vm.estado.value.feitoDia)
+        assertEquals(7_000, vm.estado.value.kmAtual)
+    }
+
+    @Test
+    fun itemNovoNaoMostraOFeito() = runTest {
+        moto()
+        assertNull(abrir().estado.value.feitoDia)
+    }
+
+    @Test
+    fun feitoEditadoGravaKmEDataComAHoraDeAntes() = runTest {
+        val moto = moto()
+        val vm = abrir(oleoFeito(moto.id).id)
+        vm.alterar { it.copy(feitoKm = "6.500", feitoDia = LocalDate.of(2026, 9, 15)) }
+        vm.salvar()
+        val salvo = dao.linhas.value.single()
+        assertEquals(6_500, salvo.ultimaVezKm)
+        assertEquals(Instant.parse("2026-09-15T18:00:00Z").toEpochMilli(), salvo.ultimaVezEm)
+        assertTrue(vm.estado.value.concluido)
+    }
+
+    @Test
+    fun feitoComKmAcimaDoAtualApontaOCampoENaoGrava() = runTest {
+        val moto = moto()
+        val oleo = oleoFeito(moto.id)
+        val vm = abrir(oleo.id)
+        vm.alterar { it.copy(feitoKm = "7.001") }
+        vm.salvar()
+        assertEquals(setOf(CampoItem.FEITO_KM), vm.estado.value.invalidos)
+        assertEquals(listOf(oleo), dao.linhas.value)
+        assertFalse(vm.estado.value.concluido)
+    }
+
+    @Test
+    fun feitoComDataDepoisDeHojeApontaOCampoENaoGrava() = runTest {
+        val moto = moto()
+        val oleo = oleoFeito(moto.id)
+        val vm = abrir(oleo.id)
+        vm.alterar { it.copy(feitoDia = LocalDate.of(2026, 10, 2)) }
+        vm.salvar()
+        assertEquals(setOf(CampoItem.FEITO_DATA), vm.estado.value.invalidos)
+        assertEquals(listOf(oleo), dao.linhas.value)
     }
 }

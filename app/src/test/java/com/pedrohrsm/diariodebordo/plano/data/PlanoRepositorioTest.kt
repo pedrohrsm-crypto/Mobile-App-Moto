@@ -7,6 +7,8 @@ import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
 import com.pedrohrsm.diariodebordo.garagem.data.CategoriaMoto
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.plano.dominio.CHAVE_TROCA_DE_OLEO
+import com.pedrohrsm.diariodebordo.plano.dominio.CampoItem
+import com.pedrohrsm.diariodebordo.plano.dominio.FeitoRecusadoException
 import com.pedrohrsm.diariodebordo.plano.dominio.Urgencia
 import com.pedrohrsm.diariodebordo.plano.dominio.planoBase
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
@@ -177,5 +179,74 @@ class PlanoRepositorioTest {
         } catch (e: IllegalStateException) {
             assertTrue(e.message.orEmpty().contains("0 linhas"))
         }
+    }
+
+    /** Óleo a cada 3.000 km, feito aos 5.000 em 1-Set, já avisado como próximo. */
+    private suspend fun oleoFeito(): ItemDoPlano {
+        val item = ItemDoPlano(
+            id = "oleo",
+            motoId = "moto",
+            nome = "Óleo",
+            intervaloKm = 3_000,
+            ultimaVezKm = 5_000,
+            ultimaVezEm = Instant.parse("2026-09-01T15:00:00Z").toEpochMilli(),
+            feitoEm = Instant.parse("2026-09-01T15:00:00Z").toEpochMilli(),
+            avisadoComo = Urgencia.PROXIMO,
+        )
+        dao.inserir(item)
+        return item
+    }
+
+    @Test
+    fun editarOFeitoGravaKmEDataELimpaOAviso() = runTest {
+        val item = oleoFeito()
+        val novaData = Instant.parse("2026-09-20T15:00:00Z").toEpochMilli()
+
+        plano.salvar(item.copy(ultimaVezKm = 6_200, ultimaVezEm = novaData), kmAtual = 7_000)
+
+        val salvo = dao.linhas.value.single()
+        assertEquals(6_200, salvo.ultimaVezKm)
+        assertEquals(novaData, salvo.ultimaVezEm)
+        assertEquals(novaData, salvo.feitoEm)
+        assertNull(salvo.avisadoComo)
+        assertEquals(1, agendador.recalculos)
+    }
+
+    @Test
+    fun feitoComKmAcimaDoAtualERecusadoSemGravar() = runTest {
+        val item = oleoFeito()
+        try {
+            plano.salvar(item.copy(ultimaVezKm = 7_001), kmAtual = 7_000)
+            fail("km do feito acima do km atual devia ser recusado")
+        } catch (e: FeitoRecusadoException) {
+            assertEquals(setOf(CampoItem.FEITO_KM), e.campos)
+        }
+        assertEquals(listOf(item), dao.linhas.value)
+        assertEquals(0, agendador.recalculos)
+    }
+
+    @Test
+    fun feitoComDataDepoisDeHojeERecusadoSemGravar() = runTest {
+        val item = oleoFeito()
+        val amanha = instante.plusSeconds(86_400).toEpochMilli()
+        try {
+            plano.salvar(item.copy(ultimaVezEm = amanha), kmAtual = 7_000)
+            fail("data do feito depois de hoje devia ser recusada")
+        } catch (e: FeitoRecusadoException) {
+            assertEquals(setOf(CampoItem.FEITO_DATA), e.campos)
+        }
+        assertEquals(listOf(item), dao.linhas.value)
+    }
+
+    @Test
+    fun editarSoONomeNaoConfereNemMexeNoFeito() = runTest {
+        val item = oleoFeito()
+        // Km atual abaixo do feito (um registro retroativo): o feito não mudou, então não é conferido.
+        plano.salvar(item.copy(nome = "Troca de óleo"), kmAtual = 4_000)
+
+        val salvo = dao.linhas.value.single()
+        assertEquals("Troca de óleo", salvo.nome)
+        assertEquals(item.feitoEm, salvo.feitoEm)
+        assertEquals(item.ultimaVezKm, salvo.ultimaVezKm)
     }
 }

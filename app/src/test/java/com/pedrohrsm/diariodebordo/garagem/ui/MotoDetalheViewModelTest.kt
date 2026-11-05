@@ -10,6 +10,7 @@ import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoAtual
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.garagem.dominio.Vizinha
+import com.pedrohrsm.diariodebordo.plano.data.planoFalso
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
@@ -34,7 +35,14 @@ class MotoDetalheViewModelTest {
 
     private val relogio = Clock.fixed(Instant.parse("2026-10-01T12:00:00Z"), ZoneId.of("America/Sao_Paulo"))
     private val motos = MotoRepositorio(FakeMotoDao(), relogio)
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, AgendadorFalso())
+    private val hodometro =
+        HodometroRepositorio(
+            FakeLeituraHodometroDao(),
+            TransacaoFalsa(),
+            relogio,
+            AgendadorFalso(),
+            planoFalso(relogio),
+        )
     private val motoAtual = MotoAtual(motos)
 
     @Before
@@ -138,7 +146,7 @@ class MotoDetalheViewModelTest {
     @Test
     fun apagarAUnicaLeituraSemRegistrosPassaEMantemOAvisoQuandoHaRegistros() = runTest {
         val dao = FakeLeituraHodometroDao()
-        val repositorio = HodometroRepositorio(dao, TransacaoFalsa(), relogio, AgendadorFalso())
+        val repositorio = HodometroRepositorio(dao, TransacaoFalsa(), relogio, AgendadorFalso(), planoFalso(relogio))
         val moto = motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
         repositorio.registrar(moto.id, 500)
         val vm = MotoDetalheViewModel(
@@ -158,7 +166,7 @@ class MotoDetalheViewModelTest {
     @Test
     fun corrigirParaOKmDeOutraLeituraMostraQualLeituraJaTemEsseKm() = runTest {
         val dao = FakeLeituraHodometroDao()
-        val repositorio = HodometroRepositorio(dao, TransacaoFalsa(), relogio, AgendadorFalso())
+        val repositorio = HodometroRepositorio(dao, TransacaoFalsa(), relogio, AgendadorFalso(), planoFalso(relogio))
         val moto = motos.criar(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
         val primeira = LeituraHodometro(motoId = moto.id, km = 1_000, lidaEm = 1_000)
         val terceira = LeituraHodometro(motoId = moto.id, km = 6_000, lidaEm = 3_000)

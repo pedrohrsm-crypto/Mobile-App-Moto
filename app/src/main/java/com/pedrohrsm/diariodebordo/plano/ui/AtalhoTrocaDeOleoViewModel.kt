@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pedrohrsm.diariodebordo.core.preferencias.Preferencias
+import com.pedrohrsm.diariodebordo.core.ui.tentar
 import com.pedrohrsm.diariodebordo.garagem.ui.MotoDetalheViewModel
 import com.pedrohrsm.diariodebordo.plano.data.AtalhoTrocaDeOleo
 import com.pedrohrsm.diariodebordo.plano.data.PlanoRepositorio

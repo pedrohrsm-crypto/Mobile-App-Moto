@@ -3,6 +3,7 @@ package com.pedrohrsm.diariodebordo.diario.data
 import com.pedrohrsm.diariodebordo.core.database.TransacaoFalsa
 import com.pedrohrsm.diariodebordo.garagem.data.FakeLeituraHodometroDao
 import com.pedrohrsm.diariodebordo.garagem.data.HodometroRepositorio
+import com.pedrohrsm.diariodebordo.plano.data.planoFalso
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import java.time.Clock
 import java.time.Instant
@@ -18,7 +19,14 @@ class RegistroRepositorioTest {
     private val relogio = Clock.fixed(instante, ZoneId.of("America/Sao_Paulo"))
     private val dao = FakeRegistroDao()
     private val fotos = FakeFotoRegistroDao()
-    private val hodometro = HodometroRepositorio(FakeLeituraHodometroDao(), TransacaoFalsa(), relogio, AgendadorFalso())
+    private val hodometro =
+        HodometroRepositorio(
+            FakeLeituraHodometroDao(),
+            TransacaoFalsa(),
+            relogio,
+            AgendadorFalso(),
+            planoFalso(relogio),
+        )
     private val repositorio = RegistroRepositorio(dao, fotos, hodometro, TransacaoFalsa(), relogio)
 
     private fun oleo(km: Int? = 12_000) = Registro(
