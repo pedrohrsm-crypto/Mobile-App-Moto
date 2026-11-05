@@ -68,7 +68,7 @@ As capturas são as do Roborazzi, versionadas no repositório e conferidas pelo 
 Pré-requisitos: JDK 21 e Android SDK com a plataforma 37 (`platforms;android-37.0`) e as ferramentas de build.
 
 ```bash
-git clone https://github.com/pedrohrsm-crypto/mobile-app-moto.git
+git clone https://github.com/pedrohrsm-crypto/Mobile-App-Moto.git
 cd mobile-app-moto
 # Aponte o SDK, se o ANDROID_HOME não estiver definido (o arquivo fica fora do git):
 echo "sdk.dir=/caminho/do/Android/Sdk" > local.properties
