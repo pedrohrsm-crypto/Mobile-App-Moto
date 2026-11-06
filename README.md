@@ -94,7 +94,7 @@ O que ficou fora do MVP:
 
 ## Fontes dos números
 
-Todos os comandos foram rodados em 5-Nov-2026 na base `f015fd9` (`main`); o item F3 inclui também os 8 testes novos do PR #77.
+Todos os comandos foram rodados em 5-Nov-2026 na base `f015fd9` (`main`), exceto o F6, que é o AAB medido pelo CI de 6-Nov-2026 (run 42271396132, head `1017a4f`); o item F3 inclui também os 8 testes novos do PR #81.
 
 | Número no texto | Fonte (comando) | Data |
 |---|---|---|
