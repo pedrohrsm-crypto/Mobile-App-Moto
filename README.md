@@ -5,7 +5,7 @@
 
 ![Tela da moto: quilometragem atual e histórico do hodômetro](docs/estudo-de-caso/tela-principal.png)
 
-Todas as telas e números deste documento usam dados de exemplo inventados (motos, valores e rotas fictícios). Nenhum dado real, de ninguém, aparece aqui.
+Todas as telas deste documento usam dados de exemplo inventados (motos, valores e rotas fictícios). Nenhum dado real, de ninguém, aparece aqui. Os números da seção 5 são medições, com fonte na última tabela.
 
 ## 1. O problema
 
@@ -23,19 +23,19 @@ Quem anda de moto costuma controlar abastecimento, troca de óleo e revisão em 
 |---|---|---|
 | ![Diário com abastecimento, manutenção, ocorrência, rolê e nota](docs/estudo-de-caso/tela-diario.png) | ![Plano com itens vencidos e a vencer](docs/estudo-de-caso/tela-plano.png) | ![Traçado da rota sem mapa de fundo](docs/estudo-de-caso/tela-rota.png) |
 
-As capturas são as do Roborazzi, versionadas no repositório e conferidas pelo CI a cada PR, com dados de exemplo dos próprios testes.
+As capturas vêm das fixtures do Roborazzi: telas renderizadas pelos testes com dados fictícios, versionadas no repositório e conferidas pelo CI a cada PR. Não são do app rodando num aparelho.
 
 ## 3. Decisões que valem contar
 
 | Decisão | Opções consideradas | Por que esta | Fonte |
 |---|---|---|---|
-| Offline-first: o Room é a fonte da verdade e nada no MVP depende de rede | Servidor e banco remoto desde o início | O app precisa funcionar na estrada, sem sinal; a nuvem só entra no premium e o MVP roda sem custo de servidor | [`docs/plano-de-produto.md`](docs/plano-de-produto.md), "Stack técnica"; [`docs/offline-first.md`](docs/offline-first.md) |
+| Offline-first: o Room é a fonte da verdade e nada no MVP depende de rede | Servidor e banco remoto desde o início | O app precisa funcionar na estrada, sem sinal; a nuvem só entra no premium e o MVP roda sem custo de servidor | [`docs/plano-de-produto.md`](docs/plano-de-produto.md), "Stack técnica" |
 | Rota como traçado simples, sem mapa de fundo | Mapa de fundo | O mapa de fundo não funciona sem rede, a menos que a área já esteja em cache; mapas offline por região ficam para depois do MVP | [`docs/plano-de-produto.md`](docs/plano-de-produto.md), "Mapa sem internet" |
 | Rota salva só com o traçado simplificado; os pontos brutos do GPS são apagados ao encerrar | Guardar todos os pontos | Menos dado de localização guardado no aparelho e no arquivo exportado | Decisão #17; [`RotaRepositorio.finalizar`](app/src/main/java/com/pedrohrsm/diariodebordo/rota/data/RotaRepositorio.kt) |
 | Banco na versão 1 até a primeira publicação; só o build de debug recria o banco se faltar migração, e o release nunca apaga o diário | Migração a cada mudança desde o início | Evita um histórico de migrações antes de existir um usuário; o diário real nunca é apagado | Decisão #12; [`DatabaseModule`](app/src/main/java/com/pedrohrsm/diariodebordo/core/di/DatabaseModule.kt) |
-| Backup em `.zip` pelo seletor do sistema, com aviso de dado pessoal e opção de sair sem rotas e sem locais | Backup em nuvem | Sem servidor e sem permissão de armazenamento; a pessoa escolhe o que sai do aparelho | [`docs/plano-de-acao.md`](docs/plano-de-acao.md), item 1.9; PRs #45 e #74 |
+| Backup em `.zip` pelo seletor do sistema, com aviso de dado pessoal e opção de sair sem rotas e sem locais | Backup em nuvem | Sem servidor e sem permissão de armazenamento; a pessoa escolhe o que sai do aparelho | PRs #45 e #74; [`SecaoBackup`](app/src/main/java/com/pedrohrsm/diariodebordo/backup/ui/SecaoBackup.kt) |
 | O AAB de release tem um teto de tamanho no CI; passar de 50 KB num PR é decisão do dono | Sem limite de tamanho | O tamanho cresce em silêncio com cada dependência; cada subida do teto fica registrada com o motivo | [`ferramentas/teto-aab.txt`](ferramentas/teto-aab.txt); decisões #53, #59, #71 e #75 |
-| Dados de exemplo só no build de debug (source set `debug`), instalável ao lado do app real | Flag de build no release | O release nem compila o código de exemplo, e o debug usa outro `applicationId` e outro banco | PR #77; [`app/src/debug`](app/src/debug/java/com/pedrohrsm/diariodebordo/exemplo) |
+| Dados de exemplo só no build de debug (source set `debug`), instalável ao lado do app real | Flag de build no release | O release nem compila o código de exemplo, e o debug usa outro `applicationId` e outro banco | PR #81; [`app/src/debug`](app/src/debug/java/com/pedrohrsm/diariodebordo/exemplo) |
 
 ## 4. Como foi construído
 
@@ -48,11 +48,11 @@ As capturas são as do Roborazzi, versionadas no repositório e conferidas pelo 
 | Indicador | Valor | Fonte |
 |---|---|---|
 | Tempo do primeiro commit ao último da `main` | 10 dias de calendário (26-Out a 5-Nov-2026) | F1 |
-| PRs integrados na `main` | 17 PRs (26 commits; o PR #27 entrou com 7 commits, sem squash) | F2 |
+| PRs integrados na `main` | 17 PRs (26 commits; o PR #27 entrou com 8 commits, sem squash) | F2 |
 | Testes unitários automatizados | 757, nenhum falhando nem ignorado | F3 |
 | Capturas de tela versionadas (Roborazzi) | 372 imagens | F4 |
 | Destinos de navegação do app | 14 | F5 |
-| Tamanho do AAB de release | 5.210.312 B (cerca de 5,0 MiB), com teto de 5.210.245 B + tolerância de 2.048 B | F6 |
+| Tamanho do AAB de release | 5.210.264 B (cerca de 5,0 MiB), com teto de 5.210.245 B + tolerância de 2.048 B | F6 |
 
 ## 6. O que aprendi
 
@@ -66,7 +66,7 @@ Pré-requisitos: JDK 21 e Android SDK com a plataforma 37 (`platforms;android-37
 
 ```bash
 git clone https://github.com/pedrohrsm-crypto/Mobile-App-Moto.git
-cd mobile-app-moto
+cd Mobile-App-Moto
 # Aponte o SDK, se o ANDROID_HOME não estiver definido (o arquivo fica fora do git):
 echo "sdk.dir=/caminho/do/Android/Sdk" > local.properties
 ./gradlew assembleDebug
@@ -99,15 +99,14 @@ Todos os comandos foram rodados em 5-Nov-2026 na base `f015fd9` (`main`); o item
 | Número no texto | Fonte (comando) | Data |
 |---|---|---|
 | F1: 10 dias, 26-Out a 5-Nov-2026 | `git log origin/main --reverse --format='%h %ad' --date=short` (primeiro commit `3031086`, 26-Out-2026; último `f015fd9`, 5-Nov-2026) | 5-Nov-2026 |
-| F2: 17 PRs, 26 commits | `git log origin/main --format=%s \| grep -E '\(#[0-9]+\)$' \| sed -E 's/.*\(#([0-9]+)\)$/\1/' \| sort -u \| wc -l` (17) e `git log origin/main --oneline \| wc -l` (26) | 5-Nov-2026 |
+| F2: 17 PRs, 26 commits, 8 commits no PR #27 | `git log origin/main --format=%s \| grep -E '\(#[0-9]+\)$' \| sed -E 's/.*\(#([0-9]+)\)$/\1/' \| sort -u \| wc -l` (17); `git log origin/main --oneline \| wc -l` (26); `git log origin/main --format=%s \| grep -c '(#27)$'` (8) | 5-Nov-2026 |
 | F3: 757 testes | `./gradlew testDebugUnitTest`, soma dos atributos `tests` dos XML em `app/build/test-results/testDebugUnitTest` (78 classes, 0 falhas, 0 ignorados); 749 na `main` `f015fd9` sem este PR | 5-Nov-2026 |
 | F4: 372 capturas | `find app/src/test/snapshots -name '*.png' \| wc -l` | 5-Nov-2026 |
 | F5: 14 destinos | `grep -c "composable(" app/src/main/java/com/pedrohrsm/diariodebordo/navegacao/DiarioNavHost.kt` | 5-Nov-2026 |
-| F6: AAB de 5.210.312 B | `./gradlew bundleRelease` seguido de `bash ferramentas/teto-aab.sh`; o teto de 5.210.245 B vem de [`ferramentas/teto-aab.txt`](ferramentas/teto-aab.txt) (CI do PR #76, run 41877452812) | 5-Nov-2026 |
+| F6: AAB de 5.210.264 B | `bash ferramentas/teto-aab.sh` no CI do PR #81, run 42271396132, head `1017a4f`; o teto de 5.210.245 B vem de [`ferramentas/teto-aab.txt`](ferramentas/teto-aab.txt) (CI do PR #76, run 41877452812) | 6-Nov-2026 |
 | ~331 KB e ~260 KB (seção 6) | [`ferramentas/teto-aab.txt`](ferramentas/teto-aab.txt), comentário do teto (+259.684 B e +331 KB) | 5-Nov-2026 |
 
 ## Documentos
 
 - [Plano de produto](docs/plano-de-produto.md): escopo, stack, roadmap, publicação na Play Store, monetização, custos, métricas e riscos
-- [Offline-first](docs/offline-first.md): dados, GPS sem rede, lembretes, backup e sincronização
 - [Design no Figma](https://www.figma.com/design/XLfpBLh0ndZhvYecq2uYbz): wireframe do fluxo e telas em alta fidelidade nos temas Oficina, Estrada e Cromo

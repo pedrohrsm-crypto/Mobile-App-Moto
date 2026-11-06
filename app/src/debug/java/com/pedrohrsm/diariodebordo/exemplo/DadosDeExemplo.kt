@@ -39,10 +39,12 @@ data class CaixaDaEstrada(val latMin: Double, val latMax: Double, val lonMin: Do
 }
 
 /**
- * Trecho da serra do Rio do Rastro (SC-390), referência de cerca de 28,39° S 49,55° O. Mata e pasto, sem endereço
- * residencial no traçado. A caixa é larga de propósito: o traçado é fórmula, não a geometria real da pista.
+ * Serra do Rio do Rastro (SC-390), estrada turística pública de Santa Catarina; referência de cerca de
+ * 28,39° S 49,55° O.
+ * A caixa (lat -28,415 a -28,380; lon -49,570 a -49,535) cobre só o trecho da serra, longe de qualquer cidade:
+ * o traçado é fórmula, não a geometria real da pista; a caixa só prova que nenhum ponto sai da estrada.
  */
-val CAIXA_RIO_DO_RASTRO = CaixaDaEstrada(latMin = -28.42, latMax = -28.37, lonMin = -49.58, lonMax = -49.53)
+val CAIXA_RIO_DO_RASTRO = CaixaDaEstrada(latMin = -28.415, latMax = -28.380, lonMin = -49.570, lonMax = -49.535)
 
 const val MOTOS_DE_EXEMPLO = 2
 const val ROTAS_DE_EXEMPLO = 2
