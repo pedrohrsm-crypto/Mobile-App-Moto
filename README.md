@@ -35,15 +35,13 @@ As capturas são as do Roborazzi, versionadas no repositório e conferidas pelo 
 | Banco na versão 1 até a primeira publicação; só o build de debug recria o banco se faltar migração, e o release nunca apaga o diário | Migração a cada mudança desde o início | Evita um histórico de migrações antes de existir um usuário; o diário real nunca é apagado | Decisão #12; [`DatabaseModule`](app/src/main/java/com/pedrohrsm/diariodebordo/core/di/DatabaseModule.kt) |
 | Backup em `.zip` pelo seletor do sistema, com aviso de dado pessoal e opção de sair sem rotas e sem locais | Backup em nuvem | Sem servidor e sem permissão de armazenamento; a pessoa escolhe o que sai do aparelho | [`docs/plano-de-acao.md`](docs/plano-de-acao.md), item 1.9; PRs #45 e #74 |
 | O AAB de release tem um teto de tamanho no CI; passar de 50 KB num PR é decisão do dono | Sem limite de tamanho | O tamanho cresce em silêncio com cada dependência; cada subida do teto fica registrada com o motivo | [`ferramentas/teto-aab.txt`](ferramentas/teto-aab.txt); decisões #53, #59, #71 e #75 |
-| Dados de exemplo só no build de debug (source set `debug`), instalável ao lado do app real | Flag de build no release | O release nem compila o código de exemplo, e o debug usa outro `applicationId` e outro banco | Frente #77; [`app/src/debug`](app/src/debug/java/com/pedrohrsm/diariodebordo/exemplo) |
+| Dados de exemplo só no build de debug (source set `debug`), instalável ao lado do app real | Flag de build no release | O release nem compila o código de exemplo, e o debug usa outro `applicationId` e outro banco | PR #77; [`app/src/debug`](app/src/debug/java/com/pedrohrsm/diariodebordo/exemplo) |
 
 ## 4. Como foi construído
 
 **Arquitetura.** Um módulo `:app`, pacotes por funcionalidade (`garagem`, `diario`, `plano`, `numeros`, `localizacao`, `rota`, `backup`) e `core` para o que é compartilhado. MVVM com Hilt, Coroutines e Flow; Room como fonte da verdade; WorkManager para os lembretes. Regra de negócio em funções de domínio puras, testadas na JVM. Toda tela usa o mesmo esqueleto (`TelaDiario`, edge-to-edge) e toda cor vem do `ColorScheme`, com par nos 3 temas.
 
-**Método.** Desenvolvido com o Framework Aprendido: um PM de projeto coordenando agentes de IA por frentes, com revisão antes de cada merge, CI e testes.
-
-**Qualidade (só o que foi medido, ver "Fontes dos números").** Cada PR passa pelos mesmos portões do CI: guardas de idioma, cor e texto fixo; ktlint; testes dos scripts de ferramentas; provas negativas (todo teste novo aparece no PR com o bug que o fez falhar); lint; build; testes unitários; capturas do Roborazzi comparadas com as commitadas; verificação do manifesto do release; AAB dentro do teto de tamanho.
+**Qualidade (só o que foi medido, ver "Fontes dos números").** Cada PR passa pelos mesmos portões do CI: guardas de idioma, cor e texto fixo; ktlint; testes dos scripts de ferramentas; provas negativas (todo teste novo aparece no PR com o bug que o fez falhar); lint; build; testes unitários; capturas do Roborazzi nos 3 temas (com modo oficina e fonte a 140% e 200%) comparadas com as commitadas; verificação do manifesto do release; AAB dentro do teto de tamanho.
 
 ## 5. Resultados em números
 
@@ -58,7 +56,6 @@ As capturas são as do Roborazzi, versionadas no repositório e conferidas pelo 
 
 ## 6. O que aprendi
 
-- **Escrever código deixou de ser o gargalo.** As frentes de IA escreveram as Fases 0 e 1 em 3 dias de calendário, e nada disso tinha passado por um CI (13 execuções, 0 verdes). O trabalho de verdade foi fazer o CI funcionar e revisar em fatias pequenas ([`docs/CRONOGRAMA.md`](docs/CRONOGRAMA.md), seção 0).
 - **Cada dependência pesa, e o teto do AAB mostra isso.** O serviço de localização do Google somou cerca de 331 KB e a biblioteca de serialização do backup, cerca de 260 KB ao teto do AAB; as duas subidas viraram decisão registrada ([`ferramentas/teto-aab.txt`](ferramentas/teto-aab.txt)).
 - **Contraste não se confere a olho.** Duas correções de tema (#47 e #55) vieram de contraste abaixo do mínimo nas cores do Figma e em componentes; hoje um teste confere cada par de cores nos 3 temas.
 - **Sem dado de exemplo, não há vitrine.** Capturas e vídeo precisavam de dados que não fossem os de uso real; por isso o build de debug ganhou a ação "Carregar dados de exemplo", que o release não contém.
@@ -97,23 +94,20 @@ O que ficou fora do MVP:
 
 ## Fontes dos números
 
-Todos os comandos foram rodados em 5-Nov-2026 na base `f015fd9` (`main`); o item F3 inclui também os 8 testes novos desta frente (#77).
+Todos os comandos foram rodados em 5-Nov-2026 na base `f015fd9` (`main`); o item F3 inclui também os 8 testes novos do PR #77.
 
 | Número no texto | Fonte (comando) | Data |
 |---|---|---|
 | F1: 10 dias, 26-Out a 5-Nov-2026 | `git log origin/main --reverse --format='%h %ad' --date=short` (primeiro commit `3031086`, 26-Out-2026; último `f015fd9`, 5-Nov-2026) | 5-Nov-2026 |
 | F2: 17 PRs, 26 commits | `git log origin/main --format=%s \| grep -E '\(#[0-9]+\)$' \| sed -E 's/.*\(#([0-9]+)\)$/\1/' \| sort -u \| wc -l` (17) e `git log origin/main --oneline \| wc -l` (26) | 5-Nov-2026 |
-| F3: 757 testes | `./gradlew testDebugUnitTest`, soma dos atributos `tests` dos XML em `app/build/test-results/testDebugUnitTest` (78 classes, 0 falhas, 0 ignorados); 749 na `main` `f015fd9` sem esta frente | 5-Nov-2026 |
+| F3: 757 testes | `./gradlew testDebugUnitTest`, soma dos atributos `tests` dos XML em `app/build/test-results/testDebugUnitTest` (78 classes, 0 falhas, 0 ignorados); 749 na `main` `f015fd9` sem este PR | 5-Nov-2026 |
 | F4: 372 capturas | `find app/src/test/snapshots -name '*.png' \| wc -l` | 5-Nov-2026 |
 | F5: 14 destinos | `grep -c "composable(" app/src/main/java/com/pedrohrsm/diariodebordo/navegacao/DiarioNavHost.kt` | 5-Nov-2026 |
 | F6: AAB de 5.210.312 B | `./gradlew bundleRelease` seguido de `bash ferramentas/teto-aab.sh`; o teto de 5.210.245 B vem de [`ferramentas/teto-aab.txt`](ferramentas/teto-aab.txt) (CI do PR #76, run 41877452812) | 5-Nov-2026 |
-| 3 dias, 13 execuções, 0 verdes (seção 6) | [`docs/CRONOGRAMA.md`](docs/CRONOGRAMA.md), seção 0, medidos no repositório anterior | 28-Set-2026 |
 | ~331 KB e ~260 KB (seção 6) | [`ferramentas/teto-aab.txt`](ferramentas/teto-aab.txt), comentário do teto (+259.684 B e +331 KB) | 5-Nov-2026 |
 
 ## Documentos
 
 - [Plano de produto](docs/plano-de-produto.md): escopo, stack, roadmap, publicação na Play Store, monetização, custos, métricas e riscos
 - [Offline-first](docs/offline-first.md): dados, GPS sem rede, lembretes, backup e sincronização
-- [Planejamento com as áreas](docs/PLANEJAMENTO.md), [plano de ação](docs/plano-de-acao.md) e [cronograma](docs/CRONOGRAMA.md)
 - [Design no Figma](https://www.figma.com/design/XLfpBLh0ndZhvYecq2uYbz): wireframe do fluxo e telas em alta fidelidade nos temas Oficina, Estrada e Cromo
-- Construído por frentes de IA (Claude Code) sob o [Framework Aprendido](https://github.com/pedrohrsm-crypto/framework-aprendido) v2.0.
