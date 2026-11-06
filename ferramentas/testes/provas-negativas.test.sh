@@ -64,6 +64,15 @@ caso "@Test em comentário não conta" 0 $'class AlvoTest {\n    @Test\n    fun 
 novo_repo "$BASE"
 caso "nome só como parte de outra palavra não conta como citado" 1 $'class AlvoTest {\n    @Test\n    fun existente() {}\n\n    @Test\n    fun teto() {}\n}' "a tabela fala de tetos" "teto"
 
+# Source set de teste de variante (testDebug, testRelease): o @Test novo ali também exige citação (#77).
+T_ORIGINAL=$T
+T=app/src/testDebug/java/x/AlvoTest.kt
+novo_repo "$BASE"
+caso "teste em src/testDebug sem citação reprova" 1 $'class AlvoTest {\n    @Test\n    fun existente() {}\n\n    @Test\n    fun naVariante() {}\n}' "tabela sem o teste" "naVariante"
+novo_repo "$BASE"
+caso "teste em src/testDebug citado passa" 0 $'class AlvoTest {\n    @Test\n    fun existente() {}\n\n    @Test\n    fun naVariante() {}\n}' "| naVariante | bug | vermelho |"
+T=$T_ORIGINAL
+
 # Base avançada: a main ganhou um teste alheio depois que o PR saiu. No CI o checkout é o merge ref; a base é HEAD^1.
 novo_repo "$BASE"
 git branch -M main; base_antiga="$base"
