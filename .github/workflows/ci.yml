@@ -120,6 +120,22 @@ jobs:
             exit 1
           fi
 
+      # APK de teste (build debug, "Diário (exemplo)", applicationId .debug): instala ao lado do app real e traz
+      # Ajustes → Carregar dados de exemplo, para capturas e vídeo sem dado real. Só no push na main (pedido do dono, 8-Nov-2026).
+      # Assinado com a chave debug do runner, que muda a cada run: para atualizar, desinstale o de exemplo antes.
+      - name: Nome do APK de teste
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: echo "SHA7=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - name: APK de teste (dados de exemplo)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v7
+        with:
+          name: diario-de-bordo-exemplo-${{ env.SHA7 }}
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 90
+
       - name: Relatórios
         if: always()
         uses: actions/upload-artifact@v7
