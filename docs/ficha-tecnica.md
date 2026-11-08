@@ -66,12 +66,12 @@ Métodos `@Test` por área (código-fonte em `app/src/test` e `app/src/testDebug
 
 ## Portões do CI
 
-Cada PR e cada push na `main` passam por estes passos, nesta ordem (GitHub Actions, [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)):
+Cada PR passa por estes 13 passos, nesta ordem; o push na `main` passa por todos menos o 4, que confere o corpo do PR (GitHub Actions, [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)):
 
 1. Guardas de idioma (pt-BR), cor fora do tema e texto fixo na interface
 2. Formatação (ktlint)
 3. Testes dos scripts de ferramentas
-4. Provas negativas: todo teste novo citado no PR
+4. Provas negativas: todo teste novo citado no PR (só em PR)
 5. Testes do buildSrc
 6. Lint do Android
 7. Build (`assembleDebug`, que compila o Kotlin e gera o código do Room e do Hilt)
