@@ -77,6 +77,7 @@ O APK sai em `app/build/outputs/apk/debug/app-debug.apk`. Para instalar num apar
 - **Dados de exemplo (só no build de debug):** abra **Ajustes** e toque em **Carregar dados de exemplo**. Entram 2 motos fictícias, 6 meses de diário, leituras do hodômetro, itens do plano em estados variados e 2 rotas desenhadas por fórmula numa estrada pública (nenhuma é gravação de GPS de alguém).
 - **Ao lado do app real:** o build de debug usa o `applicationId` `com.pedrohrsm.diariodebordo.debug` e o nome "Diário (exemplo)", então instala junto com o app de verdade, com banco e arquivos próprios.
 - **Testes:** `./gradlew testDebugUnitTest`; capturas: `./gradlew verifyRoborazziDebug`.
+- **APK de teste, com os dados de exemplo:** o CI também gera um por push na `main`, o `diario-de-bordo-exemplo-<sha7>` em **Artifacts**. Ele é assinado com uma chave de teste que muda a cada run; para trocar por um mais novo, desinstale o "Diário (exemplo)" antes.
 - **APK de release assinado:** o CI gera um por push na `main`. No GitHub, abra **Actions** → **CI**, escolha o run verde e baixe o `diario-de-bordo-release-<sha7>` em **Artifacts**. Para atualizar, instale o de um run mais novo por cima: os dados ficam.
 
 **Aviso:** a versão da Play Store vai ser assinada por outra chave (Play App Signing) e não instala por cima do APK do CI; vai pedir para desinstalar, o que apaga os dados do aparelho. Antes de trocar, use **Exportar backup** nos ajustes, guarde o `.zip` fora do aparelho e, depois de instalar a versão da Play, use **Importar backup**.
@@ -108,5 +109,6 @@ Todos os comandos foram rodados em 5-Nov-2026 na base `f015fd9` (`main`), exceto
 
 ## Documentos
 
+- [Ficha técnica](docs/ficha-tecnica.md): plataforma, stack com versões, arquitetura, testes e portões do CI
 - [Plano de produto](docs/plano-de-produto.md): escopo, stack, roadmap, publicação na Play Store, monetização, custos, métricas e riscos
 - [Design no Figma](https://www.figma.com/design/XLfpBLh0ndZhvYecq2uYbz): wireframe do fluxo e telas em alta fidelidade nos temas Oficina, Estrada e Cromo
