@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Símbolo da identidade visual (#84): a frente de uma moto genérica com guidão ape hanger, em traço uniforme.
-  Desenhado em coordenadas de 512 e reduzido por um grupo (0,19) para caber nos 66 dp centrais da zona segura de 108 dp
-  do ícone adaptativo (altura do símbolo: 332 x 0,19 = 63 dp). Uma cor só, para servir também ao <monochrome>.
+  Desenhado em coordenadas de 512 e reduzido por um grupo (0,175) para caber no círculo de 66 dp da zona segura de
+  108 dp do ícone adaptativo: a máscara redonda corta o que passa de 33 dp do centro. O centro do grupo é o do menor
+  círculo que envolve o símbolo, (256, 236), não o da caixa; a ponta da manopla fica a 32,5 dp (guarda no
+  IconeLauncherTest). Altura do símbolo: 332 x 0,175 = 58 dp. Uma cor só, para servir também ao <monochrome>.
   A cor do launcher fica aqui, em res/, fora do Compose (a guarda de cor crua só vigia o código Kotlin).
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
@@ -11,10 +13,10 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
     <group
-        android:scaleX="0.19"
-        android:scaleY="0.19"
-        android:translateX="5.36"
-        android:translateY="5.36">
+        android:scaleX="0.175"
+        android:scaleY="0.175"
+        android:translateX="9.2"
+        android:translateY="12.7">
         <!-- Farol (anel) -->
         <path
             android:pathData="M227.5,211A28.5,28.5 0,1 1,284.5 211A28.5,28.5 0,1 1,227.5 211"
