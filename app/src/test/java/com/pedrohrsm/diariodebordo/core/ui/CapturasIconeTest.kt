@@ -48,7 +48,7 @@ class CapturasIconeTest {
     @Test
     fun capturaIconeEm48e108Dp() {
         rule.setContent {
-            DiarioTheme(tema = TemaDiario.Oficina, modoOficina = false) {
+            DiarioTheme(tema = TemaDiario.OFICINA, modoOficina = false) {
                 Row(
                     Modifier.testTag(ICONES).background(MaterialTheme.colorScheme.background).padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
