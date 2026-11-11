@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#1F1F1F</color>
+    <!-- Grafite da identidade visual (#84): o mesmo grafite do tema Oficina, abaixo. -->
+    <color name="ic_launcher_background">@color/janela_fundo</color>
     <!-- cor/bg do tema Oficina no Figma (tokens-oficina.properties). -->
     <color name="janela_fundo">#1A1C1E</color>
 </resources>

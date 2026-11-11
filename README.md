@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/estudo-de-caso/logo.png" alt="Logo do Diário de Bordo: frente de uma moto com guidão alto, laranja sobre grafite, e o nome do app" width="260">
+</p>
+
 # Diário de Bordo — estudo de caso
 
 > App Android de diário de bordo e manutenção para motociclistas: registra abastecimentos, manutenções e rolês, e avisa quando a próxima revisão vence, tudo no aparelho, sem internet. · Projeto de portfólio de Pedro Henrique Rodrigues Marques · novembro/2026
