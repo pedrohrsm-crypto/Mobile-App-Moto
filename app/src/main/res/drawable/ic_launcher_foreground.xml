@@ -1,11 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Ícone provisório (uma engrenagem simples) até o ícone do Figma. -->
+<!--
+  Símbolo da identidade visual (#84): a frente de uma moto genérica com guidão ape hanger, em traço uniforme.
+  Desenhado em coordenadas de 512 e reduzido por um grupo (0,19) para caber nos 66 dp centrais da zona segura de 108 dp
+  do ícone adaptativo (altura do símbolo: 332 x 0,19 = 63 dp). Uma cor só, para servir também ao <monochrome>.
+  A cor do launcher fica aqui, em res/, fora do Compose (a guarda de cor crua só vigia o código Kotlin).
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#FF8A00"
-        android:pathData="M54,34a20,20 0,1 1,0 40a20,20 0,1 1,0 -40zM54,46a8,8 0,1 0,0 16a8,8 0,1 0,0 -16z" />
+    <group
+        android:scaleX="0.19"
+        android:scaleY="0.19"
+        android:translateX="5.36"
+        android:translateY="5.36">
+        <!-- Farol (anel) -->
+        <path
+            android:pathData="M227.5,211A28.5,28.5 0,1 1,284.5 211A28.5,28.5 0,1 1,227.5 211"
+            android:strokeColor="#FF6B1A"
+            android:strokeWidth="13" />
+        <!-- Garfo, travessa e pneu -->
+        <path
+            android:fillColor="#FF6B1A"
+            android:pathData="M214,228H218Q225,228 225,235V350H207V235Q207,228 214,228ZM207,345H222Q227,345 227,350V375Q227,380 222,380H207Q202,380 202,375V350Q202,345 207,345ZM227,351H231V366H227ZM294,228H298Q305,228 305,235V350H287V235Q287,228 294,228ZM290,345H305Q310,345 310,350V375Q310,380 305,380H290Q285,380 285,375V350Q285,345 290,345ZM281,351H285V366H281ZM207,251H305Q310,251 310,256V259Q310,264 305,264H207Q202,264 202,259V256Q202,251 207,251ZM236,322A20,20 0,0 1,276 322V402A20,20 0,0 1,236 402Z" />
+        <!-- Para-lama (crescente sobre o pneu) -->
+        <path
+            android:pathData="M237,305A19,19 0,0 1,275 305"
+            android:strokeColor="#FF6B1A"
+            android:strokeWidth="16" />
+        <!-- Guidão esquerdo: manopla, barra, alavanca e abraçadeira -->
+        <path
+            android:pathData="M136,105H186Q205,105 205,128V186Q205,200 213,207"
+            android:strokeColor="#FF6B1A"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="15" />
+        <path
+            android:pathData="M186,119L142,131"
+            android:strokeColor="#FF6B1A"
+            android:strokeLineCap="round"
+            android:strokeWidth="9" />
+        <path
+            android:fillColor="#FF6B1A"
+            android:pathData="M167,90H180Q184,90 184,94V118Q184,122 180,122H167Q163,122 163,118V94Q163,90 167,90Z" />
+        <!-- Guidão direito (espelho) -->
+        <path
+            android:pathData="M376,105H326Q307,105 307,128V186Q307,200 299,207"
+            android:strokeColor="#FF6B1A"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:strokeWidth="15" />
+        <path
+            android:pathData="M326,119L370,131"
+            android:strokeColor="#FF6B1A"
+            android:strokeLineCap="round"
+            android:strokeWidth="9" />
+        <path
+            android:fillColor="#FF6B1A"
+            android:pathData="M345,90H332Q328,90 328,94V118Q328,122 332,122H345Q349,122 349,118V94Q349,90 345,90Z" />
+    </group>
 </vector>
