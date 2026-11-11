@@ -1,7 +1,7 @@
 # Diário de Bordo — estudo de caso
 
 > App Android de diário de bordo e manutenção para motociclistas: registra abastecimentos, manutenções e rolês, e avisa quando a próxima revisão vence, tudo no aparelho, sem internet. · Projeto de portfólio de Pedro Henrique Rodrigues Marques · novembro/2026
-> Demonstração: VÍDEO_A_GRAVAR · Ao vivo: ainda não publicado na Play Store, veja o vídeo · Stack: Kotlin, Jetpack Compose + Material 3, Room, Hilt, WorkManager
+> Demonstração: [vídeo do app com dados de exemplo](https://drive.google.com/file/d/1vC1cXXDQrq83MdfEd7-51xeInmFRRLBT/view) · Ao vivo: ainda não publicado na Play Store, veja o vídeo · Stack: Kotlin, Jetpack Compose + Material 3, Room, Hilt, WorkManager
 
 ![Tela da moto: quilometragem atual e histórico do hodômetro](docs/estudo-de-caso/tela-principal.png)
 
