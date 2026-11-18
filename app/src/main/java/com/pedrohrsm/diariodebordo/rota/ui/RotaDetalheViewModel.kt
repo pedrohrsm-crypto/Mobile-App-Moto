@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -34,21 +33,17 @@ sealed interface RotaDetalheEstado {
 class RotaDetalheViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val rotas: RotaRepositorio,
-    privacidade: PrivacidadeDasRotas,
+    private val privacidade: PrivacidadeDasRotas,
 ) : ViewModel() {
 
     private val rotaId: String = checkNotNull(savedStateHandle[ARG_ROTA_ID])
 
     // Polilinha corrompida ou zonas ilegíveis lançam aqui e caem no catch: viram Erro, não um traçado vazio.
-    val estado: StateFlow<RotaDetalheEstado> = combine(
-        rotas.observar(rotaId),
-        privacidade.protecao,
-        flow { emit(privacidade.segredo()) },
-    ) { rota, protecao, segredo ->
+    val estado: StateFlow<RotaDetalheEstado> = rotas.observar(rotaId).combine(privacidade.protecao) { rota, protecao ->
         if (rota == null) {
             RotaDetalheEstado.NaoEncontrada
         } else {
-            RotaDetalheEstado.Pronto(rota, protecao.tracadoDaRota(rota.id, rota.polilinha, segredo))
+            RotaDetalheEstado.Pronto(rota, protecao.tracadoDaRota(rota.id, rota.polilinha, privacidade.segredo()))
         }
     }
         .catch { emit(RotaDetalheEstado.Erro(it.message)) }
