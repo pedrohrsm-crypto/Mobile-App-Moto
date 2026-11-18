@@ -2,6 +2,7 @@ package com.pedrohrsm.diariodebordo.rota.dominio
 
 import com.pedrohrsm.diariodebordo.localizacao.Ponto
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class PolilinhaTest {
@@ -52,11 +53,14 @@ class PolilinhaTest {
         assertEquals(emptyList<List<Ponto>>(), Polilinha.decodificarTrechos(""))
     }
 
-    /** Ler um traçado com trechos como se fosse um só desenharia uma reta por dentro do que ficou oculto. */
-    @Test(expected = IllegalArgumentException::class)
+    /**
+     * Ler um traçado com trechos como se fosse um só desenharia uma reta por dentro do que ficou oculto. A recusa é
+     * pelo separador, não por acaso: o texto com trechos às vezes também parece incompleto.
+     */
+    @Test
     fun decodificarUmTrechoSoRecusaTextoComTrechos() {
-        Polilinha.decodificar(
-            Polilinha.codificarTrechos(listOf(listOf(Ponto(1.0, 1.0, 0)), listOf(Ponto(2.0, 2.0, 0)))),
-        )
+        val texto = Polilinha.codificarTrechos(listOf(listOf(Ponto(1.0, 1.0, 0)), listOf(Ponto(2.0, 2.0, 0))))
+        val erro = assertThrows(IllegalArgumentException::class.java) { Polilinha.decodificar(texto) }
+        assertEquals("Polilinha com mais de um trecho", erro.message)
     }
 }
