@@ -243,4 +243,29 @@
     <string name="backup_versao_nova">Este backup foi feito numa versão mais nova do app. Atualize o app e tente de novo. Nada foi alterado.</string>
     <string name="backup_sem_espaco">Não há espaço no aparelho para as fotos deste backup. Libere espaço e tente de novo. Nada foi alterado.</string>
     <string name="backup_falha">Não foi possível concluir. Nada foi alterado. %1$s</string>
+
+    <!-- Privacidade das rotas no arquivo exportado (#78) -->
+    <string name="privacidade_rotas_titulo">Privacidade das rotas</string>
+    <string name="privacidade_rotas_explicacao">No arquivo de backup, o começo e o fim de cada rota saem ocultos, para não mostrar onde você mora. O traçado completo continua neste aparelho. O tamanho varia um pouco de rota para rota; a distância e a duração saem reais.</string>
+    <string name="privacidade_corte_grupo">Ocultar em cada ponta</string>
+    <string name="privacidade_corte_desligado">Desligado</string>
+    <string name="privacidade_zonas_abrir">Zonas de privacidade: %1$d</string>
+    <string name="zonas_titulo">Zonas de privacidade</string>
+    <string name="zonas_explicacao">Tudo o que passar dentro de uma zona sai do arquivo de backup, em qualquer ponto da rota. As zonas ficam só neste aparelho e não vão no backup.</string>
+    <string name="zonas_como_marcar">Para marcar uma zona, abra uma rota gravada e toque em Marcar zona no começo ou Marcar zona no fim. Não usa o GPS.</string>
+    <string name="zonas_vazio">Nenhuma zona marcada.</string>
+    <string name="zona_raio">Raio de %1$s</string>
+    <string name="zona_nova">Nova zona</string>
+    <string name="zona_editar">Editar zona</string>
+    <string name="zona_nome">Nome (por exemplo, Casa ou Trabalho)</string>
+    <string name="zona_raio_grupo">Raio</string>
+    <string name="zona_centro_inicio">O centro da zona é o começo desta rota.</string>
+    <string name="zona_centro_fim">O centro da zona é o fim desta rota.</string>
+    <string name="zona_sem_tracado">Esta rota não tem traçado para marcar uma zona.</string>
+    <string name="zona_nao_encontrada">Zona não encontrada.</string>
+    <string name="zona_excluir_titulo">Excluir esta zona?</string>
+    <string name="zona_excluir_texto">O que passa por ela volta a sair no arquivo de backup, menos as pontas das rotas.</string>
+    <string name="rota_marcar_zona_inicio">Marcar zona no começo</string>
+    <string name="rota_marcar_zona_fim">Marcar zona no fim</string>
+    <string name="rota_trecho_oculto">Em cinza e tracejado, o que sai oculto no arquivo de backup.</string>
 </resources>

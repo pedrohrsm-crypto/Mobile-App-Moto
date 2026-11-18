@@ -32,6 +32,10 @@ import com.pedrohrsm.diariodebordo.garagem.ui.MotoDetalheScreen
 import com.pedrohrsm.diariodebordo.plano.ui.AcaoAtalhoOleo
 import com.pedrohrsm.diariodebordo.plano.ui.AtalhoTrocaDeOleoView
 import com.pedrohrsm.diariodebordo.plano.ui.EstadoAtalhoOleo
+import com.pedrohrsm.diariodebordo.rota.dominio.CorteDasPontas
+import com.pedrohrsm.diariodebordo.rota.dominio.ProtecaoDasRotas
+import com.pedrohrsm.diariodebordo.rota.ui.PrivacidadeEstado
+import com.pedrohrsm.diariodebordo.rota.ui.SecaoPrivacidadeRotasConteudo
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -91,7 +95,12 @@ class CapturasAjustesTest(private val caso: Caso) {
     private fun Tela(tela: Tela) {
         val ajuste = AjusteTema(caso.tema, caso.modoOficina)
         when (tela) {
-            Tela.AJUSTES -> AjustesScreen(ajuste) { SecaoBackupConteudo(BackupEstado()) }
+            Tela.AJUSTES -> AjustesScreen(
+                ajuste,
+                privacidade = {
+                    SecaoPrivacidadeRotasConteudo(PrivacidadeEstado.Pronto(ProtecaoDasRotas(CorteDasPontas.KM1)))
+                },
+            ) { SecaoBackupConteudo(BackupEstado()) }
             // A seção de backup fica abaixo da dobra nos ajustes: capturada sozinha, no estado "trabalhando".
             Tela.BACKUP -> Surface(Modifier.fillMaxSize()) {
                 Column(Modifier.padding(LocalEscalaDiario.current.espaco(16.dp))) {

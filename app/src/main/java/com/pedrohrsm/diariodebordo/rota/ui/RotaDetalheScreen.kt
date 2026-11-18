@@ -28,15 +28,21 @@ import com.pedrohrsm.diariodebordo.core.designsystem.theme.LocalEscalaDiario
 import com.pedrohrsm.diariodebordo.core.ui.EstadoCarregando
 import com.pedrohrsm.diariodebordo.core.ui.EstadoErro
 import com.pedrohrsm.diariodebordo.core.ui.EstadoVazio
+import com.pedrohrsm.diariodebordo.garagem.ui.BotaoSecundario
 import com.pedrohrsm.diariodebordo.numeros.Formatador
+import com.pedrohrsm.diariodebordo.rota.dominio.PontaDaRota
 
 @Composable
-fun RotaDetalheRoute(onExcluida: () -> Unit, viewModel: RotaDetalheViewModel = hiltViewModel()) {
+fun RotaDetalheRoute(
+    onExcluida: () -> Unit,
+    onMarcarZona: (PontaDaRota) -> Unit,
+    viewModel: RotaDetalheViewModel = hiltViewModel(),
+) {
     val estado by viewModel.estado.collectAsStateWithLifecycle()
     val excluida by viewModel.excluida.collectAsStateWithLifecycle()
     val falha by viewModel.falha.collectAsStateWithLifecycle()
     LaunchedEffect(excluida) { if (excluida) onExcluida() }
-    RotaDetalheTela(estado, onExcluir = viewModel::excluir)
+    RotaDetalheTela(estado, onExcluir = viewModel::excluir, onMarcarZona = onMarcarZona)
     falha?.let {
         AlertDialog(
             onDismissRequest = viewModel::limparFalha,
@@ -46,9 +52,12 @@ fun RotaDetalheRoute(onExcluida: () -> Unit, viewModel: RotaDetalheViewModel = h
     }
 }
 
-/** Data, distância, duração e o traçado sem mapa. Excluir pede confirmação. */
+/**
+ * Data, distância, duração e o traçado sem mapa, com o que sai oculto no arquivo exportado em cinza (#78). Daqui
+ * a pessoa marca uma zona de privacidade no começo ou no fim da rota, sem GPS. Excluir pede confirmação.
+ */
 @Composable
-fun RotaDetalheTela(estado: RotaDetalheEstado, onExcluir: () -> Unit = {}) {
+fun RotaDetalheTela(estado: RotaDetalheEstado, onExcluir: () -> Unit = {}, onMarcarZona: (PontaDaRota) -> Unit = {}) {
     var confirmar by remember { mutableStateOf(false) }
     TelaDiario(
         titulo = stringResource(R.string.rota_titulo),
@@ -81,8 +90,16 @@ fun RotaDetalheTela(estado: RotaDetalheEstado, onExcluir: () -> Unit = {}) {
                             Formatador.duracao(estado.rota.duracaoS),
                         style = MaterialTheme.typography.headlineSmall,
                     )
-                    TracadoRota(estado.pontos, stringResource(R.string.rota_tracado_descricao))
+                    TracadoRota(estado.trechos, stringResource(R.string.rota_tracado_descricao))
+                    if (estado.trechos.any { it.oculto }) {
+                        Text(stringResource(R.string.rota_trecho_oculto), style = MaterialTheme.typography.bodySmall)
+                    }
                     Text(stringResource(R.string.rota_sem_mapa), style = MaterialTheme.typography.bodySmall)
+                    if (estado.trechos.isNotEmpty()) {
+                        PontaDaRota.entries.forEach { ponta ->
+                            BotaoSecundario(stringResource(ponta.rotuloMarcar()), { onMarcarZona(ponta) })
+                        }
+                    }
                 }
             }
         }
@@ -100,4 +117,9 @@ fun RotaDetalheTela(estado: RotaDetalheEstado, onExcluir: () -> Unit = {}) {
             dismissButton = { TextButton(onClick = { confirmar = false }) { Text(stringResource(R.string.cancelar)) } },
         )
     }
+}
+
+private fun PontaDaRota.rotuloMarcar(): Int = when (this) {
+    PontaDaRota.INICIO -> R.string.rota_marcar_zona_inicio
+    PontaDaRota.FIM -> R.string.rota_marcar_zona_fim
 }

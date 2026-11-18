@@ -14,20 +14,30 @@ import com.pedrohrsm.diariodebordo.garagem.data.CategoriaMoto
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
+import com.pedrohrsm.diariodebordo.localizacao.Ponto
 import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
 import com.pedrohrsm.diariodebordo.plano.data.OrigemItem
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
+import com.pedrohrsm.diariodebordo.rota.data.FakePrivacidadeDasRotas
 import com.pedrohrsm.diariodebordo.rota.data.PontoDeRota
 import com.pedrohrsm.diariodebordo.rota.data.Rota
+import com.pedrohrsm.diariodebordo.rota.data.ZonasIlegiveisException
+import com.pedrohrsm.diariodebordo.rota.dominio.CorteDasPontas
+import com.pedrohrsm.diariodebordo.rota.dominio.Polilinha
+import com.pedrohrsm.diariodebordo.rota.dominio.ProtecaoDasRotas
+import com.pedrohrsm.diariodebordo.rota.dominio.ZonaDePrivacidade
+import com.pedrohrsm.diariodebordo.rota.dominio.distanciaM
 import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
+import java.util.zip.ZipInputStream
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -56,6 +66,7 @@ class BackupRepositorioTest {
         dao: (BackupDao) -> BackupDao = {
             it
         },
+        val privacidade: FakePrivacidadeDasRotas = FakePrivacidadeDasRotas(),
     ) {
         val banco: DiarioDatabase = Room.inMemoryDatabaseBuilder(
             RuntimeEnvironment.getApplication(),
@@ -74,6 +85,7 @@ class BackupRepositorioTest {
             TransacaoRoom(banco),
             agendador,
             premium,
+            privacidade,
             relogio,
         )
     }
@@ -203,6 +215,99 @@ class BackupRepositorioTest {
         assertArrayEquals(JPEG, novo.arquivos.fotos["oleo.jpg"])
         assertEquals(1, novo.agendador.recalculos)
     }
+
+    /** Rota de 10 km para o leste, um ponto a cada 100 m, longe de qualquer endereço real. */
+    private val longa: List<Ponto> = (0..100).map { Ponto(-27.5, -48.5 + it * 0.001013, 0) }
+    private val rotaLonga = rota.copy(id = "longa", polilinha = Polilinha.codificar(longa))
+    private val zona = ZonaDePrivacidade(
+        id = "z",
+        nome = "Trabalho do dono",
+        latitude = longa[50].latitude,
+        longitude = longa[50].longitude,
+        raioM = 500,
+    )
+
+    private fun protegido() = FakePrivacidadeDasRotas(ProtecaoDasRotas(CorteDasPontas.KM1, listOf(zona)))
+
+    @Test
+    fun arquivoNaoTemPontoDentroDasPontasNemDaZona() = runTest {
+        val aparelho = Aparelho(privacidade = protegido())
+        aparelho.backup.gravarMotos(listOf(moto))
+        aparelho.backup.gravarRotas(listOf(rotaLonga))
+        val (arquivo, _) = aparelho.exportar()
+
+        val copia = PacoteZip.lerDados(arquivo.inputStream())
+        assertTrue(copia.tracadosProtegidos)
+        val saiu = copia.rotas.single()
+        assertEquals("distância e duração reais", rotaLonga.copy(polilinha = saiu.polilinha), saiu)
+        val trechos = Polilinha.decodificarTrechos(saiu.polilinha)
+        assertEquals("as pontas e a zona partem a rota em dois", 2, trechos.size)
+        val pontos = trechos.flatten()
+        assertTrue(pontos.all { distanciaM(it, longa.first()) >= 800 && distanciaM(it, longa.last()) >= 800 })
+        assertTrue(pontos.all { distanciaM(it, ponto(zona)) >= zona.raioM })
+    }
+
+    @Test
+    fun zonasNaoVaoNoArquivo() = runTest {
+        val aparelho = Aparelho(privacidade = protegido())
+        aparelho.backup.gravarMotos(listOf(moto))
+        aparelho.backup.gravarRotas(listOf(rotaLonga))
+        val (arquivo, _) = aparelho.exportar()
+
+        val json = ZipInputStream(arquivo.inputStream()).use {
+            it.nextEntry
+            it.readBytes().decodeToString()
+        }
+        assertFalse(json.contains("zona", ignoreCase = true))
+        assertFalse(json.contains(zona.nome))
+        assertFalse(json.contains(zona.latitude.toString()))
+        assertFalse(json.contains(zona.longitude.toString()))
+    }
+
+    @Test
+    fun rotaCurtaSaiSemTracado() = runTest {
+        val aparelho = Aparelho(privacidade = protegido())
+        aparelho.backup.gravarMotos(listOf(moto))
+        aparelho.backup.gravarRotas(listOf(rotaLonga.copy(polilinha = Polilinha.codificar(longa.take(15)))))
+        val (arquivo, _) = aparelho.exportar()
+        val saiu = PacoteZip.lerDados(arquivo.inputStream()).rotas.single()
+        assertEquals("", saiu.polilinha)
+        assertEquals(rotaLonga.distanciaM, saiu.distanciaM)
+        assertEquals(rotaLonga.duracaoS, saiu.duracaoS)
+    }
+
+    /** O mesmo padrão da mesclagem dos locais (#73): o arquivo cortado é mais novo, mas o traçado do aparelho fica. */
+    @Test
+    fun importarArquivoCortadoNaoApagaOTracadoCompletoDoAparelho() = runTest {
+        val origem = Aparelho(privacidade = protegido())
+        origem.backup.gravarMotos(listOf(moto))
+        origem.backup.gravarRotas(listOf(rotaLonga.copy(alteradoEm = 20, duracaoS = 999)))
+        val (arquivo, _) = origem.exportar()
+
+        val destino = Aparelho()
+        destino.backup.gravarMotos(listOf(moto))
+        destino.backup.gravarRotas(listOf(rotaLonga))
+        destino.repositorio.importar(arquivo.inputStream())
+
+        val ficou = destino.backup.rotas().single()
+        assertEquals(999L, ficou.duracaoS)
+        assertEquals(rotaLonga.polilinha, ficou.polilinha)
+    }
+
+    @Test
+    fun zonasIlegiveisFazemAExportacaoFalharEmVezDeSairSemProtecao() = runTest {
+        val aparelho = Aparelho(privacidade = protegido().also { it.falhar = true })
+        aparelho.backup.gravarMotos(listOf(moto))
+        aparelho.backup.gravarRotas(listOf(rotaLonga))
+        try {
+            aparelho.exportar()
+            fail("exportou sem conseguir ler as zonas")
+        } catch (e: ZonasIlegiveisException) {
+            assertFalse(aparelho.arquivos.ultimaExportacao().exists())
+        }
+    }
+
+    private fun ponto(z: ZonaDePrivacidade) = Ponto(z.latitude, z.longitude, 0)
 
     @Test
     fun exportarGuardaACopiaQueOBackupDoAndroidLeva() = runTest {

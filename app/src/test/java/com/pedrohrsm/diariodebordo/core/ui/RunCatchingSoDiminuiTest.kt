@@ -76,7 +76,6 @@ class RunCatchingSoDiminuiTest {
                 ".getOrDefault(ZoneId.systemDefault())",
             "rota/servico/GravacaoRotaService.kt: runCatching { rotas.emGravacao()?.let { rotas.finalizar(it.id, " +
                 "getString(R.string.rota_titulo_role)) } }",
-            "rota/ui/RotaDetalheViewModel.kt: runCatching { rotas.excluir(rotaId) }",
             "rota/ui/RotasViewModel.kt: viewModelScope.launch { runCatching { acao() }" +
                 ".onFailure { _falha.value = FalhaRota.AoSalvar(it.message) } }",
         ).sorted()

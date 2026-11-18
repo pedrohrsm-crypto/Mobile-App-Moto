@@ -6,9 +6,25 @@ import kotlin.math.roundToLong
 /**
  * Traçado salvo em texto compacto (algoritmo de polilinha codificada, precisão de 1e-5 grau, cerca de 1 m).
  * Guarda só latitude e longitude: o horário de cada ponto não sai do aparelho nem vai no arquivo exportado.
+ * Um traçado com partes ocultas (#78) tem mais de um trecho, separados por [SEPARADOR_DE_TRECHOS], que nunca
+ * aparece dentro de um trecho (o algoritmo só usa os caracteres de 63 a 126).
  */
 object Polilinha {
     private const val FATOR = 1e5
+    const val SEPARADOR_DE_TRECHOS = ','
+
+    /** Trechos vazios ficam de fora: o texto nunca tem dois separadores seguidos nem separador nas pontas. */
+    fun codificarTrechos(trechos: List<List<Ponto>>): String =
+        trechos.filter { it.isNotEmpty() }.joinToString(SEPARADOR_DE_TRECHOS.toString()) { codificar(it) }
+
+    /** Lê um traçado de um ou mais trechos. Texto vazio = rota sem traçado; trecho vazio no meio = corrompido. */
+    fun decodificarTrechos(texto: String): List<List<Ponto>> {
+        if (texto.isEmpty()) return emptyList()
+        return texto.split(SEPARADOR_DE_TRECHOS).map {
+            require(it.isNotEmpty()) { "Polilinha com trecho vazio" }
+            decodificar(it)
+        }
+    }
 
     fun codificar(pontos: List<Ponto>): String = buildString {
         var latAnterior = 0L
@@ -23,7 +39,9 @@ object Polilinha {
         }
     }
 
+    /** Um trecho só. Traçado com mais de um trecho é recusado: juntar os trechos desenharia o que ficou oculto. */
     fun decodificar(texto: String): List<Ponto> {
+        require(SEPARADOR_DE_TRECHOS !in texto) { "Polilinha com mais de um trecho" }
         val pontos = mutableListOf<Ponto>()
         var i = 0
         var lat = 0L
