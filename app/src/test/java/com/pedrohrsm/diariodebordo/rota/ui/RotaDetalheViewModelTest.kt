@@ -11,6 +11,7 @@ import com.pedrohrsm.diariodebordo.localizacao.Ponto
 import com.pedrohrsm.diariodebordo.plano.data.planoFalso
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
 import com.pedrohrsm.diariodebordo.rota.data.FakePontoDeRotaDao
+import com.pedrohrsm.diariodebordo.rota.data.FakePrivacidadeDasRotas
 import com.pedrohrsm.diariodebordo.rota.data.FakeRotaDao
 import com.pedrohrsm.diariodebordo.rota.data.Rota
 import com.pedrohrsm.diariodebordo.rota.data.RotaRepositorio
@@ -38,6 +39,7 @@ class RotaDetalheViewModelTest {
     private val relogio = Clock.fixed(Instant.parse("2026-10-04T09:00:00Z"), ZoneId.of("America/Sao_Paulo"))
     private val rotaDao = FakeRotaDao()
     private val transacao = TransacaoFalsa()
+    private val privacidade = FakePrivacidadeDasRotas()
     private val rotas = RotaRepositorio(
         rotaDao,
         FakePontoDeRotaDao(),
@@ -66,7 +68,11 @@ class RotaDetalheViewModelTest {
 
     private suspend fun TestScope.abrir(rota: Rota): RotaDetalheViewModel {
         rotaDao.inserir(rota)
-        val vm = RotaDetalheViewModel(SavedStateHandle(mapOf(RotaDetalheViewModel.ARG_ROTA_ID to rota.id)), rotas)
+        val vm = RotaDetalheViewModel(
+            SavedStateHandle(mapOf(RotaDetalheViewModel.ARG_ROTA_ID to rota.id)),
+            rotas,
+            privacidade,
+        )
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { vm.estado.collect {} }
         return vm
     }
@@ -77,8 +83,10 @@ class RotaDetalheViewModelTest {
         val rota = Rota(motoId = "m", iniciadaEm = 1, polilinha = Polilinha.codificar(pontos), emGravacao = false)
         val estado = abrir(rota).estado.value
         assertTrue(estado.toString(), estado is RotaDetalheEstado.Pronto)
-        assertEquals(2, (estado as RotaDetalheEstado.Pronto).pontos.size)
-        assertEquals(-28.01, estado.pontos.last().latitude, 1e-5)
+        val trechos = (estado as RotaDetalheEstado.Pronto).trechos
+        assertEquals(1, trechos.size)
+        assertEquals(2, trechos.single().pontos.size)
+        assertEquals(-28.01, trechos.single().pontos.last().latitude, 1e-5)
     }
 
     /** O defeito da revisão: a polilinha corrompida virava um quadro vazio, sem aviso. */

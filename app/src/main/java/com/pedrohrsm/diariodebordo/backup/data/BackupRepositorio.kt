@@ -12,6 +12,7 @@ import com.pedrohrsm.diariodebordo.core.premium.Premium
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorLembretes
+import com.pedrohrsm.diariodebordo.rota.data.PrivacidadeDasRotas
 import com.pedrohrsm.diariodebordo.rota.data.Rota
 import java.io.File
 import java.io.InputStream
@@ -44,16 +45,25 @@ class BackupRepositorio @Inject constructor(
     private val transacao: Transacao,
     private val lembretes: AgendadorLembretes,
     private val premium: Premium,
+    private val privacidade: PrivacidadeDasRotas,
     private val relogio: Clock,
 ) {
     /**
      * Só o que está ativo. Sem rotas, os rolês continuam no diário, mas sem o traçado. Sem locais, os registros
-     * vão sem latitude e longitude ([paraOArquivo]).
+     * vão sem latitude e longitude ([paraOArquivo]). As rotas saem sem as pontas e sem o que passa nas zonas de
+     * privacidade (#78); se as zonas não puderem ser lidas, a exportação falha em vez de sair sem proteção.
      */
     suspend fun montarCopia(comRotas: Boolean, comLocais: Boolean): CopiaDeSeguranca {
+        val protecao = privacidade.atual()
         val motos = dao.motos().filter { it.excluidoEm == null }
         val motoIds = motos.map { it.id }.toSet()
-        val rotas = if (comRotas) dao.rotas().filter { it.excluidoEm == null && it.motoId in motoIds } else emptyList()
+        val ativas = if (comRotas) dao.rotas().filter { it.excluidoEm == null && it.motoId in motoIds } else emptyList()
+        val rotas = if (protecao.ativa && ativas.isNotEmpty()) {
+            val segredo = privacidade.segredo()
+            ativas.map { it.paraOArquivo(protecao, segredo) }
+        } else {
+            ativas
+        }
         val rotaIds = rotas.map { it.id }.toSet()
         val registros = dao.registros()
             .filter { it.excluidoEm == null && it.motoId in motoIds }
@@ -64,6 +74,7 @@ class BackupRepositorio @Inject constructor(
             geradoEm = relogio.millis(),
             fusoHorario = relogio.zone.id,
             locaisOmitidos = !comLocais,
+            tracadosProtegidos = protecao.ativa,
             motos = motos,
             leituras = dao.leituras().filter { it.excluidoEm == null && it.motoId in motoIds },
             registros = registros,
@@ -161,9 +172,12 @@ class BackupRepositorio @Inject constructor(
             mesclar(dao.itensDoPlano(), copia.itensDoPlano, { it.id }, { it.alteradoEm })
                 .also { dao.gravarItensDoPlano(it.gravar) },
             // Rota excluída no aparelho perdeu o traçado (risco #23): o arquivo não a traz de volta. A que grava
-            // agora também não é tocada.
-            mesclar(dao.todasAsRotas(), copia.rotas, { it.id }, { it.alteradoEm }, protegido = ::rotaProtegida)
-                .also { dao.gravarRotas(it.gravar) },
+            // agora também não é tocada. Arquivo com traçados protegidos não apaga o traçado completo (#78).
+            dao.todasAsRotas().let { doAparelho ->
+                val chegando = copia.rotas.paraOAparelho(copia.tracadosProtegidos, doAparelho)
+                mesclar(doAparelho, chegando, { it.id }, { it.alteradoEm }, protegido = ::rotaProtegida)
+                    .also { dao.gravarRotas(it.gravar) }
+            },
         )
         return ResumoImportacao(
             novos = partes.sumOf(Mesclagem<*>::novos),

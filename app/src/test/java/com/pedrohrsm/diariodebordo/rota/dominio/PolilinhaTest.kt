@@ -2,6 +2,7 @@ package com.pedrohrsm.diariodebordo.rota.dominio
 
 import com.pedrohrsm.diariodebordo.localizacao.Ponto
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class PolilinhaTest {
@@ -35,5 +36,31 @@ class PolilinhaTest {
     @Test(expected = IllegalArgumentException::class)
     fun textoCortadoEhRecusado() {
         Polilinha.decodificar("_p~iF~ps|U_ulL")
+    }
+
+    /** #78: traçado com partes ocultas tem mais de um trecho; ida e volta mantém os trechos separados. */
+    @Test
+    fun trechosIdaEVoltaMantemOsTrechosSeparados() {
+        val trechos = listOf(
+            listOf(Ponto(-27.5, -48.5, 0), Ponto(-27.51, -48.49, 0)),
+            listOf(Ponto(-27.6, -48.4, 0), Ponto(-27.61, -48.39, 0), Ponto(-27.62, -48.38, 0)),
+        )
+        val texto = Polilinha.codificarTrechos(trechos)
+        assertEquals(1, texto.count { it == Polilinha.SEPARADOR_DE_TRECHOS })
+        val volta = Polilinha.decodificarTrechos(texto)
+        assertEquals(listOf(2, 3), volta.map { it.size })
+        assertEquals(-27.62, volta.last().last().latitude, 1e-5)
+        assertEquals(emptyList<List<Ponto>>(), Polilinha.decodificarTrechos(""))
+    }
+
+    /**
+     * Ler um traçado com trechos como se fosse um só desenharia uma reta por dentro do que ficou oculto. A recusa é
+     * pelo separador, não por acaso: o texto com trechos às vezes também parece incompleto.
+     */
+    @Test
+    fun decodificarUmTrechoSoRecusaTextoComTrechos() {
+        val texto = Polilinha.codificarTrechos(listOf(listOf(Ponto(1.0, 1.0, 0)), listOf(Ponto(2.0, 2.0, 0))))
+        val erro = assertThrows(IllegalArgumentException::class.java) { Polilinha.decodificar(texto) }
+        assertEquals("Polilinha com mais de um trecho", erro.message)
     }
 }

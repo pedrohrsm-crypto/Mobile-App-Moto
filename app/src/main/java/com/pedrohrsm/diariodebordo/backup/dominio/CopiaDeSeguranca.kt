@@ -8,8 +8,12 @@ import com.pedrohrsm.diariodebordo.plano.data.ItemDoPlano
 import com.pedrohrsm.diariodebordo.rota.data.Rota
 import kotlinx.serialization.Serializable
 
-/** Versão do formato do arquivo. Sobe quando o JSON muda; a importação converte das versões anteriores. */
-const val FORMATO_ATUAL = 1
+/**
+ * Versão do formato do arquivo. Sobe quando o JSON muda; a importação converte das versões anteriores.
+ * 2 (#78): a polilinha de uma rota pode ter mais de um trecho; o app da versão 1 desenharia uma reta por dentro do
+ * que ficou oculto, então recusa o arquivo ([FormatoNovoDemaisException]). O arquivo da versão 1 chega igual.
+ */
+const val FORMATO_ATUAL = 2
 
 /**
  * Conteúdo do arquivo de backup (diario.json dentro do .zip), com as tabelas da versão 1 do banco. Leva só o que
@@ -26,6 +30,11 @@ data class CopiaDeSeguranca(
      * Na importação, o local que o aparelho já tem fica ([paraOAparelho]).
      */
     val locaisOmitidos: Boolean = false,
+    /**
+     * As rotas saíram sem as pontas e sem o que passa nas zonas de privacidade (#78). Ausente nos arquivos antigos =
+     * traçados completos. Na importação, o traçado que o aparelho já tem fica (`paraOAparelho`).
+     */
+    val tracadosProtegidos: Boolean = false,
     val motos: List<Moto> = emptyList(),
     val leituras: List<LeituraHodometro> = emptyList(),
     val registros: List<Registro> = emptyList(),

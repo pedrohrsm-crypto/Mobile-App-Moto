@@ -13,6 +13,7 @@ import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
+import com.pedrohrsm.diariodebordo.rota.data.FakePrivacidadeDasRotas
 import com.pedrohrsm.diariodebordo.rota.data.Rota
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -49,6 +50,7 @@ class BackupViewModelTest {
         TransacaoRoom(banco),
         AgendadorFalso(),
         Premium(habilitado = false),
+        FakePrivacidadeDasRotas(),
         relogio,
     )
 

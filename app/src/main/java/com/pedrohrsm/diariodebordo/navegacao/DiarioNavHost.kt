@@ -51,9 +51,13 @@ import com.pedrohrsm.diariodebordo.plano.ui.AtalhoTrocaDeOleoRoute
 import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormRoute
 import com.pedrohrsm.diariodebordo.plano.ui.ItemPlanoFormViewModel
 import com.pedrohrsm.diariodebordo.plano.ui.PlanoRoute
+import com.pedrohrsm.diariodebordo.rota.dominio.PontaDaRota
 import com.pedrohrsm.diariodebordo.rota.ui.RotaDetalheRoute
 import com.pedrohrsm.diariodebordo.rota.ui.RotaDetalheViewModel
 import com.pedrohrsm.diariodebordo.rota.ui.RotasRoute
+import com.pedrohrsm.diariodebordo.rota.ui.ZonaFormRoute
+import com.pedrohrsm.diariodebordo.rota.ui.ZonaFormViewModel
+import com.pedrohrsm.diariodebordo.rota.ui.ZonasRoute
 
 /**
  * Lista única dos destinos da barra inferior: a barra e o grafo leem daqui, e o rótulo é o
@@ -73,6 +77,8 @@ object Rotas {
     const val MOTO = "moto/{${MotoDetalheViewModel.ARG_MOTO_ID}}"
     const val MOTO_EDITAR = "moto/{${MotoDetalheViewModel.ARG_MOTO_ID}}/editar"
     const val AJUSTES = "ajustes"
+    const val ZONAS = "ajustes/zonas"
+    const val ZONA = "ajustes/zona/{${ZonaFormViewModel.ARG_ZONA_ID}}"
 
     const val DIARIO = "diario"
     const val REGISTRO_NOVO = "registro/novo?${RegistroFormViewModel.ARG_TIPO}={${RegistroFormViewModel.ARG_TIPO}}"
@@ -80,6 +86,7 @@ object Rotas {
 
     const val ROTAS = "rotas"
     const val ROTA = "rota/{${RotaDetalheViewModel.ARG_ROTA_ID}}"
+    const val ZONA_NOVA = "rota/{${ZonaFormViewModel.ARG_ROTA_ID}}/zona/{${ZonaFormViewModel.ARG_PONTA}}"
 
     const val PLANO = "plano"
     const val ITEM_NOVO = "plano/item/novo"
@@ -92,6 +99,8 @@ object Rotas {
         "registro/novo" + (tipo?.let { "?${RegistroFormViewModel.ARG_TIPO}=$it" } ?: "")
     fun registro(registroId: String) = "registro/editar/$registroId"
     fun rota(rotaId: String) = "rota/$rotaId"
+    fun zonaNova(rotaId: String, ponta: PontaDaRota) = "rota/$rotaId/zona/${ponta.name}"
+    fun zona(zonaId: String) = "ajustes/zona/$zonaId"
     fun item(itemId: String) = "plano/item/$itemId"
 
     /** Plano da moto aberto por um lembrete, com o item avisado em destaque. */
@@ -213,7 +222,9 @@ private fun NavGraphBuilder.grafoGaragem(nav: NavController) {
             onAjustes = { nav.navigate(Rotas.AJUSTES) },
         )
     }
-    composable(Rotas.AJUSTES) { AjustesRoute() }
+    composable(Rotas.AJUSTES) { AjustesRoute(onZonas = { nav.navigate(Rotas.ZONAS) }) }
+    composable(Rotas.ZONAS) { ZonasRoute(onAbrirZona = { nav.navigate(Rotas.zona(it)) }) }
+    composable(Rotas.ZONA) { ZonaFormRoute(onConcluido = { nav.popBackStack() }) }
     composable(Rotas.MOTO_NOVA) {
         MotoFormRoute(onSalvo = { id -> nav.navigate(Rotas.moto(id)) { popUpTo(Rotas.GARAGEM) } })
     }
@@ -262,9 +273,14 @@ private fun NavGraphBuilder.grafoRotas(nav: NavController) {
             onCadastrarMoto = { nav.navigate(Rotas.MOTO_NOVA) },
         )
     }
-    composable(Rotas.ROTA) {
-        RotaDetalheRoute(onExcluida = { nav.popBackStack() })
+    composable(Rotas.ROTA) { entrada ->
+        val rotaId = checkNotNull(entrada.arguments?.getString(RotaDetalheViewModel.ARG_ROTA_ID))
+        RotaDetalheRoute(
+            onExcluida = { nav.popBackStack() },
+            onMarcarZona = { nav.navigate(Rotas.zonaNova(rotaId, it)) },
+        )
     }
+    composable(Rotas.ZONA_NOVA) { ZonaFormRoute(onConcluido = { nav.popBackStack() }) }
 }
 
 private fun NavArgumentBuilder.opcional() {

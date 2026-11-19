@@ -24,7 +24,10 @@ import com.pedrohrsm.diariodebordo.diario.ui.RegistroFormEstado
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.localizacao.Ponto
 import com.pedrohrsm.diariodebordo.rota.data.Rota
+import com.pedrohrsm.diariodebordo.rota.dominio.CorteDasPontas
 import com.pedrohrsm.diariodebordo.rota.dominio.Polilinha
+import com.pedrohrsm.diariodebordo.rota.dominio.ProtecaoDasRotas
+import com.pedrohrsm.diariodebordo.rota.dominio.tracadoDaRota
 import java.time.Instant
 import org.junit.Rule
 import org.junit.Test
@@ -92,7 +95,11 @@ class CapturasRotaTest(private val caso: Caso) {
                 RotasEstado.Pronto(estradeira, Gravacao(emGravacao, pontos = 312, capturando = false), salvas),
             )
             Tela.ROTA_DETALHE -> RotaDetalheTela(
-                RotaDetalheEstado.Pronto(salvas.first(), Polilinha.decodificar(tracado)),
+                // Corte de 1 km (#78): as pontas do traçado aparecem em cinza, tracejadas.
+                RotaDetalheEstado.Pronto(
+                    salvas.first(),
+                    ProtecaoDasRotas(CorteDasPontas.KM1).tracadoDaRota("1", tracado, ByteArray(32)),
+                ),
             )
         }
     }

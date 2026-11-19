@@ -23,23 +23,29 @@ import com.pedrohrsm.diariodebordo.core.designsystem.theme.AjusteTema
 import com.pedrohrsm.diariodebordo.core.designsystem.theme.LocalEscalaDiario
 import com.pedrohrsm.diariodebordo.core.premium.RecursoPremium
 import com.pedrohrsm.diariodebordo.exemplo.SecaoDadosDeExemplo
+import com.pedrohrsm.diariodebordo.rota.ui.SecaoPrivacidadeRotas
 
 @Composable
-fun AjustesRoute(viewModel: AjustesViewModel = hiltViewModel()) {
+fun AjustesRoute(onZonas: () -> Unit, viewModel: AjustesViewModel = hiltViewModel()) {
     val ajuste by viewModel.ajuste.collectAsStateWithLifecycle()
-    AjustesScreen(ajuste, viewModel::ajustar, viewModel.recursosPremium) {
+    AjustesScreen(ajuste, viewModel::ajustar, viewModel.recursosPremium, privacidade = {
+        SecaoPrivacidadeRotas(onZonas)
+    }) {
         SecaoBackup()
         // Dados de exemplo (#77): no release esta chamada é uma função vazia (source set release).
         SecaoDadosDeExemplo()
     }
 }
 
-/** Aparência (1.8), backup (1.9) e, só com a flag ligada, o que o premium libera (1.10). */
+/**
+ * Aparência (1.8), privacidade das rotas (#78), backup (1.9) e, só com a flag ligada, o que o premium libera (1.10).
+ */
 @Composable
 fun AjustesScreen(
     ajuste: AjusteTema,
     onAjustar: (AjusteTema) -> Unit = {},
     recursosPremium: Set<RecursoPremium> = emptySet(),
+    privacidade: @Composable () -> Unit = {},
     backup: @Composable () -> Unit = {},
 ) {
     val escala = LocalEscalaDiario.current
@@ -54,6 +60,7 @@ fun AjustesScreen(
         ) {
             // As seções se separam pelo espaçamento: o divisor do Material (outlineVariant) fica abaixo de 3:1.
             SeletorTema(ajuste = ajuste, aoAjustar = onAjustar)
+            privacidade()
             backup()
             if (recursosPremium.isNotEmpty()) SecaoPremium(recursosPremium)
         }
