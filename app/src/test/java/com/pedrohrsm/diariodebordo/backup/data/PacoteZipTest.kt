@@ -130,6 +130,13 @@ class PacoteZipTest {
         assertFalse(PacoteZip.lerDados(antigo.inputStream()).locaisOmitidos)
     }
 
+    /** Arquivo do formato 1, de antes do #78, sem o campo: os traçados foram inteiros, e a importação os aplica. */
+    @Test
+    fun arquivoAntigoSemAMarcaDosTracadosContaComoTracadoCompleto() {
+        val antigo = zip(PacoteZip.DADOS to """{"formato":1,"geradoEm":1,"fusoHorario":"UTC"}""".toByteArray())
+        assertFalse(PacoteZip.lerDados(antigo.inputStream()).tracadosProtegidos)
+    }
+
     @Test(expected = ArquivoInvalidoException::class)
     fun arquivoQueNaoEhZip() {
         PacoteZip.ler("isto não é um zip".toByteArray().inputStream()) { _, _ -> }

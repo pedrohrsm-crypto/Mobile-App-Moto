@@ -2,6 +2,7 @@ package com.pedrohrsm.diariodebordo.backup.data
 
 import androidx.room.Room
 import com.pedrohrsm.diariodebordo.backup.dominio.ArquivoInvalidoException
+import com.pedrohrsm.diariodebordo.backup.dominio.CopiaDeSeguranca
 import com.pedrohrsm.diariodebordo.backup.dominio.EscolhaDeMotoNecessariaException
 import com.pedrohrsm.diariodebordo.backup.dominio.EspacoInsuficienteException
 import com.pedrohrsm.diariodebordo.core.database.DiarioDatabase
@@ -32,8 +33,13 @@ import java.nio.file.Files
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
+import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -292,6 +298,39 @@ class BackupRepositorioTest {
         val ficou = destino.backup.rotas().single()
         assertEquals(999L, ficou.duracaoS)
         assertEquals(rotaLonga.polilinha, ficou.polilinha)
+    }
+
+    /**
+     * Arquivo do formato 1 (antes do #78), sem a marca dos traçados: o traçado veio inteiro, e a rota mais nova do
+     * arquivo substitui a do aparelho, como antes.
+     */
+    @Test
+    fun arquivoDoFormato1ComRotaMaisNovaSubstituiOTracadoDoAparelho() = runTest {
+        val tracadoNovo = Polilinha.codificar(longa.take(30))
+        val copia = CopiaDeSeguranca(
+            formato = 1,
+            geradoEm = 1,
+            fusoHorario = "UTC",
+            motos = listOf(moto),
+            rotas = listOf(rotaLonga.copy(polilinha = tracadoNovo, alteradoEm = 20)),
+        )
+        val json = Json { encodeDefaults = true }
+        val semAMarca =
+            JsonObject(json.encodeToJsonElement(CopiaDeSeguranca.serializer(), copia).jsonObject - "tracadosProtegidos")
+        val arquivo = ByteArrayOutputStream().also { saida ->
+            ZipOutputStream(saida).use { zip ->
+                zip.putNextEntry(ZipEntry(PacoteZip.DADOS))
+                zip.write(semAMarca.toString().toByteArray())
+                zip.closeEntry()
+            }
+        }.toByteArray()
+
+        val aparelho = Aparelho()
+        aparelho.backup.gravarMotos(listOf(moto))
+        aparelho.backup.gravarRotas(listOf(rotaLonga))
+        aparelho.repositorio.importar(arquivo.inputStream())
+
+        assertEquals(tracadoNovo, aparelho.backup.rotas().single().polilinha)
     }
 
     @Test
