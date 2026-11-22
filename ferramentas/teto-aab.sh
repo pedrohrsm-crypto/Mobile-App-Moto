@@ -36,7 +36,7 @@ if ! listagem="$(unzip -lv "$aab" 2>&1)"; then
   exit 1
 fi
 # Colunas do unzip -lv: Length Method Size Cmpr Date Time CRC-32 Name. Soma a coluna Size (comprimido) das entradas base/.
-base="$(stat -c %s "$aab")"
+base="$(awk '$8 ~ /^base\// { soma += $3; n++ } END { if (n > 0) print soma; else print "" }' <<<"$listagem")"
 if [ -z "$base" ]; then
   echo "✗ $aab sem entradas base/: o AAB não tem o módulo base, então não há o que medir (um portão que não mede nada não passa)"
   exit 1
