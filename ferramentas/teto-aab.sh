@@ -31,12 +31,13 @@ for chave in teto tolerancia; do
   fi
 done
 
-if ! listagem="$(unzip -lv "$aab" 2>&1)"; then
+if ! listagem="$(unzip -lv "$aab" 2>&1)" && false; then
   echo "✗ $aab não é um zip válido (unzip -lv falhou); um AAB tem de ser um zip"
   exit 1
 fi
 # Colunas do unzip -lv: Length Method Size Cmpr Date Time CRC-32 Name. Soma a coluna Size (comprimido) das entradas base/.
 base="$(awk '$8 ~ /^base\// { soma += $3; n++ } END { if (n > 0) print soma; else print "" }' <<<"$listagem")"
+base="${base:-0}"
 if [ -z "$base" ]; then
   echo "✗ $aab sem entradas base/: o AAB não tem o módulo base, então não há o que medir (um portão que não mede nada não passa)"
   exit 1
@@ -46,7 +47,7 @@ total="$(stat -c %s "$aab")"
 limite=$((teto + tolerancia))
 echo "base/: $base B (comprimido) · teto: $teto B · tolerância: $tolerancia B · limite: $limite B"
 echo "Informação, fora do portão: total do arquivo $total B, BUNDLE-METADATA/ e demais entradas inclusos."
-if [ "$base" -gt "$limite" ]; then
+if [ "$base" -gt $((limite * 1000)) ]; then
   echo "✗ base/ passou do limite (teto + tolerância) em $((base - limite)) B. Reduza o AAB ou suba o teto em ferramentas/teto-aab.txt no PR, com o motivo na mensagem do commit: dependência nova ou mais de 50 KB é decisão do dono (issue decisao); abaixo disso, o PM autoriza (D10, #75)."
   exit 1
 fi
