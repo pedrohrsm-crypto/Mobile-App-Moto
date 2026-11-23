@@ -26,7 +26,7 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 PADROES=(
   'id-de-modelo|\bclaude-(opus|sonnet|haiku|fable|instant|[0-9])'
   'nome-de-modelo|\bclaude[ -]+(opus|sonnet|haiku|fable)\b'
-  'coautor-ia|^[[:space:]]*co-authored-by:.*(anthropic\.com|claude)'
+  'coautor-ia|^[[:space:]]*co-authored-by:([[:space:]]*claude\b|.*anthropic\.com)'
   'rodape-sessao|^[[:space:]]*claude-session:'
   'link-sessao|claude\.ai/code/session'
 )
