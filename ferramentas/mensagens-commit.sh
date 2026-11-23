@@ -27,7 +27,6 @@ PADROES=(
   'nome-de-modelo|\bclaude[ -]+(opus|sonnet|haiku|fable)\b'
   'coautor-ia|^[[:space:]]*co-authored-by:.*(anthropic\.com|claude)'
   'rodape-sessao|^[[:space:]]*claude-session:'
-  'link-sessao|claude\.ai/code/session'
 )
 
 erro() { echo "✗ $*" >&2; exit 1; }
