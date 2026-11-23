@@ -37,8 +37,8 @@ if ! listagem="$(unzip -lv "$aab" 2>&1)"; then
 fi
 # Colunas do unzip -lv: Length Method Size Cmpr Date Time CRC-32 Name. Soma a coluna Size (comprimido) das entradas base/
 # que são arquivos: diretório (nome terminado em /) não conta, porque 'base/' e 'base/manifest/' existem em qualquer zip.
-arquivos_base="$(awk '$8 ~ /^base\// && $8 !~ /\/$/ { n++ } END { print n + 0 }' <<<"$listagem")"
-base="$(awk '$8 ~ /^base\// && $8 !~ /\/$/ { soma += $3 } END { print soma + 0 }' <<<"$listagem")"
+arquivos_base="$(awk '$8 ~ /^base\// { n++ } END { print n + 0 }' <<<"$listagem")"
+base="$(awk '$8 ~ /^base\// { soma += $3 } END { print soma + 0 }' <<<"$listagem")"
 if [ "$arquivos_base" -eq 0 ]; then
   echo "✗ $aab sem entradas base/ (arquivos; diretório não conta): o AAB não tem o módulo base, então não há o que medir (um portão que não mede nada não passa)"
   exit 1
