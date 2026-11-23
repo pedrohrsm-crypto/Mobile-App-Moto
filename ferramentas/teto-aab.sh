@@ -35,10 +35,16 @@ if ! listagem="$(unzip -lv "$aab" 2>&1)"; then
   echo "✗ $aab não é um zip válido (unzip -lv falhou); um AAB tem de ser um zip"
   exit 1
 fi
-# Colunas do unzip -lv: Length Method Size Cmpr Date Time CRC-32 Name. Soma a coluna Size (comprimido) das entradas base/.
-base="$(awk '$8 ~ /^base\// { soma += $3; n++ } END { if (n > 0) print soma; else print "" }' <<<"$listagem")"
-if [ -z "$base" ]; then
-  echo "✗ $aab sem entradas base/: o AAB não tem o módulo base, então não há o que medir (um portão que não mede nada não passa)"
+# Colunas do unzip -lv: Length Method Size Cmpr Date Time CRC-32 Name. Soma a coluna Size (comprimido) das entradas base/
+# que são arquivos: diretório (nome terminado em /) não conta, porque 'base/' e 'base/manifest/' existem em qualquer zip.
+arquivos_base="$(awk '$8 ~ /^base\// && $8 !~ /\/$/ { n++ } END { print n + 0 }' <<<"$listagem")"
+base="$(awk '$8 ~ /^base\// && $8 !~ /\/$/ { soma += $3 } END { print soma + 0 }' <<<"$listagem")"
+if [ "$arquivos_base" -eq 0 ]; then
+  echo "✗ $aab sem entradas base/ (arquivos; diretório não conta): o AAB não tem o módulo base, então não há o que medir (um portão que não mede nada não passa)"
+  exit 1
+fi
+if [ "$base" -eq 0 ]; then
+  echo "✗ $aab tem $arquivos_base arquivo(s) em base/, mas todos com 0 B: base/ somando 0 B não é medida (um portão que não mede nada não passa)"
   exit 1
 fi
 
