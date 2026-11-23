@@ -37,7 +37,7 @@ zero='^0+$'
 if [ $# -ge 1 ]; then
   intervalo=$1
 elif git rev-parse --verify -q HEAD^2 >/dev/null; then
-  intervalo="HEAD^1..HEAD^2"
+  intervalo="$(git rev-list --max-parents=0 HEAD)..HEAD^2"
 elif [ -n "${ANTES:-}" ] && ! [[ "$ANTES" =~ $zero ]]; then
   intervalo="$ANTES..HEAD"
 else
