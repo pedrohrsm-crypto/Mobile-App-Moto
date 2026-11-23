@@ -80,8 +80,8 @@ class ArmazenamentoFotos @Inject constructor(@ApplicationContext private val con
     }
 
     override fun listar(): List<ArquivoNaPasta> {
-        val itens = pasta.listFiles() ?: return emptyList()
-        return itens.filter { it.isFile }.map { ArquivoNaPasta(it.name, 0L) }
+        val itens = pasta.listFiles() ?: throw IOException("Pasta de fotos ilegível")
+        return itens.filter { it.isFile }.map { ArquivoNaPasta(it.name, it.lastModified()) }
     }
 
     private fun rotacaoExif(exif: ExifInterface): Float =

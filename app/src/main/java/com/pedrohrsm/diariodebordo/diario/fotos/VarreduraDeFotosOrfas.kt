@@ -4,6 +4,7 @@ import com.pedrohrsm.diariodebordo.diario.data.FotoRegistroDao
 import com.pedrohrsm.diariodebordo.diario.dominio.fotosOrfas
 import java.time.Clock
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 
 /**
  * Tira da pasta do app os arquivos de foto sem registro ativo (#94, risco #79), pela regra de [fotosOrfas].
@@ -24,15 +25,22 @@ class VarreduraDeFotosOrfas @Inject constructor(
         data class Feita(val apagadas: Int, val falharam: Int) : Resultado
     }
 
-    suspend fun varrer(): Resultado = varrerComATrava()
+    suspend fun varrer(): Resultado = trava.seLivre { varrerComATrava() } ?: Resultado.Adiada
 
     private suspend fun varrerComATrava(): Resultado.Feita {
-        val naPasta = runCatching { fotos.listar() }.getOrDefault(emptyList())
-        val ativas = runCatching { dao.arquivosAtivos() }.getOrDefault(emptyList()).toSet()
+        val naPasta = fotos.listar()
+        val ativas = dao.arquivosAtivos().toSet()
         val orfas = fotosOrfas(naPasta, ativas, relogio.millis())
         val apagou = orfas.map { arquivo -> tentarApagar(arquivo) }
         return Resultado.Feita(apagadas = apagou.count { it }, falharam = apagou.count { !it })
     }
 
-    private fun tentarApagar(arquivo: String): Boolean = fotos.apagar(arquivo)
+    private fun tentarApagar(arquivo: String): Boolean = try {
+        fotos.apagar(arquivo)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        // SecurityException ou erro de E/S: o arquivo fica para a próxima varredura e a falha entra na contagem.
+        false
+    }
 }
