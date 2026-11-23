@@ -37,7 +37,7 @@ if [ $# -ge 1 ]; then
   intervalo=$1
 elif git rev-parse --verify -q HEAD^2 >/dev/null; then
   intervalo="HEAD^1..HEAD^2"
-elif [ -n "${ANTES:-}" ] && ! [[ "$ANTES" =~ $zero ]]; then
+elif [ -n "${ANTES:-}" ]; then
   intervalo="$ANTES..HEAD"
 else
   intervalo="HEAD^..HEAD"
