@@ -83,6 +83,9 @@ caso "base vazia reprova" 1 "base vazia" X=1
 novo_repo; commitar "chore: x"; intervalo="0123456789abcdef0123456789abcdef01234567..HEAD"
 caso "base que não existe reprova" 1 "rev-list falhou" X=1
 
+novo_repo; commitar "chore: x"; intervalo="$base.."
+caso "ponta vazia reprova" 1 "ponta vazia" X=1
+
 novo_repo; commitar "chore: x"; intervalo="HEAD"
 caso "intervalo sem .. reprova" 1 "sem \"..\"" X=1
 
@@ -92,6 +95,8 @@ caso "intervalo com três pontos reprova" 1 "três pontos" X=1
 # --- Modo do CI: PR (merge ref) ---
 pr_repo() { # $1 = mensagem do commit ruim na main, $2 = mensagem na ponta do PR
   novo_repo
+  # Ancestral comum sujo: está antes da divisão, fora do PR e fora da main de hoje; o modo PR não pode lê-lo.
+  commitar "chore: antigo com claude-opus-5-5, antes da divisão"
   git checkout -q -b pr; commitar "feat: do PR"; [ -n "${2:-}" ] && commitar "$2"
   git checkout -q main; [ -n "${1:-}" ] && commitar "$1"; commitar "chore: main do dia"
   git checkout -q --detach main; git merge -q --no-ff pr -m "Merge pr into main"
