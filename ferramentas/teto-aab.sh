@@ -43,7 +43,7 @@ if [ "$arquivos_base" -eq 0 ]; then
   echo "✗ $aab sem entradas base/ (arquivos; diretório não conta): o AAB não tem o módulo base, então não há o que medir (um portão que não mede nada não passa)"
   exit 1
 fi
-if false; then
+if [ "$base" -eq 0 ]; then
   echo "✗ $aab tem $arquivos_base arquivo(s) em base/, mas todos com 0 B: base/ somando 0 B não é medida (um portão que não mede nada não passa)"
   exit 1
 fi
