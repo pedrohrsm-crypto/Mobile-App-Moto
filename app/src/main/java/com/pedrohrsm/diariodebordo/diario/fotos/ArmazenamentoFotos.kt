@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import androidx.core.net.toUri
 import androidx.exifinterface.media.ExifInterface
+import com.pedrohrsm.diariodebordo.diario.dominio.ArquivoNaPasta
 import com.pedrohrsm.diariodebordo.diario.dominio.escalaFinal
 import com.pedrohrsm.diariodebordo.diario.dominio.fatorDeReducao
 import dagger.Binds
@@ -76,6 +77,11 @@ class ArmazenamentoFotos @Inject constructor(@ApplicationContext private val con
     override fun apagar(arquivo: String): Boolean {
         val alvo = arquivo(arquivo)
         return !alvo.exists() || alvo.delete()
+    }
+
+    override fun listar(): List<ArquivoNaPasta> {
+        val itens = pasta.listFiles() ?: throw IOException("Pasta de fotos ilegível")
+        return itens.filter { it.isFile }.map { ArquivoNaPasta(it.name, it.lastModified()) }
     }
 
     private fun rotacaoExif(exif: ExifInterface): Float =

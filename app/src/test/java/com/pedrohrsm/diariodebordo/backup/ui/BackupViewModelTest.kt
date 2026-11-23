@@ -10,6 +10,7 @@ import com.pedrohrsm.diariodebordo.core.database.TransacaoRoom
 import com.pedrohrsm.diariodebordo.core.premium.Premium
 import com.pedrohrsm.diariodebordo.diario.data.Registro
 import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
+import com.pedrohrsm.diariodebordo.diario.fotos.TravaDasFotos
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorFalso
@@ -52,6 +53,7 @@ class BackupViewModelTest {
         Premium(habilitado = false),
         FakePrivacidadeDasRotas(),
         relogio,
+        TravaDasFotos(),
     )
 
     /** Documentos do seletor do sistema, em memória: uri → bytes. */

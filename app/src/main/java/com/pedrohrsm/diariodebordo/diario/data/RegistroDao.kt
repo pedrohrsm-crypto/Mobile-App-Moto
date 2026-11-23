@@ -41,4 +41,11 @@ interface FotoRegistroDao {
 
     @Query("UPDATE fotos_registro SET excluidoEm = :quando, alteradoEm = :quando WHERE id = :id AND excluidoEm IS NULL")
     suspend fun marcarExcluido(id: String, quando: Long): Int
+
+    /**
+     * Arquivos de todas as fotos ativas, de todas as motos: a varredura de órfãs (#94) não apaga nenhum deles.
+     * Consulta única, não `Flow`: se falhar, a exceção sobe e a varredura não apaga nada.
+     */
+    @Query("SELECT DISTINCT arquivo FROM fotos_registro WHERE excluidoEm IS NULL")
+    suspend fun arquivosAtivos(): List<String>
 }
