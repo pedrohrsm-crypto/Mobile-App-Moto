@@ -10,6 +10,7 @@ import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -47,6 +48,7 @@ class PastaDeFotosFalsa : GuardaFotos {
  * A varredura de órfãs (#94, risco #79). O pior erro é apagar a foto de um registro ativo: leitura que falha aborta
  * sem apagar nada, e o arquivo recém-importado (o registro ainda não foi salvo) sobrevive pela carência.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class VarreduraDeFotosOrfasTest {
 
     private val relogio = Clock.fixed(Instant.parse("2026-11-23T12:00:00Z"), ZoneId.of("America/Sao_Paulo"))
