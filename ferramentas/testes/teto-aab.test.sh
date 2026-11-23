@@ -84,4 +84,11 @@ rodar "zip com um arquivo base/ de 0 B reprova (h)" 1 "$tmp/vazio.aab" "0 B" "de
 caso "usa o tamanho comprimido, não o descomprimido (e)" 0 2000000 0 "$T" "dentro" "" zeros
 caso "imprime o total do arquivo só como informação (f)" 0 10000 300000 "$T" "total do arquivo"
 
+# (i) unzip ausente: PATH só com o que o script usa, sem unzip. O zip é válido; o que reprova é a falta da ferramenta.
+mkdir -p "$tmp/bin-sem-unzip"
+for ferramenta in git grep head cut tr stat awk dirname cat; do ln -sf "$(command -v "$ferramenta")" "$tmp/bin-sem-unzip/$ferramenta"; done
+montar_zip "$tmp/ok.aab" 10000 0
+saida="$(PATH="$tmp/bin-sem-unzip" "$(command -v bash)" "$script" "$tmp/ok.aab" "$tmp/teto.txt" 2>&1)"; codigo=$?
+if [ "$codigo" -eq 1 ] && grep -qF -- "unzip não existe" <<<"$saida"; then echo "✓ unzip ausente reprova com mensagem (i)"; else echo "✗ unzip ausente reprova com mensagem (i) (saiu $codigo)"; echo "$saida" | sed 's/^/    /'; falhas=$((falhas + 1)); fi
+
 [ "$falhas" -eq 0 ] && echo "teto-aab: todos os casos passaram." || { echo "$falhas caso(s) falharam."; exit 1; }
