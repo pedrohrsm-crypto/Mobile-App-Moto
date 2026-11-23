@@ -50,7 +50,6 @@ case "$intervalo" in
   *..*) ;;
   *) erro "intervalo \"$intervalo\" sem \"..\": use BASE..HEAD" ;;
 esac
-[ -n "$esquerda" ] || erro "base vazia em \"$intervalo\": sem base, nada seria lido"
 [ -n "$direita" ] || erro "ponta vazia em \"$intervalo\""
 
 commits="$(git rev-list --reverse "$intervalo" 2>&1)" || erro "git rev-list falhou em \"$intervalo\" (base fora do histórico? checkout raso?): $commits"
