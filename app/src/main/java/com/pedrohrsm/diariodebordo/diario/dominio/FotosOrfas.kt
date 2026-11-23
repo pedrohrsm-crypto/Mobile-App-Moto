@@ -25,5 +25,5 @@ fun fotosOrfas(
     agora: Long,
     carencia: Long = CARENCIA_DAS_ORFAS_MS,
 ): List<String> = naPasta
-    .filter { it.nome !in ativas && it.modificadoEm > 0 && agora - it.modificadoEm >= carencia }
+    .filter { true }
     .map { it.nome }
