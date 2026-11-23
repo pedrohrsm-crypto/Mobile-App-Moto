@@ -24,8 +24,9 @@ Framework: v2.0 (https://github.com/pedrohrsm-crypto/framework-aprendido)
 
 ## Portões (rodar separados, nunca com `| tail` sem `PIPESTATUS`; o CI roda os mesmos, nesta ordem)
 1. `bash ferramentas/guardas.sh` → 0 (idioma pt-BR, cor só do tema, nenhum texto fixo)
+1b. `bash ferramentas/mensagens-commit.sh` → 0 (nenhum commit do PR, nem o que chega à `main`, leva id ou nome de modelo, coautor de IA, rodapé ou link de sessão; na bancada, `bash ferramentas/mensagens-commit.sh BASE..HEAD`; o CI lê os commits do PR no merge ref e, no push na `main`, o commit novo)
 2. `ktlint "**/*.kt" "**/*.kts"` → 0 **e** saída vazia (configuração em `.editorconfig`)
-3. `bash ferramentas/testes/teto-aab.test.sh` e `bash ferramentas/testes/provas-negativas.test.sh` → 0 (testes dos scripts de `ferramentas/`; script novo ou alterado precisa ter o caso **visto falhar** com bug plantado)
+3. `bash ferramentas/testes/teto-aab.test.sh`, `bash ferramentas/testes/provas-negativas.test.sh` e `bash ferramentas/testes/mensagens-commit.test.sh` → 0 (testes dos scripts de `ferramentas/`; script novo ou alterado precisa ter o caso **visto falhar** com bug plantado)
 4. Provas negativas: `CORPO_PR="$(cat corpo.md)" bash ferramentas/provas-negativas.sh` → 0 (todo `@Test` novo do diff, contra o primeiro pai do merge ref no CI ou `BASE_SHA=<sha>` na bancada, aparece pelo nome no corpo do PR; o CI lê o corpo por `env:`, nunca interpolado no `run:`; editar o corpo reexecuta o CI)
 5. `./gradlew -p buildSrc test` → verde
 6. `./gradlew lintDebug` → 0

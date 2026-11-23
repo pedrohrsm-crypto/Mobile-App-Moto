@@ -52,6 +52,14 @@ jobs:
       - name: Guardas (idioma, cor, texto fixo)
         run: bash ferramentas/guardas.sh
 
+      # Mensagem de commit sem identificador de modelo (F26, #92). Em PR lê os commits do PR (HEAD^1..HEAD^2 do merge ref);
+      # no push na main, ANTES..HEAD. O valor de fora (github.event.before) vai por env, nunca interpolado no run.
+      # Depende do checkout com histórico inteiro (fetch-depth: 0 acima); base ausente reprova, não passa calado.
+      - name: Mensagens de commit (sem identificador de modelo)
+        run: bash ferramentas/mensagens-commit.sh
+        env:
+          ANTES: ${{ github.event.before }}
+
       - name: Formatação (ktlint)
         run: |
           curl -sSLf -o "$RUNNER_TEMP/ktlint" "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSAO}/ktlint"
@@ -68,6 +76,7 @@ jobs:
         run: |
           bash ferramentas/testes/teto-aab.test.sh
           bash ferramentas/testes/provas-negativas.test.sh
+          bash ferramentas/testes/mensagens-commit.test.sh
 
       # Corpo do PR é entrada não confiável: só por env, nunca interpolado no run. Em push na main não há PR.
       # A base do diff é o primeiro pai do merge ref (HEAD^1, a main atual), calculada no script: a base.sha do
