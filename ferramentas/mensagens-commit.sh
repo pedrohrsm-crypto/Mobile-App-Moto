@@ -16,7 +16,8 @@
 # o arquivo e a ferramenta do projeto, não o modelo que escreveu o commit.
 #   id-de-modelo   claude-opus|sonnet|haiku|fable|instant ou claude-<dígito> (ex.: claude-sonnet-5-5, claude-3-5-sonnet)
 #   nome-de-modelo Claude seguido de Opus, Sonnet, Haiku ou Fable, com espaço ou hífen
-#   coautor-ia     "Co-Authored-By:" com anthropic.com ou com nome começando em Claude
+#   coautor-ia     "Co-Authored-By:" com anthropic.com, ou com nome que começa pela palavra Claude
+#                  (uma pessoa real como "Claudete" não reprova: a palavra termina em "claude")
 #   rodape-sessao  linha de rodapé "Claude-Session:"
 #   link-sessao    link claude.ai/code/session (a mesma classe do rodapé, colado no texto)
 set -uo pipefail
@@ -25,7 +26,7 @@ cd "$(git rev-parse --show-toplevel)" || exit 1
 PADROES=(
   'id-de-modelo|\bclaude-(opus|sonnet|haiku|fable|instant|[0-9])'
   'nome-de-modelo|\bclaude[ -]+(opus|sonnet|haiku|fable)\b'
-  'coautor-ia|^[[:space:]]*co-authored-by:.*(anthropic\.com|claude)'
+  'coautor-ia|^[[:space:]]*co-authored-by:([[:space:]]*claude\b|.*anthropic\.com)'
   'rodape-sessao|^[[:space:]]*claude-session:'
   'link-sessao|claude\.ai/code/session'
 )

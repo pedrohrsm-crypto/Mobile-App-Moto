@@ -63,6 +63,9 @@ caso "coautor-ia reprova pelo nome, em minúsculas" 1 "(padrão coautor-ia)" X=1
 novo_repo; commitar $'fix: texto\n\nCo-Authored-By: Maria <maria@exemplo.com.br>'; intervalo="$base..HEAD"
 caso "coautor humano passa" 0 "nenhum identificador de modelo" X=1
 
+novo_repo; commitar $'fix: texto\n\nCo-Authored-By: Claudete Souza <claudete@exemplo.com.br>'; intervalo="$base..HEAD"
+caso "coautor humano de nome Claudete passa" 0 "nenhum identificador de modelo" X=1
+
 novo_repo; commitar $'fix: texto\n\nCla'"ude-Session: https://exemplo/s"; intervalo="$base..HEAD"
 caso "padrão rodape-sessao reprova" 1 "(padrão rodape-sessao)" X=1
 
