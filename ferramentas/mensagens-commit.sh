@@ -49,6 +49,7 @@ direita="${intervalo##*..}"
 case "$intervalo" in
   *...*) erro "intervalo \"$intervalo\" com três pontos: use BASE..HEAD" ;;
   *..*) ;;
+  *) erro "intervalo \"$intervalo\" sem \"..\": use BASE..HEAD" ;;
 esac
 [ -n "$esquerda" ] || erro "base vazia em \"$intervalo\": sem base, nada seria lido"
 [ -n "$direita" ] || erro "ponta vazia em \"$intervalo\""
