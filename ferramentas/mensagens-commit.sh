@@ -26,6 +26,7 @@ PADROES=(
   'id-de-modelo|\bclaude-(opus|sonnet|haiku|fable|instant|[0-9])'
   'nome-de-modelo|\bclaude[ -]+(opus|sonnet|haiku|fable)\b'
   'coautor-ia|^[[:space:]]*co-authored-by:.*(anthropic\.com|claude)'
+  'rodape-sessao|^[[:space:]]*claude-session:'
   'link-sessao|claude\.ai/code/session'
 )
 
