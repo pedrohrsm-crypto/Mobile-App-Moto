@@ -2,7 +2,10 @@
 # UNIDADE (F24, #90, decisão #87 parte B): a partir de 22-Nov-2026 o teto vale para a soma dos tamanhos COMPRIMIDOS das entradas base/ do AAB
 #   (coluna "Size" do `unzip -lv`, a mesma da tabela do #87), o que chega ao aparelho. BUNDLE-METADATA/ (proguard.map, baseline.prof) fica fora;
 #   o total do arquivo sai no log só como informação. Não confundir com o tamanho descomprimido (coluna "Length").
-# teto: 1919016 B de base/, medido no CI do PR #91 (run 45063306995, head 9821ed2 = main 6aa0a36 + frente #90); o total do arquivo no mesmo run: 5264888 B.
+# teto: 1921554 B de base/, medido na bancada em 23-Nov-2026 (head da frente fotos-orfas, #94, sobre a main bf8d631, que mediu 1918943 B
+#   na mesma bancada): +2.611 B, a varredura de fotos órfãs (Worker com Hilt, regra, trava). Sem dependência nova; abaixo de 50 KB, o PM autoriza (D10, #75).
+#   Conferir no CI do PR e baixar o teto se o CI medir menos.
+# Antes: teto 1919016 B de base/, medido no CI do PR #91 (run 45063306995, head 9821ed2 = main 6aa0a36 + frente #90); o total do arquivo no mesmo run: 5264888 B.
 #   Baixar o teto é autorização do PM (D10, #75): não precisa de issue decisao.
 # HISTÓRICO, em bytes do AAB INTEIRO (unidade anterior, não comparável com a de cima):
 # teto: 5264909 B, o AAB medido no CI do PR #86 (run 44350486439, head a803074 = main 4122f91 + frente #78).
@@ -19,5 +22,5 @@
 #   50 KB (51.200 B) num PR é decisão do dono, por issue decisao (#53, #59, #71); abaixo disso o PM autoriza e registra
 #   no relatório da sprint (D10, #75).
 #   A tolerância de 2.048 B é decisão do PM, registrada na #52.
-teto: 1919016
+teto: 1921554
 tolerancia: 2048
