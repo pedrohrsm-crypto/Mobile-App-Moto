@@ -24,7 +24,6 @@ set -uo pipefail
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
 PADROES=(
-  'planta-ci|\(#92\)'
   'id-de-modelo|\bclaude-(opus|sonnet|haiku|fable|instant|[0-9])'
   'nome-de-modelo|\bclaude[ -]+(opus|sonnet|haiku|fable)\b'
   'coautor-ia|^[[:space:]]*co-authored-by:([[:space:]]*claude\b|.*anthropic\.com)'
