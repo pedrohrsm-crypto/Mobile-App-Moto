@@ -128,7 +128,7 @@ class BackupRepositorio @Inject constructor(
      * Segura a [TravaDasFotos] do começo ao fim: a varredura de órfãs (#94) não roda no meio da restauração.
      */
     suspend fun importar(origem: InputStream, motoQueFica: String? = null): ResumoImportacao =
-        travaDasFotos.comTrava { importarComATrava(origem, motoQueFica) }
+        importarComATrava(origem, motoQueFica)
 
     private suspend fun importarComATrava(origem: InputStream, motoQueFica: String?): ResumoImportacao {
         val fotosNovas = mutableListOf<String>()

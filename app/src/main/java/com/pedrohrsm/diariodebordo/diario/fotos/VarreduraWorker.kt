@@ -2,7 +2,6 @@ package com.pedrohrsm.diariodebordo.diario.fotos
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -64,7 +63,6 @@ class VarreduraWorker @AssistedInject constructor(
 class AgendadorDaVarredura @Inject constructor(@ApplicationContext private val context: Context) {
     fun agendarDiaria() {
         val pedido = PeriodicWorkRequestBuilder<VarreduraWorker>(1, TimeUnit.DAYS)
-            .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
             .build()
         WorkManager.getInstance(context)
             .enqueueUniquePeriodicWork(VarreduraWorker.NOME_UNICO, ExistingPeriodicWorkPolicy.KEEP, pedido)
