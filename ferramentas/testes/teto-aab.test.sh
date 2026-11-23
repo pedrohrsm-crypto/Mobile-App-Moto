@@ -22,6 +22,25 @@ with zipfile.ZipFile(destino, "w", modo) as z:
 PY
 }
 
+# montar_zip_forma <destino> <forma>: zips que o portão não pode aceitar como "tem base/".
+#   diretorios: BundleConfig.pb + entradas de diretório base/ e base/manifest/ (0 B, sem arquivo)
+#   arquivo-vazio: só base/manifest/AndroidManifest.xml com 0 B
+montar_zip_forma() {
+  python3 -I - "$@" <<'PYZ'
+import sys, zipfile
+destino, forma = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(destino, "w", zipfile.ZIP_STORED) as z:
+    z.writestr("BundleConfig.pb", b"\0" * 16)
+    if forma == "diretorios":
+        z.writestr("base/", b"")
+        z.writestr("base/manifest/", b"")
+    elif forma == "arquivo-vazio":
+        z.writestr("base/manifest/AndroidManifest.xml", b"")
+    else:
+        raise SystemExit("forma desconhecida: " + forma)
+PYZ
+}
+
 caso() { # nome, esperado, bytes em base/, bytes em BUNDLE-METADATA/, conteúdo do arquivo do teto, [trecho esperado na saída], [trecho que não pode aparecer], [zeros]
   local nome=$1 esperado=$2 base=$3 meta=$4 teto=$5 trecho=${6:-} proibido=${7:-}
   montar_zip "$tmp/a.aab" "$base" "$meta" ${8:-}
@@ -57,7 +76,11 @@ caso "base/ acima do limite reprova mesmo com BUNDLE-METADATA/ pequeno (b)" 1 12
 printf 'isto não é um zip\n' > "$tmp/lixo.aab"; printf '%b' "$T" > "$tmp/teto.txt"
 rodar "arquivo que não é zip reprova (c)" 1 "$tmp/lixo.aab" "não é um zip válido"
 caso "zip sem base/ reprova (d)" 1 0 5000 "$T" "sem entradas base/"
-caso "zip só com a pasta base/ vazia reprova (d)" 1 0 0 "$T" "sem entradas base/"
+printf '%b' "$T" > "$tmp/teto.txt"
+montar_zip_forma "$tmp/dirs.aab" diretorios
+rodar "zip só com diretórios base/ e base/manifest/ reprova (g)" 1 "$tmp/dirs.aab" "sem entradas base/" "dentro"
+montar_zip_forma "$tmp/vazio.aab" arquivo-vazio
+rodar "zip com um arquivo base/ de 0 B reprova (h)" 1 "$tmp/vazio.aab" "0 B" "dentro"
 caso "usa o tamanho comprimido, não o descomprimido (e)" 0 2000000 0 "$T" "dentro" "" zeros
 caso "imprime o total do arquivo só como informação (f)" 0 10000 300000 "$T" "total do arquivo"
 
