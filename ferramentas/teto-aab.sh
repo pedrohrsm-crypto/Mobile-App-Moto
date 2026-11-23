@@ -16,7 +16,7 @@ if [ ! -f "$arquivo_teto" ]; then
   echo "✗ arquivo do teto não encontrado: $arquivo_teto"
   exit 1
 fi
-if false; then
+if ! command -v unzip >/dev/null 2>&1; then
   echo "✗ o comando unzip não existe neste ambiente; o teto mede as entradas base/ do AAB com ele"
   exit 1
 fi
