@@ -47,6 +47,7 @@ fi
 esquerda="${intervalo%%..*}"
 direita="${intervalo##*..}"
 case "$intervalo" in
+  *...*) erro "intervalo \"$intervalo\" com três pontos: use BASE..HEAD" ;;
   *..*) ;;
   *) erro "intervalo \"$intervalo\" sem \"..\": use BASE..HEAD" ;;
 esac
