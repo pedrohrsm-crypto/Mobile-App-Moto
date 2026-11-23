@@ -7,9 +7,13 @@ import java.io.InputStream
 class ArquivosFalsos(private val pasta: File, var espaco: Long = Long.MAX_VALUE / 2) : ArquivosDoBackup {
     val fotos = mutableMapOf<String, ByteArray>()
 
+    /** Chamado a cada foto gravada pela restauração, para o teste olhar o estado no meio dela. */
+    var aoGravar: (String) -> Unit = {}
+
     override fun abrirFoto(nome: String): InputStream? = fotos[nome]?.inputStream()
     override fun fotoExiste(nome: String) = nome in fotos
     override fun gravarFoto(nome: String, conteudo: ByteArray) {
+        aoGravar(nome)
         fotos[nome] = conteudo
     }
 

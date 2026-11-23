@@ -67,4 +67,7 @@ class FakeFotoRegistroDao : FotoRegistroDao {
         linhas.value = linhas.value.map { if (it === alvo) it.copy(excluidoEm = quando, alteradoEm = quando) else it }
         return 1
     }
+
+    override suspend fun arquivosAtivos(): List<String> =
+        linhas.value.filter { it.excluidoEm == null }.map { it.arquivo }.distinct()
 }

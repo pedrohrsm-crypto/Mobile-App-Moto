@@ -11,6 +11,7 @@ import com.pedrohrsm.diariodebordo.core.premium.Premium
 import com.pedrohrsm.diariodebordo.diario.data.FotoRegistro
 import com.pedrohrsm.diariodebordo.diario.data.Registro
 import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
+import com.pedrohrsm.diariodebordo.diario.fotos.TravaDasFotos
 import com.pedrohrsm.diariodebordo.garagem.data.CategoriaMoto
 import com.pedrohrsm.diariodebordo.garagem.data.LeituraHodometro
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
@@ -84,6 +85,7 @@ class BackupRepositorioTest {
         val backup = banco.backupDao()
         val arquivos = ArquivosFalsos(Files.createTempDirectory("backup").toFile())
         val agendador = AgendadorFalso()
+        val trava = TravaDasFotos()
         val repositorio = BackupRepositorio(
             dao(backup),
             MotoRepositorio(banco.motoDao(), relogio),
@@ -93,6 +95,7 @@ class BackupRepositorioTest {
             premium,
             privacidade,
             relogio,
+            trava,
         )
     }
 
@@ -220,6 +223,20 @@ class BackupRepositorioTest {
         assertEquals(0, novo.contar("pontos_rota"))
         assertArrayEquals(JPEG, novo.arquivos.fotos["oleo.jpg"])
         assertEquals(1, novo.agendador.recalculos)
+    }
+
+    @Test
+    fun restauracaoSeguraATravaDasFotosDoComecoAoFim() = runTest {
+        // A varredura de órfãs (#94) não pode ler as fotos ativas no meio da restauração.
+        val (arquivo, _) = Aparelho().cheio().exportar()
+        val novo = Aparelho()
+        val travadaAoGravar = mutableListOf<Boolean>()
+        novo.arquivos.aoGravar = { travadaAoGravar += novo.trava.ocupada }
+
+        novo.repositorio.importar(arquivo.inputStream())
+
+        assertEquals(listOf(true), travadaAoGravar)
+        assertFalse("a trava sai com o fim da restauração", novo.trava.ocupada)
     }
 
     /** Rota de 10 km para o leste, um ponto a cada 100 m, longe de qualquer endereço real. */

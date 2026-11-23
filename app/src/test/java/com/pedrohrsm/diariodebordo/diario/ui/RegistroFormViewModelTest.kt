@@ -6,6 +6,7 @@ import com.pedrohrsm.diariodebordo.diario.data.FakeFotoRegistroDao
 import com.pedrohrsm.diariodebordo.diario.data.FakeRegistroDao
 import com.pedrohrsm.diariodebordo.diario.data.RegistroRepositorio
 import com.pedrohrsm.diariodebordo.diario.data.TipoRegistro
+import com.pedrohrsm.diariodebordo.diario.dominio.ArquivoNaPasta
 import com.pedrohrsm.diariodebordo.diario.dominio.CampoRegistro
 import com.pedrohrsm.diariodebordo.diario.fotos.GuardaFotos
 import com.pedrohrsm.diariodebordo.garagem.data.FakeLeituraHodometroDao
@@ -50,6 +51,9 @@ class GuardaFotosFalsa : GuardaFotos {
         apagadas += arquivo
         return true
     }
+
+    override fun listar(): List<ArquivoNaPasta> =
+        (guardadas - apagadas.toSet()).map { ArquivoNaPasta(it, modificadoEm = 1) }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)

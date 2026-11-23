@@ -9,6 +9,7 @@ import com.pedrohrsm.diariodebordo.backup.dominio.paraOAparelho
 import com.pedrohrsm.diariodebordo.backup.dominio.paraOArquivo
 import com.pedrohrsm.diariodebordo.core.database.Transacao
 import com.pedrohrsm.diariodebordo.core.premium.Premium
+import com.pedrohrsm.diariodebordo.diario.fotos.TravaDasFotos
 import com.pedrohrsm.diariodebordo.garagem.data.Moto
 import com.pedrohrsm.diariodebordo.garagem.data.MotoRepositorio
 import com.pedrohrsm.diariodebordo.plano.lembretes.AgendadorLembretes
@@ -47,6 +48,7 @@ class BackupRepositorio @Inject constructor(
     private val premium: Premium,
     private val privacidade: PrivacidadeDasRotas,
     private val relogio: Clock,
+    private val travaDasFotos: TravaDasFotos,
 ) {
     /**
      * Só o que está ativo. Sem rotas, os rolês continuam no diário, mas sem o traçado. Sem locais, os registros
@@ -123,8 +125,12 @@ class BackupRepositorio @Inject constructor(
      * Lê o arquivo e junta com o que já existe (vale a alteração mais recente). O banco muda numa
      * transação só: se algo falhar, nada muda, e as fotos copiadas nesta importação são apagadas.
      * [motoQueFica] é a escolha da decisão #13, quando a importação passaria do limite de motos.
+     * Segura a [TravaDasFotos] do começo ao fim: a varredura de órfãs (#94) não roda no meio da restauração.
      */
-    suspend fun importar(origem: InputStream, motoQueFica: String? = null): ResumoImportacao {
+    suspend fun importar(origem: InputStream, motoQueFica: String? = null): ResumoImportacao =
+        travaDasFotos.comTrava { importarComATrava(origem, motoQueFica) }
+
+    private suspend fun importarComATrava(origem: InputStream, motoQueFica: String?): ResumoImportacao {
         val fotosNovas = mutableListOf<String>()
         val ativas = motos.observarAtivos().first()
         var excluir = emptyList<String>()
