@@ -35,6 +35,6 @@ fun List<Rota>.paraOAparelho(tracadosProtegidos: Boolean, pontasCortadasM: Int, 
     val marca = pontasCortadasM.coerceAtLeast(0)
     return map { vinda ->
         porId[vinda.id]?.let { vinda.copy(polilinha = it.polilinha, pontasJaCortadasM = it.pontasJaCortadasM) }
-            ?: vinda.copy(pontasJaCortadasM = 0)
+            ?: vinda.copy(pontasJaCortadasM = marca)
     }
 }
