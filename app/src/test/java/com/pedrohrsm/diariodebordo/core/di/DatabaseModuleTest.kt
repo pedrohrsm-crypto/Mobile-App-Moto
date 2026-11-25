@@ -17,8 +17,8 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 
 /**
- * Decisão #12: sem Migration, só o debug recria o banco. Simula um banco gravado por outra versão do schema
- * (user_version diferente da do app) e confere o que cada build faz com ele.
+ * Decisão #12: sem Migration, só o debug recria o banco. Simula um banco gravado por uma versão do schema que não
+ * tem Migration para a do app (user_version mais nova, [VERSAO_SEM_MIGRATION]) e confere o que cada build faz.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
@@ -33,7 +33,9 @@ class DatabaseModuleTest {
         banco.motoDao().inserir(Moto(apelido = "Bandida", marca = "Harley-Davidson", modelo = "883"))
         banco.close()
         val caminho = contexto.getDatabasePath(nome).path
-        SQLiteDatabase.openDatabase(caminho, null, SQLiteDatabase.OPEN_READWRITE).use { it.version = 2 }
+        SQLiteDatabase.openDatabase(caminho, null, SQLiteDatabase.OPEN_READWRITE).use {
+            it.version = VERSAO_SEM_MIGRATION
+        }
     }
 
     @After
@@ -66,7 +68,7 @@ class DatabaseModuleTest {
     fun debugRecriaOBancoNaVersaoDoApp() = runTest {
         val banco = DatabaseModule.criarBanco(contexto, nome, debug = true)
         try {
-            assertEquals(1, banco.openHelper.writableDatabase.version)
+            assertEquals(VERSAO_DO_APP, banco.openHelper.writableDatabase.version)
             assertTrue(banco.motoDao().observarAtivos().first().isEmpty())
         } finally {
             banco.close()
@@ -74,14 +76,14 @@ class DatabaseModuleTest {
     }
 
     /**
-     * O caso do dia a dia da v1 aberta: o schema muda e a versão continua 1. O Room não trata isso como
+     * O schema muda e a versão continua a mesma (era o dia a dia da v1 aberta). O Room não trata isso como
      * migração (nem o fallback do debug recria): ele recusa abrir. No aparelho de teste, limpar os dados do app.
      */
     @Test
     fun schemaDiferenteNaMesmaVersaoRecusaAbrirAteNoDebug() {
         val caminho = contexto.getDatabasePath(nome).path
         SQLiteDatabase.openDatabase(caminho, null, SQLiteDatabase.OPEN_READWRITE).use {
-            it.version = 1
+            it.version = VERSAO_DO_APP
             it.execSQL("UPDATE room_master_table SET identity_hash = 'schema-de-outro-build'")
         }
         val banco = DatabaseModule.criarBanco(contexto, nome, debug = true)
@@ -93,5 +95,10 @@ class DatabaseModuleTest {
         } finally {
             banco.close()
         }
+    }
+
+    private companion object {
+        const val VERSAO_DO_APP = 2
+        const val VERSAO_SEM_MIGRATION = 99
     }
 }

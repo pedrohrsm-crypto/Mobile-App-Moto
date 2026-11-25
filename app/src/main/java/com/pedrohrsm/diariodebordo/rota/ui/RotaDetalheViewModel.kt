@@ -8,6 +8,7 @@ import com.pedrohrsm.diariodebordo.rota.data.PrivacidadeDasRotas
 import com.pedrohrsm.diariodebordo.rota.data.Rota
 import com.pedrohrsm.diariodebordo.rota.data.RotaRepositorio
 import com.pedrohrsm.diariodebordo.rota.dominio.Trecho
+import com.pedrohrsm.diariodebordo.rota.dominio.paraOTracadoJaCortado
 import com.pedrohrsm.diariodebordo.rota.dominio.tracadoDaRota
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -43,7 +44,11 @@ class RotaDetalheViewModel @Inject constructor(
         if (rota == null) {
             RotaDetalheEstado.NaoEncontrada
         } else {
-            RotaDetalheEstado.Pronto(rota, protecao.tracadoDaRota(rota.id, rota.polilinha, privacidade.segredo()))
+            RotaDetalheEstado.Pronto(
+                rota,
+                protecao.paraOTracadoJaCortado(rota.pontasJaCortadasM)
+                    .tracadoDaRota(rota.id, rota.polilinha, privacidade.segredo()),
+            )
         }
     }
         .catch { emit(RotaDetalheEstado.Erro(it.message)) }

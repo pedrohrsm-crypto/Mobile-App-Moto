@@ -20,9 +20,9 @@ import com.pedrohrsm.diariodebordo.rota.data.Rota
 import com.pedrohrsm.diariodebordo.rota.data.RotaDao
 
 /**
- * Fonte da verdade do app (offline-first). Versão 1 até a primeira publicação (decisão #12): mudança de
- * entidade fica na versão 1, com o schema de app/schemas/1.json regerado e commitado. Depois da primeira
- * publicação: [version] + 1, Migration testada e o schema novo commitado.
+ * Fonte da verdade do app (offline-first). Mudança de entidade: [version] + 1, Migration em [MIGRACOES] testada
+ * e o schema novo exportado em app/schemas/ e commitado (CLAUDE.md). A versão 1 ficou aberta até a decisão #12; a 2
+ * (#88) é a primeira com Migration, porque o APK de release assinado (#63) já pode ter um diário de verdade.
  */
 @Database(
     entities = [
@@ -34,7 +34,7 @@ import com.pedrohrsm.diariodebordo.rota.data.RotaDao
         Rota::class,
         PontoDeRota::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = true,
 )
 abstract class DiarioDatabase : RoomDatabase() {

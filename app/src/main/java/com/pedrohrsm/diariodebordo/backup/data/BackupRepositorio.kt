@@ -77,6 +77,7 @@ class BackupRepositorio @Inject constructor(
             fusoHorario = relogio.zone.id,
             locaisOmitidos = !comLocais,
             tracadosProtegidos = protecao.ativa,
+            pontasCortadasM = protecao.corte.metros,
             motos = motos,
             leituras = dao.leituras().filter { it.excluidoEm == null && it.motoId in motoIds },
             registros = registros,
@@ -180,7 +181,7 @@ class BackupRepositorio @Inject constructor(
             // Rota excluída no aparelho perdeu o traçado (risco #23): o arquivo não a traz de volta. A que grava
             // agora também não é tocada. Arquivo com traçados protegidos não apaga o traçado completo (#78).
             dao.todasAsRotas().let { doAparelho ->
-                val chegando = copia.rotas.paraOAparelho(copia.tracadosProtegidos, doAparelho)
+                val chegando = copia.rotas.paraOAparelho(copia.tracadosProtegidos, copia.pontasCortadasM, doAparelho)
                 mesclar(doAparelho, chegando, { it.id }, { it.alteradoEm }, protegido = ::rotaProtegida)
                     .also { dao.gravarRotas(it.gravar) }
             },

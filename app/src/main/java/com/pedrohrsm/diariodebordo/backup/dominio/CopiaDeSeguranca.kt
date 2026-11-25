@@ -35,6 +35,12 @@ data class CopiaDeSeguranca(
      * traçados completos. Na importação, o traçado que o aparelho já tem fica (`paraOAparelho`).
      */
     val tracadosProtegidos: Boolean = false,
+    /**
+     * Tamanho escolhido do corte das pontas que toda rota do arquivo já sofreu (#88). Ausente nos arquivos antigos =
+     * 0, e a rota que chega não fica marcada: na exportação seguinte perde as pontas de novo, como antes. O app que
+     * não conhece o campo o ignora, por isso o formato continua o 2.
+     */
+    val pontasCortadasM: Int = 0,
     val motos: List<Moto> = emptyList(),
     val leituras: List<LeituraHodometro> = emptyList(),
     val registros: List<Registro> = emptyList(),

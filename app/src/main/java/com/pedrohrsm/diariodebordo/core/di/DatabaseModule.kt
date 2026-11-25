@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.pedrohrsm.diariodebordo.BuildConfig
 import com.pedrohrsm.diariodebordo.backup.data.BackupDao
 import com.pedrohrsm.diariodebordo.core.database.DiarioDatabase
+import com.pedrohrsm.diariodebordo.core.database.MIGRACOES
 import com.pedrohrsm.diariodebordo.core.database.Transacao
 import com.pedrohrsm.diariodebordo.core.database.TransacaoRoom
 import com.pedrohrsm.diariodebordo.diario.data.FotoRegistroDao
@@ -33,12 +34,12 @@ object DatabaseModule {
 
     /**
      * Decisão #12: só o build de debug recria o banco quando a versão gravada no aparelho difere da do app
-     * e falta Migration; no release isso é erro, e o diário nunca é apagado. Com a versão 1 aberta, o schema
-     * muda sem mudar a versão: aí o Room recusa abrir até no debug (identity hash), e o aparelho de teste
-     * precisa ter os dados do app limpos. `DatabaseModuleTest` prova os três casos.
+     * e falta Migration; no release isso é erro, e o diário nunca é apagado. O banco de uma versão anterior
+     * sobe pelas [MIGRACOES] nos dois builds (`MigracoesTest`). Schema que muda sem mudar a versão: o Room
+     * recusa abrir até no debug (identity hash). `DatabaseModuleTest` prova os três casos.
      */
     fun criarBanco(context: Context, nome: String, debug: Boolean): DiarioDatabase {
-        val construtor = Room.databaseBuilder(context, DiarioDatabase::class.java, nome)
+        val construtor = Room.databaseBuilder(context, DiarioDatabase::class.java, nome).addMigrations(*MIGRACOES)
         if (debug) construtor.fallbackToDestructiveMigration(dropAllTables = true)
         return construtor.build()
     }

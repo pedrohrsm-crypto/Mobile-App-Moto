@@ -350,6 +350,179 @@ class BackupRepositorioTest {
         assertEquals(tracadoNovo, aparelho.backup.rotas().single().polilinha)
     }
 
+    // #88: a rota que chegou já sem as pontas não perde as pontas de novo a cada exportação.
+
+    private suspend fun Aparelho.importarDe(origem: Aparelho): ByteArray =
+        origem.exportar().first.also { repositorio.importar(it.inputStream()) }
+
+    private fun ByteArray.rota(): Rota = PacoteZip.lerDados(inputStream()).rotas.single()
+
+    private fun origemCom1Km(): Aparelho = Aparelho(privacidade = FakePrivacidadeDasRotas(ProtecaoDasRotas()))
+
+    /** Celular novo, outro segredo: mesmo assim, a mesma polilinha. */
+    private fun celularNovo(protecao: ProtecaoDasRotas = ProtecaoDasRotas()) =
+        Aparelho(privacidade = FakePrivacidadeDasRotas(protecao, segredoFixo = ByteArray(32) { (it * 5 + 1).toByte() }))
+
+    /** (a) */
+    @Test
+    fun rotaRestauradaJaCortadaEExportadaDeNovoSaiComAMesmaPolilinha() = runTest {
+        val origem = origemCom1Km().apply {
+            backup.gravarMotos(listOf(moto))
+            backup.gravarRotas(listOf(rotaLonga))
+        }
+        val novo = celularNovo().apply { backup.gravarMotos(listOf(moto)) }
+        val primeiro = novo.importarDe(origem)
+        assertEquals(CorteDasPontas.KM1.metros, PacoteZip.lerDados(primeiro.inputStream()).pontasCortadasM)
+        assertEquals(CorteDasPontas.KM1.metros, novo.backup.rotas().single().pontasJaCortadasM)
+
+        val (segundo, _) = novo.exportar()
+
+        assertEquals(primeiro.rota().polilinha, segundo.rota().polilinha)
+    }
+
+    /** (b) */
+    @Test
+    fun rotaRestauradaComZonaNovaPerdeOTrechoDaZona() = runTest {
+        val origem = origemCom1Km().apply {
+            backup.gravarMotos(listOf(moto))
+            backup.gravarRotas(listOf(rotaLonga))
+        }
+        val novo = celularNovo().apply { backup.gravarMotos(listOf(moto)) }
+        val restaurada = Polilinha.decodificarTrechos(novo.importarDe(origem).rota().polilinha).flatten()
+        novo.privacidade.salvarZona(zona)
+
+        val (arquivo, _) = novo.exportar()
+
+        val trechos = Polilinha.decodificarTrechos(arquivo.rota().polilinha)
+        assertEquals("a zona parte a rota em dois", 2, trechos.size)
+        assertTrue(trechos.flatten().none { distanciaM(it, ponto(zona)) < zona.raioM })
+        assertEquals("as pontas não são cortadas de novo", restaurada.first(), trechos.first().first())
+        assertEquals("as pontas não são cortadas de novo", restaurada.last(), trechos.last().last())
+    }
+
+    /** (c) */
+    @Test
+    fun rotaGravadaNoAparelhoContinuaPerdendoAsPontasNaExportacao() = runTest {
+        val aparelho = origemCom1Km().apply {
+            backup.gravarMotos(listOf(moto))
+            backup.gravarRotas(listOf(rotaLonga))
+        }
+        repeat(2) {
+            val pontos = Polilinha.decodificarTrechos(aparelho.exportar().first.rota().polilinha).flatten()
+            assertTrue(pontos.all { distanciaM(it, longa.first()) >= 800 && distanciaM(it, longa.last()) >= 800 })
+        }
+        assertEquals(0, aparelho.backup.rotas().single().pontasJaCortadasM)
+    }
+
+    /** (d) */
+    @Test
+    fun rotaQueOAparelhoJaTinhaMantemAPolilinhaCompletaENaoFicaMarcada() = runTest {
+        val origem = origemCom1Km().apply {
+            backup.gravarMotos(listOf(moto))
+            backup.gravarRotas(listOf(rotaLonga.copy(alteradoEm = 20)))
+        }
+        val aparelho = origemCom1Km().apply {
+            backup.gravarMotos(listOf(moto))
+            backup.gravarRotas(listOf(rotaLonga))
+        }
+        aparelho.importarDe(origem)
+
+        val ficou = aparelho.backup.rotas().single()
+        assertEquals(rotaLonga.polilinha, ficou.polilinha)
+        assertEquals(0, ficou.pontasJaCortadasM)
+        assertEquals(20L, ficou.alteradoEm)
+    }
+
+    /** Proteção só com zonas: as pontas saíram reais, e a rota que chega não pode ficar marcada. */
+    @Test
+    fun arquivoSoComZonasNaoMarcaARota() = runTest {
+        val soZonas = ProtecaoDasRotas(CorteDasPontas.DESLIGADO, listOf(zona))
+        val origem = Aparelho(privacidade = FakePrivacidadeDasRotas(soZonas)).apply {
+            backup.gravarMotos(listOf(moto))
+            backup.gravarRotas(listOf(rotaLonga))
+        }
+        val novo = celularNovo().apply { backup.gravarMotos(listOf(moto)) }
+        val arquivo = novo.importarDe(origem)
+        assertTrue(PacoteZip.lerDados(arquivo.inputStream()).tracadosProtegidos)
+        assertEquals(0, novo.backup.rotas().single().pontasJaCortadasM)
+
+        val pontos = Polilinha.decodificarTrechos(novo.exportar().first.rota().polilinha).flatten()
+        assertTrue(pontos.all { distanciaM(it, longa.first()) >= 800 && distanciaM(it, longa.last()) >= 800 })
+    }
+
+    /**
+     * O dono exporta com a proteção desligada e depois liga: o arquivo sem proteção não diz que as pontas já
+     * saíram, então o celular seguinte não marca a rota e corta as pontas outra vez. O traçado encolhe, como antes
+     * do #88; a privacidade não piora.
+     */
+    @Test
+    fun exportarComAProtecaoDesligadaEDepoisLigarCortaAsPontasDeNovo() = runTest {
+        val origem = origemCom1Km().apply {
+            backup.gravarMotos(listOf(moto))
+            backup.gravarRotas(listOf(rotaLonga))
+        }
+        val segundo = celularNovo(ProtecaoDasRotas(CorteDasPontas.DESLIGADO)).apply {
+            backup.gravarMotos(listOf(moto))
+        }
+        val cortada = segundo.importarDe(origem).rota().polilinha
+        val (semProtecao, _) = segundo.exportar()
+        assertEquals("sem proteção, a rota sai como está: cortada", cortada, semProtecao.rota().polilinha)
+        assertFalse(PacoteZip.lerDados(semProtecao.inputStream()).tracadosProtegidos)
+        assertEquals(0, PacoteZip.lerDados(semProtecao.inputStream()).pontasCortadasM)
+
+        val terceiro = celularNovo().apply { backup.gravarMotos(listOf(moto)) }
+        terceiro.repositorio.importar(semProtecao.inputStream())
+        assertEquals(0, terceiro.backup.rotas().single().pontasJaCortadasM)
+
+        val antes = Polilinha.decodificarTrechos(cortada).flatten()
+        val pontos = Polilinha.decodificarTrechos(terceiro.exportar().first.rota().polilinha).flatten()
+        assertTrue(pontos.all { distanciaM(it, antes.first()) >= 800 && distanciaM(it, antes.last()) >= 800 })
+    }
+
+    /** A marca é do aparelho: nem a rota do arquivo a leva, nem o arquivo consegue impô-la por rota. */
+    @Test
+    fun marcaDaRotaNaoVaiNoArquivo() = runTest {
+        val aparelho = Aparelho().apply {
+            backup.gravarMotos(listOf(moto))
+            backup.gravarRotas(listOf(rotaLonga.copy(pontasJaCortadasM = 1_000)))
+        }
+        val json = ZipInputStream(aparelho.exportar().first.inputStream()).use {
+            it.nextEntry
+            it.readBytes().decodeToString()
+        }
+        assertFalse(json.contains("pontasJaCortadasM"))
+    }
+
+    /** (e) Arquivo do formato 2 de antes do #88, sem o campo: a rota chega e perde as pontas de novo, como antes. */
+    @Test
+    fun arquivoAntigoSemOCampoNaoMarcaARota() = runTest {
+        val copia = CopiaDeSeguranca(
+            formato = 2,
+            geradoEm = 1,
+            fusoHorario = "UTC",
+            tracadosProtegidos = true,
+            pontasCortadasM = 1_000,
+            motos = listOf(moto),
+            rotas = listOf(rotaLonga),
+        )
+        val json = Json { encodeDefaults = true }
+        val semOCampo =
+            JsonObject(json.encodeToJsonElement(CopiaDeSeguranca.serializer(), copia).jsonObject - "pontasCortadasM")
+        val arquivo = ByteArrayOutputStream().also { saida ->
+            ZipOutputStream(saida).use { zip ->
+                zip.putNextEntry(ZipEntry(PacoteZip.DADOS))
+                zip.write(semOCampo.toString().toByteArray())
+                zip.closeEntry()
+            }
+        }.toByteArray()
+        assertEquals(0, PacoteZip.lerDados(arquivo.inputStream()).pontasCortadasM)
+
+        val aparelho = origemCom1Km().apply { backup.gravarMotos(listOf(moto)) }
+        aparelho.repositorio.importar(arquivo.inputStream())
+
+        assertEquals(0, aparelho.backup.rotas().single().pontasJaCortadasM)
+    }
+
     @Test
     fun zonasIlegiveisFazemAExportacaoFalharEmVezDeSairSemProtecao() = runTest {
         val aparelho = Aparelho(privacidade = protegido().also { it.falhar = true })
