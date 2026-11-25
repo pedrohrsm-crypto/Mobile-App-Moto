@@ -46,11 +46,11 @@ class DiarioDatabaseTest {
     }
 
     @Test
-    fun abreNaVersao1ComAsTabelasDaFase1() {
+    fun abreNaVersaoAtualComAsTabelasDaFase1() {
         val db = banco.openHelper.writableDatabase
         db.query("PRAGMA user_version").use {
             assertTrue(it.moveToFirst())
-            assertEquals(1, it.getInt(0))
+            assertEquals("versão 2 desde o #88", 2, it.getInt(0))
         }
         val tabelas = nomes("SELECT name FROM sqlite_master WHERE type = 'table'")
         assertTrue(
