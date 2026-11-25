@@ -11,8 +11,4 @@ package com.pedrohrsm.diariodebordo.rota.dominio
  * privacidade valem sempre, porque uma zona nova tem de esconder o trecho mesmo numa rota antiga.
  */
 fun ProtecaoDasRotas.paraOTracadoJaCortado(pontasJaCortadasM: Int): ProtecaoDasRotas =
-    if (corte != CorteDasPontas.DESLIGADO && pontasJaCortadasM >= corte.metros) {
-        copy(corte = CorteDasPontas.DESLIGADO)
-    } else {
-        this
-    }
+    if (pontasJaCortadasM > 0) ProtecaoDasRotas(CorteDasPontas.DESLIGADO) else copy(corte = CorteDasPontas.DESLIGADO)

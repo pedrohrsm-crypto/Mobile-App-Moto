@@ -14,4 +14,4 @@ val MIGRACAO_1_2 = object : Migration(1, 2) {
 }
 
 /** Todas as Migrations, da mais antiga à mais nova. O app abre um banco de toda versão já instalada. */
-val MIGRACOES = arrayOf(MIGRACAO_1_2)
+val MIGRACOES = emptyArray<androidx.room.migration.Migration>()

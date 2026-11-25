@@ -6,7 +6,6 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 
 /**
  * Rota de um rolê. Durante a gravação os pontos ficam em [PontoDeRota]; ao salvar, só o traçado
@@ -33,7 +32,6 @@ data class Rota(
     val fusoHorario: String = "",
     val excluidoEm: Long? = null,
     val pendenteSync: Boolean = false,
-    @Transient
     @ColumnInfo(defaultValue = "0")
     val pontasJaCortadasM: Int = 0,
 )

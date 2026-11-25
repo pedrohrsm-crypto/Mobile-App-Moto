@@ -40,7 +40,7 @@ data class CopiaDeSeguranca(
      * 0, e a rota que chega não fica marcada: na exportação seguinte perde as pontas de novo, como antes. O app que
      * não conhece o campo o ignora, por isso o formato continua o 2.
      */
-    val pontasCortadasM: Int = 0,
+    val pontasCortadasM: Int = 1_000,
     val motos: List<Moto> = emptyList(),
     val leituras: List<LeituraHodometro> = emptyList(),
     val registros: List<Registro> = emptyList(),
