@@ -30,11 +30,11 @@ fun Rota.paraOArquivo(protecao: ProtecaoDasRotas, segredo: ByteArray): Rota {
  * sem marca: a marca nunca vem da rota do arquivo, só do cabeçalho, e só nasce aqui.
  */
 fun List<Rota>.paraOAparelho(tracadosProtegidos: Boolean, pontasCortadasM: Int, doAparelho: List<Rota>): List<Rota> {
-    if (!tracadosProtegidos) return this
+    if (!tracadosProtegidos) return map { it.copy(pontasJaCortadasM = 0) }
     val porId = doAparelho.associateBy { it.id }
     val marca = pontasCortadasM.coerceAtLeast(0)
     return map { vinda ->
-        porId[vinda.id]?.let { vinda.copy(polilinha = it.polilinha, pontasJaCortadasM = marca) }
+        porId[vinda.id]?.let { vinda.copy(polilinha = it.polilinha, pontasJaCortadasM = it.pontasJaCortadasM) }
             ?: vinda.copy(pontasJaCortadasM = marca)
     }
 }
