@@ -10,5 +10,4 @@ package com.pedrohrsm.diariodebordo.rota.dominio
  * 1 km para 5 km tem de ver 5 km ocultos, então a rota cortada com 1 km é cortada outra vez. As zonas de
  * privacidade valem sempre, porque uma zona nova tem de esconder o trecho mesmo numa rota antiga.
  */
-fun ProtecaoDasRotas.paraOTracadoJaCortado(pontasJaCortadasM: Int): ProtecaoDasRotas =
-    this
+fun ProtecaoDasRotas.paraOTracadoJaCortado(pontasJaCortadasM: Int): ProtecaoDasRotas = this
